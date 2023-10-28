@@ -1,0 +1,44 @@
+package main
+
+import (
+	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/alice"
+	"net/http"
+	"talkliketv.net/ui"
+)
+
+func (app *application) routes() http.Handler {
+	router := httprouter.New()
+
+	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.notFoundResponse(w, r)
+	})
+
+	// Take the ui.Files embedded filesystem and convert it to a http.FS type so
+	// that it satisfies the http.FileSystem interface. We then pass that to the
+	// http.FileServer() function to create the file server handler.
+	fileServer := http.FileServer(http.FS(ui.Files))
+
+	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
+
+	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
+
+	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
+
+	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
+	router.Handler(http.MethodGet, "/about", dynamic.ThenFunc(app.about))
+	router.Handler(http.MethodGet, "/phrase/view/:id", dynamic.ThenFunc(app.phraseView))
+	router.Handler(http.MethodGet, "/user/signup", dynamic.ThenFunc(app.userSignup))
+	router.Handler(http.MethodPost, "/user/signup", dynamic.ThenFunc(app.userSignupPost))
+	router.Handler(http.MethodGet, "/user/login", dynamic.ThenFunc(app.userLogin))
+	router.Handler(http.MethodPost, "/user/login", dynamic.ThenFunc(app.userLoginPost))
+	protected := dynamic.Append(app.requireAuthentication)
+	
+	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.userLogoutPost))
+	router.Handler(http.MethodGet, "/account/view", protected.ThenFunc(app.accountView))
+	router.Handler(http.MethodGet, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdate))
+	router.Handler(http.MethodPost, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdatePost))
+
+	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+	return standard.Then(router)
+}
