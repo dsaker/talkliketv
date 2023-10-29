@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/alexedwards/scs/postgresstore v0.0.0-20231022164606-84bd122bd881 // indirect
 	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/justinas/alice v1.2.0 // indirect
 	github.com/justinas/nosurf v1.1.1 // indirect

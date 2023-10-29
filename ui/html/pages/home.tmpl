@@ -1,15 +1,15 @@
 {{define "title"}}Home{{end}}
 
 {{define "main"}}
-    <h2>Latest Snippets</h2>
-    {{if .Snippets}}
+    <h2>Latest Phrases</h2>
+    {{if .Phrases}}
      <table>
         <tr>
             <th>Title</th>
             <th>Created</th>
             <th>ID</th>
          </tr>
-        {{range .Snippets}}
+        {{range .Phrases}}
         <tr>
             <!-- Use the new clean URL style-->
             <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td>

@@ -17,8 +17,8 @@ confirm:
 # DEVELOPMENT
 # ==================================================================================== #
 
-## run/api: run the cmd/api application
-run/web:
+## run: run the cmd/api application
+run:
 	go run ./cmd/web -db-dsn=${TALKTV_DB_DSN}
 
 ## db/psql: connect to the database using psql

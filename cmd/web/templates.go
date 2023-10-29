@@ -11,8 +11,8 @@ import (
 
 type templateData struct {
 	CurrentYear     int
-	Snippet         *models.Phrase
-	Snippets        []*models.Phrase
+	Phrase          *models.Phrase
+	Phrases         []*models.Phrase
 	Form            any
 	Flash           string
 	IsAuthenticated bool

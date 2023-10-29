@@ -1,18 +1,24 @@
-{{define "title"}}Snippet #{{.Snippet.ID}}{{end}}
+{{define "title"}}Phrase{{end}}
 
 {{define "main"}}
-    {{with .Snippet}}
-    <div class='snippet'>
-        <div class='metadata'>
-            <strong>{{.Title}}</strong>
-            <span>#{{.ID}}</span>
-        </div>
-        <pre><code>{{.Content}}</code></pre>
-        <div class='metadata'>
-            <!-- Use the new template function here -->
-            <time>Created: {{humanDate .Created}}</time>
-            <time>Expires: {{humanDate .Expires}}</time>
-        </div>
-    </div>
+    <h2>Phrases</h2>
+    {{if .Phrases}}
+     <table>
+        <tr>
+            <th>Phrase</th>
+            <th>Translates</th>
+            <th>ID</th>
+         </tr>
+        {{range .Phrases}}
+        <tr>
+            <!-- Use the new clean URL style-->
+            <td>{{.Phrase}}</td>
+            <td>{{.Translates}}</td>
+            <td>#{{.ID}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{else}}
+        <p>There's nothing to see here... yet!</p>
     {{end}}
 {{end}}
