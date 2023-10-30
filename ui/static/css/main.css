@@ -172,7 +172,7 @@ form input[type="radio"] {
     margin-left: 18px;
 }
 
-form input[type="text"], form input[type="password"], form input[type="email"] {
+form input[type="text"], form input[type="password"], form input[type="email"], input[type="text"] {
     padding: 0.75em 18px;
     width: 100%;
 }
@@ -285,17 +285,22 @@ table {
 }
 
 td, th {
-    text-align: left;
+    text-align: center;
     padding: 9px 18px;
 }
 
-th:last-child, td:last-child {
-    text-align: right;
-    color: #6A6C6F;
-}
+/*th:last-child, td:last-child {*/
+/*    text-align: right;*/
+/*    color: #6A6C6F;*/
+/*}*/
 
 tr {
     border-bottom: 1px solid #E4E5E7;
+}
+
+th.answer {
+    border-bottom: 1px solid #E4E5E7;
+    visibility: hidden;
 }
 
 tr:nth-child(2n) {

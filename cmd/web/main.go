@@ -132,7 +132,7 @@ func main() {
 		"address": *addr,
 	})
 
-	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+	err = srv.ListenAndServe()
 	logger.PrintFatal(err, nil)
 }
 
