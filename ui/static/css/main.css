@@ -298,9 +298,21 @@ tr {
     border-bottom: 1px solid #E4E5E7;
 }
 
-th.answer {
+th {
     border-bottom: 1px solid #E4E5E7;
-    visibility: hidden;
+}
+
+td.answer {
+    display: none;
+    color: darkorange;
+}
+
+div.phraseTable {
+    display: none;
+}
+
+div.tableButtons {
+    display: none;
 }
 
 tr:nth-child(2n) {

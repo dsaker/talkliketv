@@ -1,27 +1,40 @@
 {{define "title"}}Phrase{{end}}
 
 {{define "main"}}
-     <table>
+    {{if .Phrases}}
+    {{range $index, $value := .Phrases}}
+    <div id="phrase{{$index}}" class="phraseTable" >
+        <table>
+            <tr>
+                <td>{{.Phrase}}</td>
+            </tr>
+         </table>
+         <table>
+            <tr>
+                <td><input id="solution{{$index}}" type="text" placeholder="solución"></td>
+            </tr>
+         </table>
+         <table>
+            <tr>
+               <td id="answer{{$index}}" class="answer">{{.Translates}}</td>
+             </tr>
+         </table>
+    </div>
+    {{end}}
+    {{end}}
+    <div id="tableButtons" class="tableButtons">
+        <table>
+            <tr>
+                <td><button id="hintButton">Hint</button></td>
+                <td><button id="showButton">Show</button></td>
+                <td><button id="acceptButton">Accept</button></td>
+                <td><button id="rejectButton">Reject</button></td>
+            </tr>
+        </table>
+    </div>
+    <table>
         <tr>
-          <td>{{(index .Phrases 0).Phrase}}</td>
-        </tr>
-     </table>
-     <table>
-        <tr>
-          <th><input type="text" placeholder="solución"></th>
-        </tr>
-     </table>
-     <table>
-        <tr>
-          <td><button id="hintButton">Hint</button></td>
-          <td><button id="showButton">Show</button></td>
-          <td><button id="acceptButton">Accept</button></td>
-          <td><button id="rejectButton">Reject</button></td>
-        </tr>
-     </table>
-     <table>
-        <tr>
-          <th class="answer">{{(index .Phrases 0).Translates}}</th>
+            <td><button id="startButton">Start</button></td>
         </tr>
     </table>
     <br>
