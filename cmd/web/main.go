@@ -59,7 +59,7 @@ func main() {
 
 	// Use the empty string "" as the default value for the db-dsn command-line flag,
 	// rather than os.Getenv("GREENLIGHT_DB_DSN") like we were previously.
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://talktv:pa55word@localhost/talktv?sslmode=disable", "PostgreSQL DSN")
 
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")

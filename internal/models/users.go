@@ -14,6 +14,7 @@ type UserModelInterface interface {
 	Exists(id int) (bool, error)
 	Get(id int) (*User, error)
 	PasswordUpdate(id int, currentPassword, newPassword string) error
+	PhraseCorrect(id int, id2 int) error
 }
 
 type User struct {
@@ -27,6 +28,36 @@ type User struct {
 // Define a new UserModel type which wraps a database connection pool.
 type UserModel struct {
 	DB *sql.DB
+}
+
+func (m *UserModel) PhraseCorrect(userID int, phraseID int) error {
+	args := []interface{}{userID, phraseID}
+
+	var exists bool
+
+	stmt := "SELECT EXISTS(SELECT true FROM users_phrases WHERE user_id = $1 and phrase_id = $2)"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, stmt, args...).Scan(&exists)
+
+	var query string
+	if exists {
+		query = `
+			UPDATE users_phrases 
+			SET correct = correct + 1 
+			WHERE user_id = $1 and phrase_id = $2`
+	} else {
+		query = `
+		INSERT INTO users_phrases 
+		VALUES  ($1, $2, 1)`
+	}
+
+	_, err = m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *UserModel) Insert(name, email, password string) error {

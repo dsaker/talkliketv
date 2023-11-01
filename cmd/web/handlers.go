@@ -24,16 +24,6 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 
-	//params := httprouter.ParamsFromContext(r.Context())
-
-	// We can then use the ByName() method to get the value of the "id" named
-	// parameter from the slice and validate it as normal.
-	//id, err := strconv.Atoi(params.ByName("id"))
-	//if err != nil || id < 1 {
-	//	app.notFoundResponse(w, r)
-	//	return
-	//}
-
 	phrases, err := app.phrases.NextTen()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {

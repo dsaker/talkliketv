@@ -18,10 +18,10 @@ function reject() {
     nextPhrase();
 }
 
-document.getElementById("acceptButton").addEventListener("click", accept);
-function accept() {
-    nextPhrase()
-}
+// document.getElementsByName("acceptButton").forEach(function (e){ e.addEventListener("click", accept)});
+// function accept() {
+//     nextPhrase()
+// }
 
 document.getElementById("hintButton").addEventListener("click", hint);
 function hint() {
@@ -40,7 +40,22 @@ function hint() {
     document.getElementById("solution" + count).placeholder = newString;
 }
 
-document.getElementById("showButton").addEventListener("click", show);
+document.getElementsByName("phraseCorrectForm").forEach(
+    function (form){
+        form.addEventListener("submit", function (e){
+            e.preventDefault();
+            fetch("/phrase/correct", {
+                method: "POST",
+                body: new FormData(form)
+            })
+                .then(response => console.log(response.data))
+                .catch(error => console.error(error));
+        })
+    })
+
+document.getElementsByName("showButton").forEach(
+    function (e){ e.addEventListener("click", show)});
+
 function show() {
     let th = document.getElementById("answer" + count);
     if (th.style.display === "block") {

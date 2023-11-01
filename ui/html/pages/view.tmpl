@@ -19,19 +19,25 @@
                <td id="answer{{$index}}" class="answer">{{.Translates}}</td>
              </tr>
          </table>
+         <table>
+             <tr>
+                 <td><button id="hintButton" name="hintButton">Hint</button></td>
+                 <td><button id="showButton" name="showButton">Show</button></td>
+                 <td>
+                     <form name='phraseCorrectForm' novalidate>
+                         <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                         <input type='hidden' name='phrase_id' value='{{.ID}}'>
+                         <input type='submit' value='Accept'>
+                     </form>
+                 </td>
+                 <td><button id="rejectButton">Reject</button></td>
+             </tr>
+         </table>
     </div>
-    {{end}}
-    {{end}}
     <div id="tableButtons" class="tableButtons">
-        <table>
-            <tr>
-                <td><button id="hintButton">Hint</button></td>
-                <td><button id="showButton">Show</button></td>
-                <td><button id="acceptButton">Accept</button></td>
-                <td><button id="rejectButton">Reject</button></td>
-            </tr>
-        </table>
     </div>
+    {{end}}
+    {{end}}
     <table>
         <tr>
             <td><button id="startButton">Start</button></td>

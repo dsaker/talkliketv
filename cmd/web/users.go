@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/validator"
 )
@@ -216,4 +217,29 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 	app.sessionManager.Put(r.Context(), "flash", "Your password has been updated!")
 
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
+}
+
+func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
+	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	var input struct {
+		PhraseId string `form:"phrase_id"`
+	}
+
+	err := app.decodePostForm(r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	i, err := strconv.Atoi(input.PhraseId)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+	}
+
+	err = app.users.PhraseCorrect(userID, i)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
 }
