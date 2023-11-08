@@ -5,5 +5,3 @@ CREATE TABLE IF NOT EXISTS movies (
 );
 
 INSERT INTO movies (id, title, num_subs) VALUES (-1, 'Not a Movie', 0);
-
-INSERT INTO movies (id, title, num_subs) VALUES (1, 'MissAdrenalineS01E01', 642);
