@@ -8,6 +8,7 @@ var mockPhrase = &models.Phrase{
 	ID:         1,
 	Phrase:     "An old silent pond",
 	Translates: "An old silent pond...",
+	Hint:       "A  o   s      p   ...",
 }
 
 type PhraseModel struct{}
@@ -27,4 +28,8 @@ func (m *PhraseModel) Get(id int) (*models.Phrase, error) {
 
 func (m *PhraseModel) NextTen() ([]*models.Phrase, error) {
 	return []*models.Phrase{mockPhrase}, nil
+}
+
+func (m *PhraseModel) PhraseCorrect(id int, id2 int) error {
+	return nil
 }

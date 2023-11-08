@@ -14,11 +14,11 @@ type UserModelInterface interface {
 	Exists(id int) (bool, error)
 	Get(id int) (*User, error)
 	PasswordUpdate(id int, currentPassword, newPassword string) error
-	PhraseCorrect(id int, id2 int) error
 }
 
 type User struct {
 	ID             int
+	MovieId        int
 	Name           string
 	Email          string
 	HashedPassword []byte
@@ -30,36 +30,6 @@ type UserModel struct {
 	DB *sql.DB
 }
 
-func (m *UserModel) PhraseCorrect(userID int, phraseID int) error {
-	args := []interface{}{userID, phraseID}
-
-	var exists bool
-
-	stmt := "SELECT EXISTS(SELECT true FROM users_phrases WHERE user_id = $1 and phrase_id = $2)"
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-	err := m.DB.QueryRowContext(ctx, stmt, args...).Scan(&exists)
-
-	var query string
-	if exists {
-		query = `
-			UPDATE users_phrases 
-			SET correct = correct + 1 
-			WHERE user_id = $1 and phrase_id = $2`
-	} else {
-		query = `
-		INSERT INTO users_phrases 
-		VALUES  ($1, $2, 1)`
-	}
-
-	_, err = m.DB.ExecContext(ctx, query, args...)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (m *UserModel) Insert(name, email, password string) error {
 	// Create a bcrypt hash of the plain-text password.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
@@ -68,8 +38,8 @@ func (m *UserModel) Insert(name, email, password string) error {
 	}
 
 	query := `
-        INSERT INTO users (name, email, hashed_password) 
-        VALUES ($1, $2, $3)`
+        INSERT INTO users (name, email, hashed_password, movie_id) 
+        VALUES ($1, $2, $3, -1)`
 
 	args := []interface{}{name, email, hashedPassword}
 
@@ -138,9 +108,9 @@ func (m *UserModel) Exists(id int) (bool, error) {
 func (m *UserModel) Get(id int) (*User, error) {
 	var user User
 
-	stmt := `SELECT id, name, email, created FROM users WHERE id = ?`
+	stmt := `SELECT id, movie_id, name, email, created FROM users WHERE id = $1`
 
-	err := m.DB.QueryRow(stmt, id).Scan(&user.ID, &user.Name, &user.Email, &user.Created)
+	err := m.DB.QueryRow(stmt, id).Scan(&user.ID, &user.MovieId, &user.Name, &user.Email, &user.Created)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord

@@ -1,61 +1,44 @@
 let count = 0;
 
-function removePunctuation(text) {
-    let punctuation = /[\.,?!]/g;
-    let newText = text.replace(punctuation, "");
-    return newText;
-}
-
 function nextPhrase() {
+    if (count === 9) {
+        location.reload()
+    }
     document.getElementById("phrase" + count).style.display = "none";
     count ++;
     document.getElementById("phrase" + count).style.display = "block";
     console.log(count)
 }
 
-document.getElementById("rejectButton").addEventListener("click", reject);
+document.getElementsByName("rejectButton").forEach(
+    function (e) {e.addEventListener( "click", reject)});
 function reject() {
     nextPhrase();
 }
 
-// document.getElementsByName("acceptButton").forEach(function (e){ e.addEventListener("click", accept)});
-// function accept() {
-//     nextPhrase()
-// }
-
-document.getElementById("hintButton").addEventListener("click", hint);
+document.getElementsByName("hintButton").forEach(
+    function (e) {e.addEventListener("click", hint)});
 function hint() {
-    let phrase = document.getElementById("answer" + count).innerText;
-    phrase = removePunctuation(phrase);
-
-    let newString = phrase[0];
-    for (let i = 1; i < phrase.length; i++) {
-        if (phrase[i-1] === " ") {
-            newString += phrase[i];
-        }
-        else {
-            newString += "_";
-        }
-    }
-    document.getElementById("solution" + count).placeholder = newString;
+    let hint = document.getElementById("phraseHint" + count).value;
+    console.log(hint)
+    document.getElementById("solution" + count).placeholder = hint;
 }
 
 document.getElementsByName("phraseCorrectForm").forEach(
     function (form){
-        form.addEventListener("submit", function (e){
+        form.addEventListener("click", function (e){
             e.preventDefault();
             fetch("/phrase/correct", {
                 method: "POST",
                 body: new FormData(form)
             })
-                .then(response => console.log(response.data))
+                .then(function() {nextPhrase()})
                 .catch(error => console.error(error));
         })
     })
 
 document.getElementsByName("showButton").forEach(
     function (e){ e.addEventListener("click", show)});
-
 function show() {
     let th = document.getElementById("answer" + count);
     if (th.style.display === "block") {

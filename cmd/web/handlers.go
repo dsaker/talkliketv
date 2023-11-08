@@ -22,24 +22,6 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "home.tmpl", data)
 }
 
-func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
-
-	phrases, err := app.phrases.NextTen()
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			app.notFoundResponse(w, r)
-		} else {
-			app.serverErrorResponse(w, r, err)
-		}
-		return
-	}
-
-	data := app.newTemplateData(r)
-	data.Phrases = phrases
-
-	app.render(w, r, http.StatusOK, "view.tmpl", data)
-}
-
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	app.render(w, r, http.StatusOK, "about.tmpl", data)

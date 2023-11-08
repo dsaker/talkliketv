@@ -39,6 +39,7 @@ type application struct {
 	config         config
 	logger         *jsonlog.Logger
 	phrases        models.PhraseModelInterface
+	movies         models.MovieModelInterface
 	users          models.UserModelInterface
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
@@ -109,6 +110,7 @@ func main() {
 		debug:          *debug,
 		logger:         logger,
 		phrases:        &models.PhraseModel{DB: db},
+		movies:         &models.MovieModel{DB: db},
 		users:          &models.UserModel{DB: db},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,

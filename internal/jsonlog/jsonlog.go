@@ -94,7 +94,11 @@ func (l *Logger) print(level Level, message string, properties map[string]string
 
 	// Include a stack trace for entries at the ERROR and FATAL levels.
 	if level >= LevelError {
-		aux.Trace = string(debug.Stack())
+		_, err := l.out.Write(debug.Stack())
+		if err != nil {
+			return 0, err
+		}
+		//aux.Trace = string(debug.Stack())
 	}
 
 	// Declare a line variable for holding the actual log entry text.

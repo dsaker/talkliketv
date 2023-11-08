@@ -1,0 +1,29 @@
+{{define "title"}}Movies{{end}}
+
+{{define "main"}}
+    <h2>Movies</h2>
+    {{if .Movies}}
+     <table>
+        <tr>
+            <th>Title</th>
+            <th>Phrases</th>
+            <th></th>
+         </tr>
+        {{range .Movies}}
+        <tr>
+            <td>{{.Title}}</td>
+            <td>{{.NumSubs}}</td>
+            <td>
+                <form action="/movies/choose" method="POST">
+                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                    <input type='hidden' name='movie_id' value='{{.ID}}'>
+                    <button>Select</button>
+                </form>
+            </td>
+        </tr>
+        {{end}}
+    </table>
+    {{else}}
+        <p>There's nothing to see here... yet!</p>
+    {{end}}
+{{end}}

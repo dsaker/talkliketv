@@ -18,6 +18,8 @@ type templateData struct {
 	IsAuthenticated bool
 	CSRFToken       string
 	User            *models.User
+	Movie           *models.Movie
+	Movies          []*models.Movie
 }
 
 func humanDate(t time.Time) string {
