@@ -7,7 +7,7 @@ import (
 
 type MovieModelInterface interface {
 	Get(id int) (*Movie, error)
-	All() ([]*Movie, error)
+	All(id int) ([]*Movie, error)
 	ChooseMovie(id int, i int) error
 }
 
@@ -33,7 +33,7 @@ func (m *MovieModel) ChooseMovie(userId int, movieId int) error {
 		return err
 	}
 
-	query = `select correct from users_phrases where user_id = $2 and movie_id = $1`
+	query = `select exists(select correct from users_phrases where user_id = $2 and movie_id = $1 limit 1)`
 
 	var exists bool
 	err = m.DB.QueryRow(query, args...).Scan(&exists)
@@ -87,11 +87,11 @@ func (m *MovieModel) Get(id int) (*Movie, error) {
 	return v, nil
 }
 
-func (m *MovieModel) All() ([]*Movie, error) {
+func (m *MovieModel) All(languageId int) ([]*Movie, error) {
 	// Write the SQL statement we want to execute.
-	stmt := `SELECT id, title, num_subs FROM movies where id > 0 ORDER BY id DESC LIMIT 10`
+	stmt := `SELECT id, title, num_subs FROM movies where language_id = $1 ORDER BY id DESC LIMIT 10`
 
-	rows, err := m.DB.Query(stmt)
+	rows, err := m.DB.Query(stmt, languageId)
 	if err != nil {
 		return nil, err
 	}

@@ -24,7 +24,7 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 	if user.MovieId == -1 {
 		app.sessionManager.Put(r.Context(), "flash", "Please choose a movie")
 		data := app.newTemplateData(r)
-		app.render(w, r, http.StatusOK, "phrases.tmpl", data)
+		app.render(w, r, http.StatusOK, "phrases.gohtml", data)
 		//http.Redirect(w, r, "/movies/view", http.StatusSeeOther)
 		return
 	}
@@ -42,7 +42,7 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Phrases = phrases
 
-	app.render(w, r, http.StatusOK, "phrases.tmpl", data)
+	app.render(w, r, http.StatusOK, "phrases.gohtml", data)
 }
 
 func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {

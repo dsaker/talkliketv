@@ -12,6 +12,7 @@ type userSignupForm struct {
 	Name                string `form:"name"`
 	Email               string `form:"email"`
 	Password            string `form:"password"`
+	Language            string `form:"language"`
 	validator.Validator `form:"-"`
 }
 
@@ -19,7 +20,18 @@ type userSignupForm struct {
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = userSignupForm{}
-	app.render(w, r, http.StatusOK, "signup.tmpl", data)
+	languages, err := app.languages.All()
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFoundResponse(w, r)
+		} else {
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	data.Languages = languages
+	app.render(w, r, http.StatusOK, "signup.gohtml", data)
 }
 
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
@@ -40,20 +52,30 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
-		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
 		return
 	}
 
-	// Try to create a new user record in the database. If the email already
-	// exists then add an error message to the form and re-display it.
-	err = app.users.Insert(form.Name, form.Email, form.Password)
+	languageId, err := app.languages.GetId(form.Language)
+	err = app.users.Insert(form.Name, form.Email, form.Password, languageId)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
 
 			data := app.newTemplateData(r)
 			data.Form = form
-			app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+			languages, err := app.languages.All()
+			if err != nil {
+				if errors.Is(err, models.ErrNoRecord) {
+					app.notFoundResponse(w, r)
+				} else {
+					app.serverErrorResponse(w, r, err)
+				}
+				return
+			}
+
+			data.Languages = languages
+			app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
 		} else {
 			app.serverErrorResponse(w, r, err)
 		}
@@ -80,7 +102,7 @@ type userLoginForm struct {
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = userLoginForm{}
-	app.render(w, r, http.StatusOK, "login.tmpl", data)
+	app.render(w, r, http.StatusOK, "login.gohtml", data)
 }
 
 func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +122,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		data := app.newTemplateData(r)
 		data.Form = form
 
-		app.render(w, r, http.StatusUnprocessableEntity, "login.tmpl", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "login.gohtml", data)
 		return
 	}
 
@@ -112,7 +134,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 			data := app.newTemplateData(r)
 			data.Form = form
 
-			app.render(w, r, http.StatusUnprocessableEntity, "login.tmpl", data)
+			app.render(w, r, http.StatusUnprocessableEntity, "login.gohtml", data)
 		} else {
 			app.serverErrorResponse(w, r, err)
 		}
@@ -171,7 +193,7 @@ func (app *application) accountPasswordUpdate(w http.ResponseWriter, r *http.Req
 	data := app.newTemplateData(r)
 	data.Form = accountPasswordUpdateForm{}
 
-	app.render(w, r, http.StatusOK, "password.tmpl", data)
+	app.render(w, r, http.StatusOK, "password.gohtml", data)
 }
 
 func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +215,7 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 		data := app.newTemplateData(r)
 		data.Form = form
 
-		app.render(w, r, http.StatusUnprocessableEntity, "password.tmpl", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "password.gohtml", data)
 		return
 	}
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
@@ -206,7 +228,7 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 			data := app.newTemplateData(r)
 			data.Form = form
 
-			app.render(w, r, http.StatusUnprocessableEntity, "password.tmpl", data)
+			app.render(w, r, http.StatusUnprocessableEntity, "password.gohtml", data)
 		} else if err != nil {
 			app.serverErrorResponse(w, r, err)
 		}

@@ -9,16 +9,18 @@ import (
 )
 
 type UserModelInterface interface {
-	Insert(name, email, password string) error
+	Insert(name, email, password string, language int) error
 	Authenticate(email, password string) (int, error)
 	Exists(id int) (bool, error)
 	Get(id int) (*User, error)
 	PasswordUpdate(id int, currentPassword, newPassword string) error
+	LanguageUpdate(userId int, languageId int) error
 }
 
 type User struct {
 	ID             int
 	MovieId        int
+	LanguageId     int
 	Name           string
 	Email          string
 	HashedPassword []byte
@@ -30,7 +32,7 @@ type UserModel struct {
 	DB *sql.DB
 }
 
-func (m *UserModel) Insert(name, email, password string) error {
+func (m *UserModel) Insert(name, email, password string, language int) error {
 	// Create a bcrypt hash of the plain-text password.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
@@ -38,10 +40,10 @@ func (m *UserModel) Insert(name, email, password string) error {
 	}
 
 	query := `
-        INSERT INTO users (name, email, hashed_password, movie_id) 
-        VALUES ($1, $2, $3, -1)`
+        INSERT INTO users (name, email, hashed_password, movie_id, language_id) 
+        VALUES ($1, $2, $3, -1, $4)`
 
-	args := []interface{}{name, email, hashedPassword}
+	args := []interface{}{name, email, hashedPassword, language}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -108,9 +110,9 @@ func (m *UserModel) Exists(id int) (bool, error) {
 func (m *UserModel) Get(id int) (*User, error) {
 	var user User
 
-	stmt := `SELECT id, movie_id, name, email, created FROM users WHERE id = $1`
+	stmt := `SELECT id, movie_id, name, email, language_id FROM users WHERE id = $1`
 
-	err := m.DB.QueryRow(stmt, id).Scan(&user.ID, &user.MovieId, &user.Name, &user.Email, &user.Created)
+	err := m.DB.QueryRow(stmt, id).Scan(&user.ID, &user.MovieId, &user.Name, &user.Email, &user.LanguageId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord
@@ -125,7 +127,7 @@ func (m *UserModel) Get(id int) (*User, error) {
 func (m *UserModel) PasswordUpdate(id int, currentPassword, newPassword string) error {
 	var currentHashedPassword []byte
 
-	stmt := "SELECT hashed_password FROM users WHERE id = ?"
+	stmt := "SELECT hashed_password FROM users WHERE id = $1"
 
 	err := m.DB.QueryRow(stmt, id).Scan(&currentHashedPassword)
 	if err != nil {
@@ -146,8 +148,16 @@ func (m *UserModel) PasswordUpdate(id int, currentPassword, newPassword string) 
 		return err
 	}
 
-	stmt = "UPDATE users SET hashed_password = ? WHERE id = ?"
+	stmt = "UPDATE users SET hashed_password = $1 WHERE id = $2"
 
 	_, err = m.DB.Exec(stmt, string(newHashedPassword), id)
+	return err
+}
+
+func (m *UserModel) LanguageUpdate(userId int, languageId int) error {
+
+	query := "UPDATE users SET language_id = $1 WHERE id = $2"
+
+	_, err := m.DB.Exec(query, languageId, userId)
 	return err
 }

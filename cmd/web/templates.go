@@ -20,6 +20,7 @@ type templateData struct {
 	User            *models.User
 	Movie           *models.Movie
 	Movies          []*models.Movie
+	Languages       []*models.Language
 }
 
 func humanDate(t time.Time) string {
@@ -46,7 +47,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	// filesystem which match the pattern 'html/pages/*.tmpl'. This essentially
 	// gives us a slice of all the 'page' templates for the application, just
 	// like before.
-	pages, err := fs.Glob(ui.Files, "html/pages/*.tmpl")
+	pages, err := fs.Glob(ui.Files, "html/pages/*.gohtml")
 	if err != nil {
 		return nil, err
 	}

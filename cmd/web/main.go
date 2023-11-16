@@ -40,6 +40,7 @@ type application struct {
 	logger         *jsonlog.Logger
 	phrases        models.PhraseModelInterface
 	movies         models.MovieModelInterface
+	languages      models.LanguageModelInterface
 	users          models.UserModelInterface
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
@@ -111,6 +112,7 @@ func main() {
 		logger:         logger,
 		phrases:        &models.PhraseModel{DB: db},
 		movies:         &models.MovieModel{DB: db},
+		languages:      &models.LanguageModel{DB: db},
 		users:          &models.UserModel{DB: db},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,

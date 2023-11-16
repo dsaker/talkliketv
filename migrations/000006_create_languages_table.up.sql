@@ -4,4 +4,5 @@ CREATE TABLE IF NOT EXISTS languages (
 );
 
 INSERT INTO languages (language) VALUES ('Spanish');
-INSERT INTO languages (language) VALUES ('French')
+INSERT INTO languages (language) VALUES ('French');
+INSERT INTO languages (id, language) VALUES (-1, 'Not a Language');

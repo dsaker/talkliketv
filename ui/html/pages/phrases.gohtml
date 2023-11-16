@@ -34,13 +34,12 @@
                          <button>Accept</button>
                      </form>
                  </td>
-                 <td><button name="rejectButton">Reject</button></td>
+                 <td><button name="rejectButton">Repeat</button></td>
              </tr>
          </table>
     </div>
     <div id="tableButtons" class="tableButtons">
     </div>
-    {{end}}
     {{end}}
     <table>
         <tr>
@@ -48,22 +47,6 @@
         </tr>
     </table>
     <br>
-    {{if .Phrases}}
-     <table>
-        <tr>
-            <th>Phrase</th>
-            <th>Translates</th>
-            <th>ID</th>
-         </tr>
-        {{range .Phrases}}
-        <tr>
-            <!-- Use the new clean URL style-->
-            <td>{{.Phrase}}</td>
-            <td>{{.Translates}}</td>
-            <td>#{{.ID}}</td>
-        </tr>
-        {{end}}
-    </table>
     <script src="/static/js/phrases.js" type="text/javascript"></script>
     {{else}}
         <p>There's nothing to see here... yet!</p>

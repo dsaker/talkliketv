@@ -1,0 +1,2 @@
+ALTER TABLE users
+    ADD COLUMN language_id bigint NOT NULL REFERENCES languages ON DELETE CASCADE DEFAULT -1;

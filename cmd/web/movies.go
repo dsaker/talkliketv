@@ -10,7 +10,15 @@ import (
 
 func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 
-	movies, err := app.movies.All()
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	user, err := app.users.Get(userId)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	movies, err := app.movies.All(user.LanguageId)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -19,7 +27,7 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Movies = movies
 
-	app.render(w, r, http.StatusOK, "movies.tmpl", data)
+	app.render(w, r, http.StatusOK, "movies.gohtml", data)
 }
 
 func (app *application) movieView(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +58,7 @@ func (app *application) movieView(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 
-	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
 	var input struct {
 		MoviesId string `form:"movie_id"`
@@ -67,7 +75,7 @@ func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 		app.badRequestResponse(w, r, err)
 	}
 
-	err = app.movies.ChooseMovie(userID, i)
+	err = app.movies.ChooseMovie(userId, i)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

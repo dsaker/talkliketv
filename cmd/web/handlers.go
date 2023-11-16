@@ -19,12 +19,12 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	//data.Snippets = phrases
 
-	app.render(w, r, http.StatusOK, "home.tmpl", data)
+	app.render(w, r, http.StatusOK, "home.gohtml", data)
 }
 
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-	app.render(w, r, http.StatusOK, "about.tmpl", data)
+	app.render(w, r, http.StatusOK, "about.gohtml", data)
 }
 
 func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
@@ -42,8 +42,18 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.User = user
+	languages, err := app.languages.All()
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFoundResponse(w, r)
+		} else {
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
 
-	app.render(w, r, http.StatusOK, "account.tmpl", data)
+	data.Languages = languages
+	app.render(w, r, http.StatusOK, "account.gohtml", data)
 }
 
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
