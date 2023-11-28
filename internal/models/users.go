@@ -40,7 +40,7 @@ func (m *UserModel) Insert(name, email, password string, language int) error {
 	}
 
 	query := `
-        INSERT INTO users (name, email, hashed_password, movie_id, language_id) 
+        INSERT INTO users (name, email, hashed_password, movie_id, language_id, created) 
         VALUES ($1, $2, $3, -1, $4)`
 
 	args := []interface{}{name, email, hashedPassword, language}
@@ -110,9 +110,9 @@ func (m *UserModel) Exists(id int) (bool, error) {
 func (m *UserModel) Get(id int) (*User, error) {
 	var user User
 
-	stmt := `SELECT id, movie_id, name, email, language_id FROM users WHERE id = $1`
+	stmt := `SELECT id, movie_id, name, email, language_id, created FROM users WHERE id = $1`
 
-	err := m.DB.QueryRow(stmt, id).Scan(&user.ID, &user.MovieId, &user.Name, &user.Email, &user.LanguageId)
+	err := m.DB.QueryRow(stmt, id).Scan(&user.ID, &user.MovieId, &user.Name, &user.Email, &user.LanguageId, &user.Created)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord

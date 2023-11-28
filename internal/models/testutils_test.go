@@ -4,15 +4,13 @@ import (
 	"database/sql"
 	"os"
 	"testing"
+
+	_ "github.com/lib/pq"
 )
 
 func newTestDB(t *testing.T) *sql.DB {
-	// Establish a sql.DB connection pool for our test database. Because our
-	// setup and teardown scripts contains multiple SQL statements, we need
-	// to use the "multiStatements=true" parameter in our DSN. This instructs
-	// our MySQL database driver to support executing multiple SQL statements
-	// in one db.Exec() call.
-	db, err := sql.Open("mysql", "test_web:pass@/test_snippetbox?parseTime=true&multiStatements=true")
+
+	db, err := sql.Open("postgres", "postgres://testdb:pa55word@localhost/testdb?sslmode=disable")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -24,14 +24,6 @@ type PhraseModel struct {
 func (m *PhraseModel) PhraseCorrect(userID int, phraseId int, movieId int) error {
 	args := []interface{}{userID, phraseId, movieId}
 
-	//var exists bool
-	//
-	//query := "SELECT EXISTS(SELECT true FROM users_phrases WHERE user_id = $1 and phrase_id = $2 and movie_id = $3)"
-	//
-	//ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	//defer cancel()
-	//err := m.DB.QueryRowContext(ctx, query, args...).Scan(&exists)
-
 	query := `
 			UPDATE users_phrases 
 			SET correct = correct + 1 
@@ -40,18 +32,6 @@ func (m *PhraseModel) PhraseCorrect(userID int, phraseId int, movieId int) error
 	if err != nil {
 		return err
 	}
-
-	//var query string
-	//if exists {
-	//	query = `
-	//		UPDATE users_phrases
-	//		SET correct = correct + 1
-	//		WHERE user_id = $1 and phrase_id = $2 and movie_id = $3`
-	//} else {
-	//	query = `
-	//	INSERT INTO users_phrases
-	//	VALUES  ($1, $2, $3, 1)`
-	//}
 
 	_, err = m.DB.Exec(query, args...)
 	if err != nil {

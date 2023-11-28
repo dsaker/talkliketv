@@ -16,6 +16,35 @@ type userSignupForm struct {
 	validator.Validator `form:"-"`
 }
 
+func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
+	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	user, err := app.users.Get(userID)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		} else {
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	data := app.newTemplateData(r)
+	data.User = user
+	languages, err := app.languages.All()
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFoundResponse(w, r)
+		} else {
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	data.Languages = languages
+	app.render(w, r, http.StatusOK, "account.gohtml", data)
+}
+
 // Update the handler so it displays the signup page.
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
@@ -57,6 +86,10 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	languageId, err := app.languages.GetId(form.Language)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
 	err = app.users.Insert(form.Name, form.Email, form.Password, languageId)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
@@ -64,12 +97,12 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 
 			data := app.newTemplateData(r)
 			data.Form = form
-			languages, err := app.languages.All()
-			if err != nil {
-				if errors.Is(err, models.ErrNoRecord) {
+			languages, err2 := app.languages.All()
+			if err2 != nil {
+				if errors.Is(err2, models.ErrNoRecord) {
 					app.notFoundResponse(w, r)
 				} else {
-					app.serverErrorResponse(w, r, err)
+					app.serverErrorResponse(w, r, err2)
 				}
 				return
 			}
