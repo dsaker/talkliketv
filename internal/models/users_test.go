@@ -29,7 +29,7 @@ func TestUserModelExists(t *testing.T) {
 		},
 		{
 			name:   "Non-existent ID",
-			userID: 2,
+			userID: -1,
 			want:   false,
 		},
 	}

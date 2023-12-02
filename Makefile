@@ -26,6 +26,11 @@ run:
 db/psql:
 	psql ${TALKTV_DB_DSN}
 
+## db/testdb: connect to the database using psql
+.PHONY: db/testdb
+db/testdb:
+	psql ${TEST_DB_DSN}
+
 ## db/migrations/new name=$1: create a new database migration
 .PHONY: db/migrations/new
 db/migrations/new:

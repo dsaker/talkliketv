@@ -1,5 +1,6 @@
-DROP TABLE public.users;
-DROP TABLE public.sessions;
-DROP TABLE public.phrases;
-DROP TABLE public.movies;
-DROP TABLE public.languages;
+DROP TABLE users_phrases CASCADE;
+DROP TABLE users CASCADE ;
+DROP TABLE sessions CASCADE ;
+DROP TABLE movies CASCADE ;
+DROP TABLE languages CASCADE ;
+DROP TABLE phrases CASCADE ;

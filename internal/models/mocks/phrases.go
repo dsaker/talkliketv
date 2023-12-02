@@ -6,9 +6,10 @@ import (
 
 var mockPhrase = &models.Phrase{
 	ID:         1,
-	Phrase:     "An old silent pond",
-	Translates: "An old silent pond...",
-	Hint:       "A  o   s      p   ...",
+	MovieId:    1,
+	Phrase:     "You can do it. Keep going. Breathe.",
+	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
+	Hint:       "T  p     . S    , s    , s    . R      .",
 }
 
 type PhraseModel struct{}
@@ -17,19 +18,19 @@ func (m *PhraseModel) Insert(phrase string, translates string, correct int) (int
 	return 2, nil
 }
 
-func (m *PhraseModel) Get(id int) (*models.Phrase, error) {
-	switch id {
-	case 1:
-		return mockPhrase, nil
-	default:
-		return nil, models.ErrNoRecord
-	}
-}
-
 func (m *PhraseModel) NextTen() ([]*models.Phrase, error) {
 	return []*models.Phrase{mockPhrase}, nil
 }
 
 func (m *PhraseModel) PhraseCorrect(id int, id2 int) error {
 	return nil
+}
+
+func (m *PhraseModel) PercentageDone(userId int, movieId int) (float32, error) {
+	switch userId {
+	case 1:
+		return 1.1, nil
+	default:
+		return -1.0, models.ErrNoRecord
+	}
 }

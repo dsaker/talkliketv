@@ -25,7 +25,6 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 		app.sessionManager.Put(r.Context(), "flash", "Please choose a movie")
 		data := app.newTemplateData(r)
 		app.render(w, r, http.StatusOK, "phrases.gohtml", data)
-		//http.Redirect(w, r, "/movies/view", http.StatusSeeOther)
 		return
 	}
 

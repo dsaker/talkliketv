@@ -7,6 +7,7 @@ import (
 type PhraseModelInterface interface {
 	NextTen(id int, id2 int) ([]*Phrase, error)
 	PhraseCorrect(id int, id2 int, id3 int) error
+	PercentageDone(id int, id2 int) (float32, error)
 }
 
 type Phrase struct {
@@ -14,7 +15,7 @@ type Phrase struct {
 	Phrase     string
 	Translates string
 	Hint       string
-	MovieId    string
+	MovieId    int
 }
 
 type PhraseModel struct {
@@ -77,4 +78,29 @@ func (m *PhraseModel) NextTen(userId int, movieId int) ([]*Phrase, error) {
 	}
 
 	return phrases, nil
+}
+
+func (m *PhraseModel) PercentageDone(userId int, movieId int) (float32, error) {
+
+	query := `
+			SELECT SUM(correct) 
+			FROM users_phrases
+			WHERE user_id = $1 AND movie_id = $2`
+
+	var sum float32
+	if err := m.DB.QueryRow(query, userId, movieId).Scan(&sum); err != nil {
+		return -1, err
+	}
+
+	query = `
+			SELECT num_subs 
+			FROM movies
+			WHERE id=$1`
+
+	var total float32
+	if err := m.DB.QueryRow(query, movieId).Scan(&total); err != nil {
+		return -1, err
+	}
+
+	return sum / total, nil
 }
