@@ -2,12 +2,13 @@ package models
 
 import (
 	"database/sql"
+	"math"
 )
 
 type PhraseModelInterface interface {
 	NextTen(id int, id2 int) ([]*Phrase, error)
 	PhraseCorrect(id int, id2 int, id3 int) error
-	PercentageDone(id int, id2 int) (float32, error)
+	PercentageDone(id int, id2 int) (float64, error)
 }
 
 type Phrase struct {
@@ -80,14 +81,14 @@ func (m *PhraseModel) NextTen(userId int, movieId int) ([]*Phrase, error) {
 	return phrases, nil
 }
 
-func (m *PhraseModel) PercentageDone(userId int, movieId int) (float32, error) {
+func (m *PhraseModel) PercentageDone(userId int, movieId int) (float64, error) {
 
 	query := `
 			SELECT SUM(correct) 
 			FROM users_phrases
 			WHERE user_id = $1 AND movie_id = $2`
 
-	var sum float32
+	var sum float64
 	if err := m.DB.QueryRow(query, userId, movieId).Scan(&sum); err != nil {
 		return -1, err
 	}
@@ -97,10 +98,12 @@ func (m *PhraseModel) PercentageDone(userId int, movieId int) (float32, error) {
 			FROM movies
 			WHERE id=$1`
 
-	var total float32
+	var total float64
 	if err := m.DB.QueryRow(query, movieId).Scan(&total); err != nil {
 		return -1, err
 	}
-
-	return sum / total, nil
+	//fmt.Println(math.Round(x*100)/100)
+	x := sum / total
+	//return math.Round((sum / total * 100) / 100), nil
+	return math.Ceil(x*100) / 100, nil
 }

@@ -9,9 +9,9 @@ import (
 
 func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 
-	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.users.Get(userID)
+	user, err := app.users.Get(userId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
@@ -28,7 +28,22 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	phrases, err := app.phrases.NextTen(userID, user.MovieId)
+	phrases, err := app.phrases.NextTen(userId, user.MovieId)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFoundResponse(w, r)
+		} else {
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	percentage, err := app.phrases.PercentageDone(userId, user.MovieId)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+	movie, err := app.movies.Get(user.MovieId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFoundResponse(w, r)
@@ -40,12 +55,14 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Phrases = phrases
+	data.Percentage = percentage
+	data.Movie = movie
 
 	app.render(w, r, http.StatusOK, "phrases.gohtml", data)
 }
 
 func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
-	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
 	var input struct {
 		PhraseId string `form:"phrase_id"`
@@ -67,7 +84,7 @@ func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 	}
-	err = app.phrases.PhraseCorrect(userID, p, m)
+	err = app.phrases.PhraseCorrect(userId, p, m)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
