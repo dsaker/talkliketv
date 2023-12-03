@@ -21,6 +21,7 @@ type templateData struct {
 	Movie           *models.Movie
 	Movies          []*models.Movie
 	Languages       []*models.Language
+	Percentage      float64
 }
 
 func humanDate(t time.Time) string {
