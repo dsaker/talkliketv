@@ -1,9 +1,20 @@
 package models
 
 import (
+	"database/sql"
+	"os"
 	"talkliketv.net/internal/assert"
 	"testing"
 )
+
+var testDbInstance *sql.DB
+
+func TestMain(m *testing.M) {
+	testDB := SetupTestDatabase()
+	testDbInstance = testDB.DbInstance
+	defer testDB.TearDown()
+	os.Exit(m.Run())
+}
 
 func TestUserModelExists(t *testing.T) {
 	// Skip the test if the "-short" flag is provided when running the test.
@@ -40,7 +51,7 @@ func TestUserModelExists(t *testing.T) {
 			// our test database. Calling this here -- inside t.Run() -- means
 			// that fresh database tables and data will be set up and torn down
 			// for each subtest.
-			db := newTestDB(t)
+			db := testDbInstance
 
 			// Create a new instance of the UserModel.
 			m := UserModel{db}
