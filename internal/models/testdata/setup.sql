@@ -1,122 +1,74 @@
-CREATE EXTENSION IF NOT EXISTS citext;
 
-CREATE TABLE languages(
-    id bigint NOT NULL,
-    language text NOT NULL
-);
-
-CREATE TABLE movies (
-    id bigint NOT NULL,
-    title text NOT NULL,
-    num_subs integer NOT NULL,
-    language_id bigint DEFAULT 1 NOT NULL
-);
-
-CREATE TABLE phrases (
-    id bigint NOT NULL,
-    movie_id bigint NOT NULL,
-    phrase text NOT NULL,
-    translates text NOT NULL,
-    hint text NOT NULL
-);
-
-CREATE TABLE sessions (
-    token text NOT NULL,
-    data bytea NOT NULL,
-    expiry timestamp with time zone NOT NULL
-);
-
-CREATE TABLE users (
-    id bigint NOT NULL,
-    movie_id bigint NOT NULL,
-    name text NOT NULL,
-    email citext NOT NULL,
-    hashed_password bytea NOT NULL,
-    created timestamp(0) with time zone DEFAULT now() NOT NULL,
-    language_id bigint DEFAULT 1 NOT NULL
-);
-
-CREATE TABLE users_phrases (
-    user_id bigint NOT NULL,
-    phrase_id bigint NOT NULL,
-    movie_id bigint NOT NULL,
-    correct bigint
-);
-
-INSERT INTO languages (id, language) VALUES (1,
-                                             'Spanish'),
-                                         (2,
-                                          'French'),
-                                         (-1,
-                                          'Not a Language');
+-- INSERT INTO languages (id, language) VALUES (1,
+--                                              'Spanish'),
+--                                             (2,
+--                                              'French'),
+--                                             (-1,
+--                                              'Not a Language');
 
 INSERT into movies (id, title, num_subs, language_id) VALUES (1,
                                                               'MissAdrenalineS01E01',
                                                               642,
                                                               1),
-                                                          (16,
-                                                           'TheSimpsonsS32E01',
-                                                           325,
-                                                           2),
-                                                          (25,
-                                                           'MissAdrenalineS01E02',
-                                                           625,
-                                                           1),
-                                                          (-1,
-                                                           'Not a Movie',
-                                                           0,
-                                                           -1);
+                                                             (16,
+                                                              'TheSimpsonsS32E01',
+                                                              325,
+                                                              2),
+                                                             (25,
+                                                              'MissAdrenalineS01E02',
+                                                              625,
+                                                              1);
 
 INSERT INTO phrases (id, movie_id, phrase, translates, hint) VALUES (2,
                                                                      1,
                                                                      'You can do it. Keep going. Breathe.',
                                                                      'Tú puedes. Sigue, sigue, sigue. Respira.',
                                                                      'T  p     . S    , s    , s    . R      .'),
-                                                                 (3,
-                                                                  1,
-                                                                  'Dont close your legs. Dont.',
-                                                                  'No me cierres las piernas. No las cierres.',
-                                                                  'N  m  c       l   p      . N  l   c      .'),
-                                                                 (4,
-                                                                  1,
-                                                                  'Hey, Romina, dont forget you go last here.',
-                                                                  'Ey, Romina, no se le olvide que acá va de última.',
-                                                                  'E , R     , n  s  l  o      q   a   v  d  ú     .'),
-                                                                 (5,
-                                                                  1,
-                                                                  'Oh, you snooze, you lose.',
-                                                                  'Ay, como lo vi tan dormidito.',
-                                                                  'A , c    l  v  t   d        .'),
-                                                                 (6,
-                                                                  1,
-                                                                  'Dont you know female centaurs dont exist?',
-                                                                  '¡Ja! ¿Usted no sabía que las centauros mujeres no existen?',
-                                                                  '¡J ! ¿U     n  s     q   l   c         m       n  e      ?'),
-                                                                 (7,
-                                                                  1,
-                                                                  'Tato, did you know that if theres a male, its because a female gave birth to it?',
-                                                                  'Tato, ¿y sabe que si hay un hombre de cada cosa es porque una hembra lo parió? ¿O no?',
-                                                                  'T   , ¿y s    q   s  h   u  h      d  c    c    e  p      u   h      l  p    ? ¿O n ?'),
-                                                                 (8,
-                                                                  1,
-                                                                  'You know what you need to do to become a centaur?',
-                                                                  '¡Ja! ¿Sabe qué le falta a usted para ser una centauro?',
-                                                                  '¡J ! ¿S    q   l  f     a u     p    s   u   c       ?'),
-                                                                 (9,
-                                                                  1,
-                                                                  'Instead of plodding along, learn to fly.',
-                                                                  'Volar, porque con lo lenta que es…',
-                                                                  'V    , p      c   l  l     q   e …'),
-                                                                 (10,
-                                                                  1,
-                                                                  'Come on, Tato, instead of trying to distract me,',
-                                                                  'Venga, Tato. En vez de tratar de desconcentrarme, concéntrese en lo suyo más bien.',
-                                                                  'V    , T   . E  v   d  t      d  d              , c           e  l  s    m   b   .'),
-                                                                 (11,
-                                                                  1,
-                                                                  'Because my brunette and I are all in!',
-                                                                  '¡Porque mi Morocha y yo vamos con toda!',
-                                                                  '¡P      m  M       y y  v     c   t   !');
+                                                                    (3,
+                                                                     1,
+                                                                     'Dont close your legs. Dont.',
+                                                                     'No me cierres las piernas. No las cierres.',
+                                                                     'N  m  c       l   p      . N  l   c      .'),
+                                                                    (4,
+                                                                     1,
+                                                                     'Hey, Romina, dont forget you go last here.',
+                                                                     'Ey, Romina, no se le olvide que acá va de última.',
+                                                                     'E , R     , n  s  l  o      q   a   v  d  ú     .'),
+                                                                    (5,
+                                                                     1,
+                                                                     'Oh, you snooze, you lose.',
+                                                                     'Ay, como lo vi tan dormidito.',
+                                                                     'A , c    l  v  t   d        .'),
+                                                                    (6,
+                                                                     1,
+                                                                     'Dont you know female centaurs dont exist?',
+                                                                     '¡Ja! ¿Usted no sabía que las centauros mujeres no existen?',
+                                                                     '¡J ! ¿U     n  s     q   l   c         m       n  e      ?'),
+                                                                    (7,
+                                                                     1,
+                                                                     'Tato, did you know that if theres a male, its because a female gave birth to it?',
+                                                                     'Tato, ¿y sabe que si hay un hombre de cada cosa es porque una hembra lo parió? ¿O no?',
+                                                                     'T   , ¿y s    q   s  h   u  h      d  c    c    e  p      u   h      l  p    ? ¿O n ?'),
+                                                                    (8,
+                                                                     1,
+                                                                     'You know what you need to do to become a centaur?',
+                                                                     '¡Ja! ¿Sabe qué le falta a usted para ser una centauro?',
+                                                                     '¡J ! ¿S    q   l  f     a u     p    s   u   c       ?'),
+                                                                    (9,
+                                                                     1,
+                                                                     'Instead of plodding along, learn to fly.',
+                                                                     'Volar, porque con lo lenta que es…',
+                                                                     'V    , p      c   l  l     q   e …'),
+                                                                    (10,
+                                                                     1,
+                                                                     'Come on, Tato, instead of trying to distract me,',
+                                                                     'Venga, Tato. En vez de tratar de desconcentrarme, concéntrese en lo suyo más bien.',
+                                                                     'V    , T   . E  v   d  t      d  d              , c           e  l  s    m   b   .'),
+                                                                    (11,
+                                                                     1,
+                                                                     'Because my brunette and I are all in!',
+                                                                     '¡Porque mi Morocha y yo vamos con toda!',
+                                                                     '¡P      m  M       y y  v     c   t   !');
 
 -- 12	1	Let's see if you can beat this time.	Vamos a ver si supera este tiempo.	V     a v   s  s      e    t     .
 -- 13	1	Let's see if you can stay on your bike.	Pues vamos a ver si no se cae.	P    v     a v   s  n  s  c  .
@@ -315,26 +267,21 @@ INSERT INTO phrases (id, movie_id, phrase, translates, hint) VALUES (2,
 -- --
 --
 INSERT INTO users (id, movie_id, name, email, hashed_password, created, language_id) VALUES (
-                                                                                             2,
-                                                                                             -1, 'user2',
-                                                                                             'user2@email.com',
-                                                                                             '\\x2432612431322445396a71444c59364b5173736e616130536757572f754367383872534367776c314f626b443550365142313958436b476754325836',
-                                                                                             '2023-11-14 08:21:57-08',
-                                                                                             2),
-                                                                                         (1,
-                                                                                          1,
-                                                                                          'user1',
-                                                                                          'user1@email.com',
-                                                                                          '\\x243261243132246d796679615276486e73457138724e647332727a454f59586c464764393755386f486f57336d2e31696b5135326446344e73666d57',
-                                                                                          '2023-11-14 08:13:52-08',
-                                                                                          1);
+                                                                                                2,
+                                                                                                -1, 'user2',
+                                                                                                'user2@email.com',
+                                                                                                '\\x2432612431322445396a71444c59364b5173736e616130536757572f754367383872534367776c314f626b443550365142313958436b476754325836',
+                                                                                                '2023-11-14 08:21:57-08',
+                                                                                                2),
+                                                                                            (1,
+                                                                                             1,
+                                                                                             'user1',
+                                                                                             'user1@email.com',
+                                                                                             '\\x243261243132246d796679615276486e73457138724e647332727a454f59586c464764393755386f486f57336d2e31696b5135326446344e73666d57',
+                                                                                             '2023-11-14 08:13:52-08',
+                                                                                             1);
 
---
---
--- --
--- -- Data for Name: users_phrases; Type: TABLE DATA; Schema: public; Owner: testdb
--- --
---
+
 -- COPY users_phrases (user_id, phrase_id, movie_id, correct) FROM stdin;
 -- 1	2093	25	0
 -- 1	2094	25	0
@@ -366,121 +313,3 @@ INSERT INTO users (id, movie_id, name, email, hashed_password, created, language
 -- 1	2120	25	0
 -- 1	2121	25	0
 -- \.
-
---
--- Name: languages languages_pkey; Type: CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY languages
-    ADD CONSTRAINT languages_pkey PRIMARY KEY (id);
-
-
---
--- Name: movies movies_pkey; Type: CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY movies
-    ADD CONSTRAINT movies_pkey PRIMARY KEY (id);
-
-
---
--- Name: phrases phrases_pkey; Type: CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY phrases
-    ADD CONSTRAINT phrases_pkey PRIMARY KEY (id);
-
---
--- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY sessions
-    ADD CONSTRAINT sessions_pkey PRIMARY KEY (token);
-
---
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_email_key UNIQUE (email);
-
-
---
--- Name: users_phrases users_phrases_pkey; Type: CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY users_phrases
-    ADD CONSTRAINT users_phrases_pkey PRIMARY KEY (user_id, phrase_id, movie_id);
-
-
---
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-
---
--- Name: sessions_expiry_idx; Type: INDEX; Schema: public; Owner: testdb
---
-
-CREATE INDEX sessions_expiry_idx ON sessions USING btree (expiry);
-
-
---
--- Name: movies movies_language_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY movies
-    ADD CONSTRAINT movies_language_id_fkey FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE;
-
-
---
--- Name: phrases phrases_movie_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY phrases
-    ADD CONSTRAINT phrases_movie_id_fkey FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE;
-
-
---
--- Name: users users_language_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_language_id_fkey FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE;
-
-
---
--- Name: users users_movie_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_movie_id_fkey FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE;
-
-
---
--- Name: users_phrases users_phrases_movie_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY users_phrases
-    ADD CONSTRAINT users_phrases_movie_id_fkey FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE;
-
-
---
--- Name: users_phrases users_phrases_phrase_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY users_phrases
-    ADD CONSTRAINT users_phrases_phrase_id_fkey FOREIGN KEY (phrase_id) REFERENCES phrases(id) ON DELETE CASCADE;
-
-
---
--- Name: users_phrases users_phrases_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: testdb
---
-
-ALTER TABLE ONLY users_phrases
-    ADD CONSTRAINT users_phrases_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-
-

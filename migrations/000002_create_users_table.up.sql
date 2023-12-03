@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS citext;
+
 CREATE TABLE users (
    id bigserial PRIMARY KEY,
    movie_id bigint NOT NULL REFERENCES movies ON DELETE CASCADE,
