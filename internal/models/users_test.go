@@ -30,7 +30,7 @@ func TestUserModelExists(t *testing.T) {
 	}{
 		{
 			name:   "Valid ID",
-			userID: 1,
+			userID: 9999,
 			want:   true,
 		},
 		{
