@@ -59,12 +59,8 @@ audit:
 	go vet ./...
 	staticcheck ./...
 	@echo 'Running tests...'
-	go test -race -vet=off ./... -db-dsn=${TALKTV_DB_DSN}
+	go test -race -vet=off ./...
 
-## test: run test with vebal
-.PHONY: test
-test:
-	go test
 # ==================================================================================== #
 # BUILD
 # ==================================================================================== #

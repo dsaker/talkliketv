@@ -1,26 +1,14 @@
 package main
 
 import (
-	"database/sql"
 	"net/http"
 	"net/url"
-	"os"
 	"talkliketv.net/internal/assert"
-	"talkliketv.net/internal/models"
 	"testing"
 )
 
-var testDbInstance *sql.DB
-
-func TestMain(m *testing.M) {
-	testDB := models.SetupTestDatabase()
-	testDbInstance = testDB.DbInstance
-	defer testDB.TearDown()
-	os.Exit(m.Run())
-}
-
 func TestUserSignup(t *testing.T) {
-	app := newTestApplicationDB(t, testDbInstance)
+	app := newTestApplication(t)
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
 
@@ -116,7 +104,7 @@ func TestUserSignup(t *testing.T) {
 		{
 			name:         "Duplicate email",
 			userName:     validName,
-			userEmail:    "user1@email.com",
+			userEmail:    "dupe@example.com",
 			userLanguage: validLanguage,
 			userPassword: validPassword,
 			csrfToken:    validCSRFToken,

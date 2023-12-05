@@ -51,6 +51,9 @@ func SetupTestDatabase() *TestDatabase {
 
 	// migrate db schema
 	err = migrateDb(dbAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	script, err := os.ReadFile(dir + "/testdata/setup.sql")
 	if err != nil {

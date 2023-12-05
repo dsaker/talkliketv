@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
 	"flag"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
@@ -15,7 +14,7 @@ import (
 	"os"
 	"regexp"
 	"talkliketv.net/internal/jsonlog"
-	"talkliketv.net/internal/models"
+	"talkliketv.net/internal/models/mocks"
 	"testing"
 	"time"
 )
@@ -23,6 +22,14 @@ import (
 // Define a custom testServer type which embeds a httptest.Server instance.
 type testServer struct {
 	*httptest.Server
+}
+
+var cfg config
+var debug *bool
+
+func init() {
+	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	debug = flag.Bool("debug", false, "Enable debug mode")
 }
 
 // Create a postForm method for sending POST requests to the test server. The
@@ -46,38 +53,6 @@ func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (i
 	return rs.StatusCode, rs.Header, string(body)
 }
 
-func newTestApplicationDB(t *testing.T, db *sql.DB) *application {
-	// Create an instance of the template cache.
-	templateCache, err := newTemplateCache()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	formDecoder := form.NewDecoder()
-
-	sessionManager := scs.New()
-	sessionManager.Lifetime = 12 * time.Hour
-
-	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
-
-	var cfg config
-
-	debug := flag.Bool("debug", false, "Enable debug mode")
-
-	return &application{
-		config:         cfg,
-		debug:          *debug,
-		logger:         logger,
-		phrases:        &models.PhraseModel{DB: db},
-		movies:         &models.MovieModel{DB: db},
-		languages:      &models.LanguageModel{DB: db},
-		users:          &models.UserModel{DB: db},
-		templateCache:  templateCache,
-		formDecoder:    formDecoder,
-		sessionManager: sessionManager,
-	}
-}
-
 func newTestApplication(t *testing.T) *application {
 	// Create an instance of the template cache.
 	templateCache, err := newTemplateCache()
@@ -85,30 +60,23 @@ func newTestApplication(t *testing.T) *application {
 		t.Fatal(err)
 	}
 
-	// And a form decoder.
 	formDecoder := form.NewDecoder()
 
-	// And a session manager instance. Note that we use the same settings as
-	// production, except that we *don't* set a Store for the session manager.
-	// If no store is set, the SCS package will default to using a transient
-	// in-memory store, which is ideal for testing purposes.
 	sessionManager := scs.New()
 	sessionManager.Lifetime = 12 * time.Hour
-	sessionManager.Cookie.Secure = true
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
-	var cfg config
-
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	flag.Parse()
 
 	return &application{
 		config:         cfg,
+		debug:          *debug,
 		logger:         logger,
-		phrases:        &models.PhraseModel{},
-		movies:         &models.MovieModel{},
-		languages:      &models.LanguageModel{},
-		users:          &models.UserModel{},
+		phrases:        &mocks.PhraseModel{},
+		movies:         &mocks.MovieModel{},
+		languages:      &mocks.LanguageModel{},
+		users:          &mocks.UserModel{},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
