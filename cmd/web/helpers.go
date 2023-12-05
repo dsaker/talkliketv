@@ -45,10 +45,22 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 }
 
 func (app *application) newTemplateData(r *http.Request) *templateData {
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	var email string
+	if userId != 0 {
+		user, _ := app.users.Get(userId)
+		email = user.Email
+	} else {
+		email = ""
+	}
+
+	app.logger.PrintInfo(fmt.Sprintf("email: %s", email), nil)
+
 	return &templateData{
 		CurrentYear:     time.Now().Year(),
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: app.isAuthenticated(r),
+		Email:           email,
 		CSRFToken:       nosurf.Token(r), // Add the CSRF token.
 	}
 }

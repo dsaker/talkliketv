@@ -16,6 +16,7 @@ type templateData struct {
 	Form            any
 	Flash           string
 	IsAuthenticated bool
+	Email           string
 	CSRFToken       string
 	User            *models.User
 	Movie           *models.Movie
