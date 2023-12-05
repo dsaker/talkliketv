@@ -5,16 +5,53 @@ import (
 	"flag"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
+	"html"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"os"
+	"regexp"
 	"talkliketv.net/internal/jsonlog"
-	"talkliketv.net/internal/models"
+	"talkliketv.net/internal/models/mocks"
 	"testing"
 	"time"
 )
+
+// Define a custom testServer type which embeds a httptest.Server instance.
+type testServer struct {
+	*httptest.Server
+}
+
+var cfg config
+var debug *bool
+
+func init() {
+	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	debug = flag.Bool("debug", false, "Enable debug mode")
+}
+
+// Create a postForm method for sending POST requests to the test server. The
+// final parameter to this method is a url.Values object which can contain any
+// form data that you want to send in the request body.
+func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (int, http.Header, string) {
+	rs, err := ts.Client().PostForm(ts.URL+urlPath, form)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Read the response body from the test server.
+	defer rs.Body.Close()
+	body, err := io.ReadAll(rs.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bytes.TrimSpace(body)
+
+	// Return the response status, headers and body.
+	return rs.StatusCode, rs.Header, string(body)
+}
 
 func newTestApplication(t *testing.T) *application {
 	// Create an instance of the template cache.
@@ -23,39 +60,27 @@ func newTestApplication(t *testing.T) *application {
 		t.Fatal(err)
 	}
 
-	// And a form decoder.
 	formDecoder := form.NewDecoder()
 
-	// And a session manager instance. Note that we use the same settings as
-	// production, except that we *don't* set a Store for the session manager.
-	// If no store is set, the SCS package will default to using a transient
-	// in-memory store, which is ideal for testing purposes.
 	sessionManager := scs.New()
 	sessionManager.Lifetime = 12 * time.Hour
-	sessionManager.Cookie.Secure = true
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
-	var cfg config
-
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	flag.Parse()
 
 	return &application{
 		config:         cfg,
+		debug:          *debug,
 		logger:         logger,
-		phrases:        &models.PhraseModel{},
-		movies:         &models.MovieModel{},
-		languages:      &models.LanguageModel{},
-		users:          &models.UserModel{},
+		phrases:        &mocks.PhraseModel{},
+		movies:         &mocks.MovieModel{},
+		languages:      &mocks.LanguageModel{},
+		users:          &mocks.UserModel{},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
 	}
-}
-
-// Define a custom testServer type which embeds a httptest.Server instance.
-type testServer struct {
-	*httptest.Server
 }
 
 func newTestServer(t *testing.T, h http.Handler) *testServer {
@@ -105,18 +130,17 @@ func (ts *testServer) get(t *testing.T, urlPath string) (int, http.Header, strin
 
 // Define a regular expression which captures the CSRF token value from the
 // HTML for our user signup page.
-//var csrfTokenRX = regexp.MustCompile(`<input type='hidden' name='csrf_token' value='(.+)'>`)
+var csrfTokenRX = regexp.MustCompile(`<input type='hidden' name='csrf_token' value='(.+)'>`)
 
-//
-//func extractCSRFToken(t *testing.T, body string) string {
-//	// Use the FindStringSubmatch method to extract the token from the HTML body.
-//	// Note that this returns an array with the entire matched pattern in the
-//	// first position, and the values of any captured data in the subsequent
-//	// positions.
-//	matches := csrfTokenRX.FindStringSubmatch(body)
-//	if len(matches) < 2 {
-//		t.Fatal("no csrf token found in body")
-//	}
-//
-//	return html.UnescapeString(string(matches[1]))
-//}
+func extractCSRFToken(t *testing.T, body string) string {
+	// Use the FindStringSubmatch method to extract the token from the HTML body.
+	// Note that this returns an array with the entire matched pattern in the
+	// first position, and the values of any captured data in the subsequent
+	// positions.
+	matches := csrfTokenRX.FindStringSubmatch(body)
+	if len(matches) < 2 {
+		t.Fatal("no csrf token found in body")
+	}
+
+	return html.UnescapeString(matches[1])
+}

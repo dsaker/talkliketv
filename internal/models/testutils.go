@@ -10,6 +10,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -39,11 +40,22 @@ func SetupTestDatabase() *TestDatabase {
 		log.Fatal("failed to setup test", err)
 	}
 
+	_, path, _, ok := runtime.Caller(0)
+	println("path is : " + path)
+	if !ok {
+		log.Fatal(err)
+	}
+
+	dir, _ := filepath.Split(path)
+	fmt.Println("Dir:", dir)
+
 	// migrate db schema
 	err = migrateDb(dbAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Read the setup SQL script from file and execute the statements.
-	script, err := os.ReadFile("./testdata/setup.sql")
+	script, err := os.ReadFile(dir + "/testdata/setup.sql")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -112,14 +124,6 @@ func createContainer(ctx context.Context) (testcontainers.Container, *sql.DB, st
 }
 
 func migrateDb(dbAddr string) error {
-
-	// get location of test
-	_, path, _, ok := runtime.Caller(0)
-	println("path is : " + path)
-	if !ok {
-		return fmt.Errorf("failed to get path")
-	}
-
 	databaseURL := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", DbUser, DbPass, dbAddr, DbName)
 
 	err := migrateUp("file://../../../migrations", databaseURL)

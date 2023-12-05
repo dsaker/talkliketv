@@ -40,7 +40,7 @@ func (m *UserModel) Insert(name, email, password string, language int) error {
 	}
 
 	query := `
-        INSERT INTO users (name, email, hashed_password, movie_id, language_id, created) 
+        INSERT INTO users (name, email, hashed_password, movie_id, language_id) 
         VALUES ($1, $2, $3, -1, $4)`
 
 	args := []interface{}{name, email, hashedPassword, language}

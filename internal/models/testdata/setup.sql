@@ -267,13 +267,13 @@ INSERT INTO phrases (id, movie_id, phrase, translates, hint) VALUES (2,
 -- --
 --
 INSERT INTO users (id, movie_id, name, email, hashed_password, created, language_id) VALUES (
-                                                                                                2,
+                                                                                                9999,
                                                                                                 -1, 'user2',
                                                                                                 'user2@email.com',
                                                                                                 '\\x2432612431322445396a71444c59364b5173736e616130536757572f754367383872534367776c314f626b443550365142313958436b476754325836',
                                                                                                 '2023-11-14 08:21:57-08',
                                                                                                 2),
-                                                                                            (1,
+                                                                                            (99999,
                                                                                              1,
                                                                                              'user1',
                                                                                              'user1@email.com',

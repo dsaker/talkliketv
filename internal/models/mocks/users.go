@@ -7,7 +7,7 @@ import (
 
 type UserModel struct{}
 
-func (m *UserModel) Insert(name, email, password string) error {
+func (m *UserModel) Insert(name, email, password string, language int) error {
 	switch email {
 	case "dupe@example.com":
 		return models.ErrDuplicateEmail
@@ -51,6 +51,18 @@ func (m *UserModel) Get(id int) (*models.User, error) {
 func (m *UserModel) PasswordUpdate(id int, currentPassword, newPassword string) error {
 	if id == 1 {
 		if currentPassword != "pa$$word" {
+			return models.ErrInvalidCredentials
+		}
+
+		return nil
+	}
+
+	return models.ErrNoRecord
+}
+
+func (m *UserModel) LanguageUpdate(userId int, languageId int) error {
+	if userId == 1 {
+		if languageId != 1 {
 			return models.ErrInvalidCredentials
 		}
 
