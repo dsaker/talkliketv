@@ -3,5 +3,6 @@ CREATE TABLE IF NOT EXISTS phrases (
     movie_id bigint NOT NULL REFERENCES movies ON DELETE CASCADE,
     phrase text NOT NULL,
     translates text NOT NULL,
-    hint text NOT NULL
+    phrase_hint text NOT NULL,
+    translates_hint text NOT NULL
 )

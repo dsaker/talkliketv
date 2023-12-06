@@ -6,5 +6,6 @@ CREATE TABLE users (
    name text NOT NULL,
    email citext unique NOT NULL,
    hashed_password bytea NOT NULL,
+   switch bool NOT NUll DEFAULT FALSE,
    created timestamp(0) with time zone NOT NULL DEFAULT NOW()
 );
