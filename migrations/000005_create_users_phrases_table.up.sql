@@ -3,6 +3,6 @@ CREATE TABLE IF NOT EXISTS users_phrases (
      phrase_id bigint NOT NULL REFERENCES phrases ON DELETE CASCADE,
      movie_id bigint NOT NULL REFERENCES movies ON DELETE CASCADE,
      phrase_correct bigint,
-     switch_correct bigint,
+     flipped_correct bigint,
      PRIMARY KEY (user_id, phrase_id, movie_id)
     );

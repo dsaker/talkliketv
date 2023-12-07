@@ -16,11 +16,12 @@
                 <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                 <button>Logout</button>
             </form>
-            {{if eq .Email "user1@email.com"}}
-                <a href='/user/signup'>Signup</a>
-            {{end}}
+{{/*            {{if eq .Email "user1@email.com"}}*/}}
+{{/*                <a href='/user/signup'>Signup</a>*/}}
+{{/*            {{end}}*/}}
         {{else}}
             <a href='/user/login'>Login</a>
+            <a href='/user/signup'>Signup</a>
         {{end}}
     </div>
 </nav>

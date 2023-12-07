@@ -33,13 +33,14 @@ func (app *application) routes() http.Handler {
 	protected := dynamic.Append(app.requireAuthentication)
 
 	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.userLogoutPost))
-	router.Handler(http.MethodGet, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdate))
-	router.Handler(http.MethodPost, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdatePost))
 	router.Handler(http.MethodGet, "/movies/view", protected.ThenFunc(app.moviesView))
 	router.Handler(http.MethodPost, "/movies/choose", protected.ThenFunc(app.moviesChoose))
 	router.Handler(http.MethodGet, "/phrase/view", protected.ThenFunc(app.phraseView))
 	router.Handler(http.MethodGet, "/account/view", protected.ThenFunc(app.accountView))
 	router.Handler(http.MethodPost, "/phrase/correct", protected.ThenFunc(app.phraseCorrect))
+	router.Handler(http.MethodGet, "/user/language/switch", protected.ThenFunc(app.userLanguageSwitch))
+	router.Handler(http.MethodGet, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdate))
+	router.Handler(http.MethodPost, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdatePost))
 	router.Handler(http.MethodGet, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdate))
 	router.Handler(http.MethodPost, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdatePost))
 

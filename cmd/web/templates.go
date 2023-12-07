@@ -12,7 +12,7 @@ import (
 type templateData struct {
 	CurrentYear     int
 	Phrase          *models.Phrase
-	Phrases         []*models.Phrase
+	Phrases         []*models.FrontendPhrase
 	Form            any
 	Flash           string
 	IsAuthenticated bool
@@ -60,8 +60,8 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		// Create a slice containing the filepath patterns for the templates we
 		// want to parse.
 		patterns := []string{
-			"html/base.tmpl",
-			"html/partials/*.tmpl",
+			"html/base.gohtml",
+			"html/partials/*.gohtml",
 			page,
 		}
 

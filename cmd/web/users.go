@@ -274,9 +274,11 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }
 
-func (app *application) switchUpdatePost(w http.ResponseWriter, r *http.Request) {
+func (app *application) userLanguageSwitch(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	app.users.FlippedUpdate(userId)
 
 	app.sessionManager.Put(r.Context(), "flash", "Your password has been updated!")
 
