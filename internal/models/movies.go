@@ -33,7 +33,7 @@ func (m *MovieModel) ChooseMovie(userId int, movieId int) error {
 		return err
 	}
 
-	query = `select exists(select correct from users_phrases where user_id = $2 and movie_id = $1 limit 1)`
+	query = `select exists(select phrase_correct from users_phrases where user_id = $2 and movie_id = $1)`
 
 	var exists bool
 	err = m.DB.QueryRow(query, args...).Scan(&exists)
@@ -48,7 +48,7 @@ func (m *MovieModel) ChooseMovie(userId int, movieId int) error {
 			return err
 		}
 
-		query = `insert into users_phrases (user_id, phrase_id, movie_id, correct) values ($1, $2, $3, 0)`
+		query = `insert into users_phrases (user_id, phrase_id, movie_id, phrase_correct, flipped_correct) values ($1, $2, $3, 0, 0)`
 		defer rows.Close()
 
 		for rows.Next() {

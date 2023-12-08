@@ -13,6 +13,7 @@ type userSignupForm struct {
 	Email               string `form:"email"`
 	Password            string `form:"password"`
 	Language            string `form:"language"`
+	Switch              bool   `form:"switch"`
 	validator.Validator `form:"-"`
 }
 
@@ -271,4 +272,15 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 	app.sessionManager.Put(r.Context(), "flash", "Your password has been updated!")
 
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
+}
+
+func (app *application) userLanguageSwitch(w http.ResponseWriter, r *http.Request) {
+
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	app.users.FlippedUpdate(userId)
+
+	app.sessionManager.Put(r.Context(), "flash", "Your password has been updated!")
+
+	http.Redirect(w, r, "/phrase/view", http.StatusSeeOther)
 }

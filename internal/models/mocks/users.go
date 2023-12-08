@@ -71,3 +71,7 @@ func (m *UserModel) LanguageUpdate(userId int, languageId int) error {
 
 	return models.ErrNoRecord
 }
+
+func (m *UserModel) FlippedUpdate(userId int) error {
+	return nil
+}

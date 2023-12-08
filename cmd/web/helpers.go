@@ -54,8 +54,6 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 		email = ""
 	}
 
-	app.logger.PrintInfo(fmt.Sprintf("email: %s", email), nil)
-
 	return &templateData{
 		CurrentYear:     time.Now().Year(),
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),

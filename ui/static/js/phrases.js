@@ -54,3 +54,9 @@ function start() {
     document.getElementById("tableButtons").style.display = "block";
     document.getElementById("startButton").style.display = "none";
 }
+
+const form = document.getElementById("switchSliderForm");
+
+document.getElementById("switchSliderForm").addEventListener( "click", function () {
+    form.submit()
+})

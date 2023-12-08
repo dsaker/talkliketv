@@ -28,7 +28,7 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	phrases, err := app.phrases.NextTen(userId, user.MovieId)
+	phrases, err := app.phrases.NextTen(userId, user.MovieId, user.Flipped)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFoundResponse(w, r)
@@ -38,7 +38,7 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	percentage, err := app.phrases.PercentageDone(userId, user.MovieId)
+	percentage, err := app.phrases.PercentageDone(userId, user.MovieId, user.Flipped)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -64,27 +64,33 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
+	user, err := app.users.Get(userId)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	var input struct {
 		PhraseId string `form:"phrase_id"`
 		MovieId  string `form:"movie_id"`
 	}
 
-	err := app.decodePostForm(r, &input)
+	err = app.decodePostForm(r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
-	p, err := strconv.Atoi(input.PhraseId)
+	phraseId, err := strconv.Atoi(input.PhraseId)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 	}
 
-	m, err := strconv.Atoi(input.MovieId)
+	movieId, err := strconv.Atoi(input.MovieId)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 	}
-	err = app.phrases.PhraseCorrect(userId, p, m)
+	err = app.phrases.PhraseCorrect(userId, phraseId, movieId, user.Flipped)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

@@ -15,6 +15,7 @@ type UserModelInterface interface {
 	Get(id int) (*User, error)
 	PasswordUpdate(id int, currentPassword, newPassword string) error
 	LanguageUpdate(userId int, languageId int) error
+	FlippedUpdate(int) error
 }
 
 type User struct {
@@ -23,6 +24,7 @@ type User struct {
 	LanguageId     int
 	Name           string
 	Email          string
+	Flipped        bool
 	HashedPassword []byte
 	Created        time.Time
 }
@@ -110,9 +112,16 @@ func (m *UserModel) Exists(id int) (bool, error) {
 func (m *UserModel) Get(id int) (*User, error) {
 	var user User
 
-	stmt := `SELECT id, movie_id, name, email, language_id, created FROM users WHERE id = $1`
+	stmt := `SELECT id, movie_id, name, email, language_id, created, flipped FROM users WHERE id = $1`
 
-	err := m.DB.QueryRow(stmt, id).Scan(&user.ID, &user.MovieId, &user.Name, &user.Email, &user.LanguageId, &user.Created)
+	err := m.DB.QueryRow(stmt, id).Scan(
+		&user.ID,
+		&user.MovieId,
+		&user.Name,
+		&user.Email,
+		&user.LanguageId,
+		&user.Created,
+		&user.Flipped)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord
@@ -159,5 +168,14 @@ func (m *UserModel) LanguageUpdate(userId int, languageId int) error {
 	query := "UPDATE users SET language_id = $1 WHERE id = $2"
 
 	_, err := m.DB.Exec(query, languageId, userId)
+	return err
+}
+
+func (m *UserModel) FlippedUpdate(id int) error {
+
+	stmt := "UPDATE users SET flipped = NOT flipped WHERE id = $1"
+
+	_, err := m.DB.Exec(stmt, id)
+
 	return err
 }
