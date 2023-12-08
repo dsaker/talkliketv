@@ -38,7 +38,7 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/phrase/view", protected.ThenFunc(app.phraseView))
 	router.Handler(http.MethodGet, "/account/view", protected.ThenFunc(app.accountView))
 	router.Handler(http.MethodPost, "/phrase/correct", protected.ThenFunc(app.phraseCorrect))
-	router.Handler(http.MethodGet, "/user/language/switch", protected.ThenFunc(app.userLanguageSwitch))
+	router.Handler(http.MethodPost, "/user/language/switch", protected.ThenFunc(app.userLanguageSwitch))
 	router.Handler(http.MethodGet, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdate))
 	router.Handler(http.MethodPost, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdatePost))
 	router.Handler(http.MethodGet, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdate))

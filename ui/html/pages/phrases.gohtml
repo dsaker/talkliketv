@@ -48,7 +48,14 @@
     </table>
     <table>
         <tr>
-            <td></td><td>{{.Movie.Title}}</td><td>{{.Percentage}}</td>
+            <td>
+                <form action='/user/language/switch' method='POST' id="switchSliderForm">
+                    <label class="switch" >
+                        <input type="checkbox" name='csrf_token' value='{{.CSRFToken}}' onclick="this.form.submit()">
+                        <span class="slider round"></span>
+                    </label> Switch
+                </form>
+            </td><td>{{.Movie.Title}}</td><td>{{.Percentage}}</td>
         </tr>
     </table>
     <br>
