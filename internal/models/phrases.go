@@ -11,7 +11,7 @@ type PhraseModelInterface interface {
 }
 
 type Phrase struct {
-	Id             int
+	ID             int
 	Phrase         string
 	Translates     string
 	PhraseHint     string
@@ -20,7 +20,7 @@ type Phrase struct {
 }
 
 type FrontendPhrase struct {
-	Id         int
+	ID         int
 	Phrase     string
 	Translates string
 	Hint       string
@@ -92,13 +92,13 @@ func (m *PhraseModel) NextTen(userId int, movieId int, flipped bool) ([]*Fronten
 		// Create a pointer to a new zeroed Phrase struct.
 		p := &Phrase{}
 
-		err = rows.Scan(&p.Id, &p.Phrase, &p.Translates, &p.PhraseHint, &p.TranslatesHint, &p.MovieId)
+		err = rows.Scan(&p.ID, &p.Phrase, &p.Translates, &p.PhraseHint, &p.TranslatesHint, &p.MovieId)
 		if err != nil {
 			return nil, err
 		}
 
 		fp := &FrontendPhrase{}
-		fp.Id = p.Id
+		fp.ID = p.ID
 		fp.MovieId = p.MovieId
 
 		if flipped {
