@@ -72,15 +72,15 @@ linker_flags = '-s -X main.buildTime=${current_time} -X main.version=${git_descr
 ## build/api: build the cmd/api application
 .PHONY: build/api
 build/api:
-	@echo 'Building cmd/api...'
-	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/api
-	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/api
+	@echo 'Building cmd/web...'
+	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/web
+	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/web
 
 # ==================================================================================== #
 # PRODUCTION
 # ==================================================================================== #
 
-production_host_ip = "128.199.5.76"
+production_host_ip = "164.92.111.120"
 
 ## production/connect: connect to the production server
 .PHONY: production/connect
@@ -101,3 +101,27 @@ production/configure/api.service:
 		sudo mv ~/api.service /etc/systemd/system/ \
 		&& sudo systemctl enable api \
 		&& sudo systemctl restart api \'
+
+## production/deploy/uploadcsv: deploy the scripts to production
+.PHONY: production/uploadcsv
+production/uploadcsv:
+	## rsync -rP --delete ./scripts/uploadcsv.py talkliketv@${production_host_ip}:~/uploadcsv/
+	## rsync -rP --delete ./scripts/csvfile talkliketv@${production_host_ip}:~/uploadcsv
+    scp ./scripts/csvfile/NothingToSeeHereS01E01.csv  talkliketv@${production_host_ip}:~/uploadcsv
+
+
+## production/configure/caddyfile: configure the production Caddyfile
+.PHONY: production/configure/caddyfile
+production/configure/caddyfile:
+	rsync -P ./remote/production/Caddyfile talkliketv@${production_host_ip}:~
+	ssh -t talkliketv@${production_host_ip} '\
+		sudo mv ~/Caddyfile /etc/caddy/ \
+		&& sudo systemctl reload caddy \'
+
+.PHONY: production/redeploy/api
+production/redeploy/api:
+	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/web
+	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/web
+	rsync -rP --delete ./bin/linux_amd64/api ./migrations talkliketv@${production_host_ip}:~
+	ssh -t talkliketv@${production_host_ip} '\
+		sudo systemctl restart api \'

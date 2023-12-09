@@ -38,7 +38,7 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	percentage, err := app.phrases.PercentageDone(userId, user.MovieId, user.Flipped)
+	sum, total, err := app.phrases.PercentageDone(userId, user.MovieId, user.Flipped)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -55,7 +55,8 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Phrases = phrases
-	data.Percentage = percentage
+	data.Sum = sum
+	data.Total = total
 	data.Movie = movie
 
 	app.render(w, r, http.StatusOK, "phrases.gohtml", data)
@@ -90,6 +91,7 @@ func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 	}
+
 	err = app.phrases.PhraseCorrect(userId, phraseId, movieId, user.Flipped)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

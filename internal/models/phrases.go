@@ -2,13 +2,12 @@ package models
 
 import (
 	"database/sql"
-	"math"
 )
 
 type PhraseModelInterface interface {
 	NextTen(int, int, bool) ([]*FrontendPhrase, error)
 	PhraseCorrect(int, int, int, bool) error
-	PercentageDone(int, int, bool) (float64, error)
+	PercentageDone(int, int, bool) (int, int, error)
 }
 
 type Phrase struct {
@@ -32,51 +31,55 @@ type PhraseModel struct {
 	DB *sql.DB
 }
 
-func returnFlipped(flipped bool) string {
-	var correct string
-	if flipped {
-		correct = "flipped_correct"
-	} else {
-		correct = "phrase_correct"
-	}
-	return correct
-}
-
 func (m *PhraseModel) PhraseCorrect(userId int, phraseId int, movieId int, flipped bool) error {
-	correct := returnFlipped(flipped)
 
-	args := []interface{}{userId, phraseId, movieId, correct}
+	args := []interface{}{userId, phraseId, movieId}
 
-	query := `
+	var query string
+	if flipped {
+		query = `
 			UPDATE users_phrases 
-			SET $4 = $4 + 1 
+			SET flipped_correct = flipped_correct + 1 
 			WHERE user_id = $1 and phrase_id = $2 and movie_id = $3`
+	} else {
+		query = `
+			UPDATE users_phrases 
+			SET phrase_correct = phrase_correct + 1 
+			WHERE user_id = $1 and phrase_id = $2 and movie_id = $3`
+	}
+
 	_, err := m.DB.Exec(query, args...)
 	if err != nil {
 		return err
 	}
 
-	_, err = m.DB.Exec(query, args...)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
 func (m *PhraseModel) NextTen(userId int, movieId int, flipped bool) ([]*FrontendPhrase, error) {
 
-	correct := returnFlipped(flipped)
-
-	stmt := `
+	var query string
+	if flipped {
+		query = `
 			SELECT p.id, p.phrase, p.translates, p.phrase_hint, p.translates_hint, p.movie_id
 			FROM phrases p 
 			INNER JOIN users_phrases up 
 			ON p.id = up.phrase_id
 			WHERE up.user_id = $1 and up.movie_id = $2
-			ORDER BY $3, phrase_id 
+			ORDER BY flipped_correct, phrase_id 
 			LIMIT 10`
+	} else {
+		query = `
+			SELECT p.id, p.phrase, p.translates, p.phrase_hint, p.translates_hint, p.movie_id
+			FROM phrases p 
+			INNER JOIN users_phrases up 
+			ON p.id = up.phrase_id
+			WHERE up.user_id = $1 and up.movie_id = $2
+			ORDER BY phrase_correct, phrase_id 
+			LIMIT 10`
+	}
 
-	rows, err := m.DB.Query(stmt, userId, movieId, correct)
+	rows, err := m.DB.Query(query, userId, movieId)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +120,7 @@ func (m *PhraseModel) NextTen(userId int, movieId int, flipped bool) ([]*Fronten
 	return frontendPhrases, nil
 }
 
-func (m *PhraseModel) PercentageDone(userId int, movieId int, flipped bool) (float64, error) {
+func (m *PhraseModel) PercentageDone(userId int, movieId int, flipped bool) (int, int, error) {
 	var query string
 	if flipped {
 		query = `
@@ -131,9 +134,9 @@ func (m *PhraseModel) PercentageDone(userId int, movieId int, flipped bool) (flo
 			WHERE user_id = $1 AND movie_id = $2`
 	}
 
-	var sum float64
+	var sum int
 	if err := m.DB.QueryRow(query, userId, movieId).Scan(&sum); err != nil {
-		return -1, err
+		return -1, -1, err
 	}
 
 	query = `
@@ -141,12 +144,10 @@ func (m *PhraseModel) PercentageDone(userId int, movieId int, flipped bool) (flo
 			FROM movies
 			WHERE id=$1`
 
-	var total float64
+	var total int
 	if err := m.DB.QueryRow(query, movieId).Scan(&total); err != nil {
-		return -1, err
+		return -1, -1, err
 	}
-	//fmt.Println(math.Round(x*100)/100)
-	x := sum / total
-	//return math.Round((sum / total * 100) / 100), nil
-	return math.Ceil(x*100) / 100, nil
+
+	return sum, total, nil
 }

@@ -108,6 +108,6 @@ func (m *PhraseModel) PhraseCorrect(id int, id2 int, id3 int, flipped bool) erro
 	return nil
 }
 
-func (m *PhraseModel) PercentageDone(id int, id2 int, flipped bool) (float64, error) {
-	return 0.01, nil
+func (m *PhraseModel) PercentageDone(id int, id2 int, flipped bool) (int, int, error) {
+	return -1, -1, nil
 }

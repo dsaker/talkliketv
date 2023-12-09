@@ -26,6 +26,7 @@
              <tr>
                  <td><button id="hintButton" name="hintButton">Hint</button></td>
                  <td><button id="showButton" name="showButton">Show</button></td>
+                 <td><button name="rejectButton">Repeat</button></td>
                  <td>
                      <form name='phraseCorrectForm' novalidate>
                          <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
@@ -34,7 +35,6 @@
                          <button>Accept</button>
                      </form>
                  </td>
-                 <td><button name="rejectButton">Repeat</button></td>
              </tr>
          </table>
     </div>
@@ -55,7 +55,7 @@
                         <span class="slider round"></span>
                     </label> Switch
                 </form>
-            </td><td>{{.Movie.Title}}</td><td>{{.Percentage}}</td>
+            </td><td>{{.Movie.Title}}</td><td>{{.Sum}}/{{.Total}}</td>
         </tr>
     </table>
     <br>
