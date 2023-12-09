@@ -34,6 +34,7 @@ func (app *application) routes() http.Handler {
 
 	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.userLogoutPost))
 	router.Handler(http.MethodGet, "/movies/view", protected.ThenFunc(app.moviesView))
+	router.Handler(http.MethodGet, "/movies/mp3/:id", protected.ThenFunc(app.moviesMp3))
 	router.Handler(http.MethodPost, "/movies/choose", protected.ThenFunc(app.moviesChoose))
 	router.Handler(http.MethodGet, "/phrase/view", protected.ThenFunc(app.phraseView))
 	router.Handler(http.MethodGet, "/account/view", protected.ThenFunc(app.accountView))
