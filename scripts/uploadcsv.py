@@ -23,7 +23,8 @@ def makehintstring(solution):
                 hintstring += " "
             else:
                 hintstring += word[i]
-    return hintstring
+        hintstring += " "
+    return hintstring.strip()
 
 
 def upload_file(file, language, title):
