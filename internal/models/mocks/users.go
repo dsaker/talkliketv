@@ -36,10 +36,13 @@ func (m *UserModel) Exists(id int) (bool, error) {
 func (m *UserModel) Get(id int) (*models.User, error) {
 	if id == 1 {
 		u := &models.User{
-			ID:      1,
-			Name:    "Alice",
-			Email:   "alice@example.com",
-			Created: time.Now(),
+			ID:         1,
+			MovieId:    1,
+			LanguageId: 1,
+			Name:       "Alice",
+			Email:      "alice@example.com",
+			Flipped:    false,
+			Created:    time.Now(),
 		}
 
 		return u, nil

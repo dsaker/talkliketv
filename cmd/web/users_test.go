@@ -197,6 +197,86 @@ func TestAccountLanguageUpdatePost(t *testing.T) {
 	}
 }
 
+func TestUserLoginLogoutPost(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	_, _, body := ts.get(t, "/user/login")
+	validCSRFToken := extractCSRFToken(t, body)
+
+	const (
+		validPassword = "pa$$word"
+		validEmail    = "alice@example.com"
+		formTag       = "<form action='/user/login' method='POST' novalidate>"
+	)
+
+	tests := []struct {
+		name         string
+		userEmail    string
+		userPassword string
+		csrfToken    string
+		wantCode     int
+		wantFormTag  string
+	}{
+		{
+			name:         "Invalid CSRF Token",
+			userEmail:    validEmail,
+			userPassword: validPassword,
+			csrfToken:    "wrongToken",
+			wantCode:     http.StatusBadRequest,
+		},
+		{
+			name:         "Empty email",
+			userEmail:    "",
+			userPassword: validPassword,
+			csrfToken:    validCSRFToken,
+			wantCode:     http.StatusUnprocessableEntity,
+			wantFormTag:  formTag,
+		},
+		{
+			name:         "Empty password",
+			userEmail:    validEmail,
+			userPassword: "",
+			csrfToken:    validCSRFToken,
+			wantCode:     http.StatusUnprocessableEntity,
+			wantFormTag:  formTag,
+		},
+		{
+			name:         "Invalid email",
+			userEmail:    "bob@example.",
+			userPassword: validPassword,
+			csrfToken:    validCSRFToken,
+			wantCode:     http.StatusUnprocessableEntity,
+			wantFormTag:  formTag,
+		},
+		{
+			name:         "Valid submission",
+			userEmail:    validEmail,
+			userPassword: validPassword,
+			csrfToken:    validCSRFToken,
+			wantCode:     http.StatusSeeOther,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("email", tt.userEmail)
+			form.Add("password", tt.userPassword)
+			form.Add("csrf_token", tt.csrfToken)
+
+			code, _, body := ts.postForm(t, "/user/login", form)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantFormTag != "" {
+				assert.StringContains(t, body, tt.wantFormTag)
+			}
+		})
+	}
+}
+
 func TestAccountLanguageUpdateView(t *testing.T) {
 
 	app := newTestApplication(t)
@@ -235,4 +315,30 @@ func TestAccountLanguageUpdateView(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUserLogoutPost(t *testing.T) {
+
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	validCSRFToken := login(t, ts)
+
+	t.Run("Get Phrases", func(t *testing.T) {
+		form := url.Values{}
+		form.Add("csrf_token", validCSRFToken)
+		code, _, body := ts.get(t, "/phrase/view")
+
+		assert.Equal(t, code, http.StatusOK)
+		assert.StringContains(t, body, "<td><button id=\"startButton\">Start</button></td>")
+	})
+
+	t.Run("Valid Logout", func(t *testing.T) {
+		form := url.Values{}
+		form.Add("csrf_token", validCSRFToken)
+		code, _, _ := ts.postForm(t, "/user/logout", form)
+
+		assert.Equal(t, code, http.StatusSeeOther)
+	})
 }
