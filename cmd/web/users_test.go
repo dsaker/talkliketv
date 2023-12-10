@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestUserSignup(t *testing.T) {
+func TestUserSignupPost(t *testing.T) {
 	app := newTestApplication(t)
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
@@ -197,7 +197,7 @@ func TestAccountLanguageUpdatePost(t *testing.T) {
 	}
 }
 
-func TestUserLoginLogoutPost(t *testing.T) {
+func TestUserLoginPost(t *testing.T) {
 	app := newTestApplication(t)
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
@@ -277,46 +277,6 @@ func TestUserLoginLogoutPost(t *testing.T) {
 	}
 }
 
-func TestAccountLanguageUpdateView(t *testing.T) {
-
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	_ = login(t, ts)
-
-	tests := []struct {
-		name     string
-		urlPath  string
-		wantCode int
-		wantTag  string
-	}{
-		{
-			name:     "Valid Path",
-			urlPath:  "/account/language/update",
-			wantCode: http.StatusOK,
-			wantTag:  "<form action='/account/language/update' method='POST' novalidate>",
-		},
-		{
-			name:     "Invalid Path",
-			urlPath:  "/account/language/update/1",
-			wantCode: http.StatusNotFound,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			code, _, body := ts.get(t, tt.urlPath)
-
-			assert.Equal(t, code, tt.wantCode)
-
-			if tt.wantTag != "" {
-				assert.StringContains(t, body, tt.wantTag)
-			}
-		})
-	}
-}
-
 func TestUserLogoutPost(t *testing.T) {
 
 	app := newTestApplication(t)
@@ -341,4 +301,109 @@ func TestUserLogoutPost(t *testing.T) {
 
 		assert.Equal(t, code, http.StatusSeeOther)
 	})
+}
+
+func TestAccountPasswordUpdatePost(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	validCSRFToken := login(t, ts)
+
+	const (
+		validCurrentPassword         = "pa$$word"
+		validNewPassword             = "newpa$$word"
+		validNewPasswordConfirmation = "newpa$$word"
+		wantTag                      = "<form action='/account/password/update' method='POST' novalidate>"
+	)
+
+	tests := []struct {
+		name                    string
+		currentPassword         string
+		newPassword             string
+		newPasswordConfirmation string
+		csrfToken               string
+		wantCode                int
+		wantTag                 string
+	}{
+		{
+			name:                    "Valid submission",
+			currentPassword:         validCurrentPassword,
+			newPassword:             validNewPassword,
+			newPasswordConfirmation: validNewPasswordConfirmation,
+			csrfToken:               validCSRFToken,
+			wantCode:                http.StatusSeeOther,
+		},
+		{
+			name:                    "Invalid CSRF Token",
+			currentPassword:         validCurrentPassword,
+			newPassword:             validNewPassword,
+			newPasswordConfirmation: validNewPasswordConfirmation,
+			csrfToken:               "wrongToken",
+			wantCode:                http.StatusBadRequest,
+		},
+		{
+			name:                    "Empty Current Password",
+			currentPassword:         "",
+			newPassword:             validNewPassword,
+			newPasswordConfirmation: validNewPasswordConfirmation,
+			csrfToken:               validCSRFToken,
+			wantCode:                http.StatusUnprocessableEntity,
+			wantTag:                 wantTag,
+		},
+		{
+			name:                    "Empty New Password",
+			currentPassword:         validCurrentPassword,
+			newPassword:             "",
+			newPasswordConfirmation: validNewPasswordConfirmation,
+			csrfToken:               validCSRFToken,
+			wantCode:                http.StatusUnprocessableEntity,
+			wantTag:                 wantTag,
+		},
+		{
+			name:                    "Empty Password Confirmation",
+			currentPassword:         validCurrentPassword,
+			newPassword:             validNewPassword,
+			newPasswordConfirmation: "",
+			csrfToken:               validCSRFToken,
+			wantCode:                http.StatusUnprocessableEntity,
+			wantTag:                 wantTag,
+		},
+		{
+			name:                    "Incorrect Current Password",
+			currentPassword:         "wrong",
+			newPassword:             validNewPassword,
+			newPasswordConfirmation: validNewPasswordConfirmation,
+			csrfToken:               validCSRFToken,
+			wantCode:                http.StatusUnprocessableEntity,
+			wantTag:                 wantTag,
+		},
+		{
+			name:                    "New Password And Confirmation Do Not Match",
+			currentPassword:         validCurrentPassword,
+			newPassword:             "wrong",
+			newPasswordConfirmation: validNewPasswordConfirmation,
+			csrfToken:               validCSRFToken,
+			wantCode:                http.StatusUnprocessableEntity,
+			wantTag:                 wantTag,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("currentPassword", tt.currentPassword)
+			form.Add("newPassword", tt.newPassword)
+			form.Add("newPasswordConfirmation", tt.newPasswordConfirmation)
+			form.Add("csrf_token", tt.csrfToken)
+
+			code, _, body := ts.postForm(t, "/account/password/update", form)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantTag != "" {
+				assert.StringContains(t, body, tt.wantTag)
+			}
+		})
+	}
 }

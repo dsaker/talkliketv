@@ -302,7 +302,7 @@ func (app *application) accountLanguageUpdate(w http.ResponseWriter, r *http.Req
 	}
 
 	data.Languages = languages
-	app.render(w, r, http.StatusOK, "language.gohtml", data)
+	app.render(w, r, http.StatusOK, "languageUpdate.gohtml", data)
 }
 
 func (app *application) accountLanguageUpdatePost(w http.ResponseWriter, r *http.Request) {
@@ -320,7 +320,7 @@ func (app *application) accountLanguageUpdatePost(w http.ResponseWriter, r *http
 	if err != nil {
 		data := app.newTemplateData(r)
 		data.Form = form
-		app.render(w, r, http.StatusUnprocessableEntity, "language.gohtml", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "languageUpdate.gohtml", data)
 		return
 	}
 
