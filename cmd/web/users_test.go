@@ -133,22 +133,12 @@ func TestUserSignup(t *testing.T) {
 	}
 }
 
-func TestAccountLanguageUpdate(t *testing.T) {
+func TestAccountLanguageUpdatePost(t *testing.T) {
 	app := newTestApplication(t)
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
 
-	_, _, body := ts.get(t, "/user/login")
-	validCSRFToken := extractCSRFToken(t, body)
-
-	form := url.Values{}
-	form.Add("email", "alice@example.com")
-	form.Add("password", "pa$$word")
-	form.Add("csrf_token", validCSRFToken)
-
-	code, _, _ := ts.postForm(t, "/user/login", form)
-
-	assert.Equal(t, code, http.StatusSeeOther)
+	validCSRFToken := login(t, ts)
 
 	const (
 		validLanguage = "Spanish"
@@ -207,52 +197,29 @@ func TestAccountLanguageUpdate(t *testing.T) {
 	}
 }
 
-func TestSnippetView(t *testing.T) {
-	// Create a new instance of our application struct which uses the mocked
-	// dependencies.
-	app := newTestApplication(t)
+func TestAccountLanguageUpdateView(t *testing.T) {
 
-	// Establish a new test server for running end-to-end tests.
+	app := newTestApplication(t)
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
 
-	// Set up some table-driven tests to check the responses sent by our
-	// application for different URLs.
+	_ = login(t, ts)
+
 	tests := []struct {
 		name     string
 		urlPath  string
 		wantCode int
-		wantBody string
+		wantTag  string
 	}{
 		{
-			name:     "Valid ID",
-			urlPath:  "/snippet/view/1",
+			name:     "Valid Path",
+			urlPath:  "/account/language/update",
 			wantCode: http.StatusOK,
-			wantBody: "An old silent pond...",
+			wantTag:  "<form action='/account/language/update' method='POST' novalidate>",
 		},
 		{
-			name:     "Non-existent ID",
-			urlPath:  "/snippet/view/2",
-			wantCode: http.StatusNotFound,
-		},
-		{
-			name:     "Negative ID",
-			urlPath:  "/snippet/view/-1",
-			wantCode: http.StatusNotFound,
-		},
-		{
-			name:     "Decimal ID",
-			urlPath:  "/snippet/view/1.23",
-			wantCode: http.StatusNotFound,
-		},
-		{
-			name:     "String ID",
-			urlPath:  "/snippet/view/foo",
-			wantCode: http.StatusNotFound,
-		},
-		{
-			name:     "Empty ID",
-			urlPath:  "/snippet/view/",
+			name:     "Invalid Path",
+			urlPath:  "/account/language/update/1",
 			wantCode: http.StatusNotFound,
 		},
 	}
@@ -263,8 +230,8 @@ func TestSnippetView(t *testing.T) {
 
 			assert.Equal(t, code, tt.wantCode)
 
-			if tt.wantBody != "" {
-				assert.StringContains(t, body, tt.wantBody)
+			if tt.wantTag != "" {
+				assert.StringContains(t, body, tt.wantTag)
 			}
 		})
 	}
