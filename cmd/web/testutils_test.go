@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"talkliketv.net/internal/assert"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models/mocks"
 	"testing"
@@ -32,9 +33,22 @@ func init() {
 	debug = flag.Bool("debug", false, "Enable debug mode")
 }
 
-// Create a postForm method for sending POST requests to the test server. The
-// final parameter to this method is a url.Values object which can contain any
-// form data that you want to send in the request body.
+func login(t *testing.T, ts *testServer) string {
+	_, _, body := ts.get(t, "/user/login")
+	validCSRFToken := extractCSRFToken(t, body)
+
+	form := url.Values{}
+	form.Add("email", "alice@example.com")
+	form.Add("password", "pa$$word")
+	form.Add("csrf_token", validCSRFToken)
+
+	code, _, _ := ts.postForm(t, "/user/login", form)
+
+	assert.Equal(t, code, http.StatusSeeOther)
+
+	return validCSRFToken
+}
+
 func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (int, http.Header, string) {
 	rs, err := ts.Client().PostForm(ts.URL+urlPath, form)
 	if err != nil {

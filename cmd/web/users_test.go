@@ -132,3 +132,107 @@ func TestUserSignup(t *testing.T) {
 		})
 	}
 }
+
+func TestAccountLanguageUpdatePost(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	validCSRFToken := login(t, ts)
+
+	const (
+		validLanguage = "Spanish"
+		formTag       = "<form action='/account/language/update' method='POST' novalidate>"
+	)
+
+	tests := []struct {
+		name         string
+		userLanguage string
+		csrfToken    string
+		wantCode     int
+		wantTag      string
+	}{
+		{
+			name:         "Valid submission",
+			userLanguage: validLanguage,
+			csrfToken:    validCSRFToken,
+			wantCode:     http.StatusSeeOther,
+		},
+		{
+			name:         "Invalid CSRF Token",
+			userLanguage: validLanguage,
+			csrfToken:    "wrongToken",
+			wantCode:     http.StatusBadRequest,
+		},
+		{
+			name:         "Empty language",
+			userLanguage: "",
+			csrfToken:    validCSRFToken,
+			wantCode:     http.StatusUnprocessableEntity,
+			wantTag:      formTag,
+		},
+		{
+			name:         "Wrong language",
+			userLanguage: "Invalid Language",
+			csrfToken:    validCSRFToken,
+			wantCode:     http.StatusUnprocessableEntity,
+			wantTag:      formTag,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("language", tt.userLanguage)
+			form.Add("csrf_token", tt.csrfToken)
+
+			code, _, body := ts.postForm(t, "/account/language/update", form)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantTag != "" {
+				assert.StringContains(t, body, tt.wantTag)
+			}
+		})
+	}
+}
+
+func TestAccountLanguageUpdateView(t *testing.T) {
+
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	_ = login(t, ts)
+
+	tests := []struct {
+		name     string
+		urlPath  string
+		wantCode int
+		wantTag  string
+	}{
+		{
+			name:     "Valid Path",
+			urlPath:  "/account/language/update",
+			wantCode: http.StatusOK,
+			wantTag:  "<form action='/account/language/update' method='POST' novalidate>",
+		},
+		{
+			name:     "Invalid Path",
+			urlPath:  "/account/language/update/1",
+			wantCode: http.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, _, body := ts.get(t, tt.urlPath)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantTag != "" {
+				assert.StringContains(t, body, tt.wantTag)
+			}
+		})
+	}
+}
