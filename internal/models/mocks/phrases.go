@@ -3,7 +3,7 @@ package mocks
 import "talkliketv.net/internal/models"
 
 var mockPhrase1 = &models.FrontendPhrase{
-	Id:         1,
+	ID:         1,
 	Phrase:     "You can do it. Keep going. Breathe.",
 	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
 	Hint:       "T  p     . S    , s    , s    . R      .",
@@ -11,7 +11,7 @@ var mockPhrase1 = &models.FrontendPhrase{
 }
 
 var mockPhrase2 = &models.FrontendPhrase{
-	Id:         2,
+	ID:         2,
 	Phrase:     "You can do it. Keep going. Breathe.",
 	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
 	Hint:       "T  p     . S    , s    , s    . R      .",
@@ -19,7 +19,7 @@ var mockPhrase2 = &models.FrontendPhrase{
 }
 
 var mockPhrase3 = &models.FrontendPhrase{
-	Id:         3,
+	ID:         3,
 	Phrase:     "You can do it. Keep going. Breathe.",
 	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
 	Hint:       "T  p     . S    , s    , s    . R      .",
@@ -27,7 +27,7 @@ var mockPhrase3 = &models.FrontendPhrase{
 }
 
 var mockPhrase4 = &models.FrontendPhrase{
-	Id:         4,
+	ID:         4,
 	Phrase:     "You can do it. Keep going. Breathe.",
 	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
 	Hint:       "T  p     . S    , s    , s    . R      .",
@@ -35,7 +35,7 @@ var mockPhrase4 = &models.FrontendPhrase{
 }
 
 var mockPhrase5 = &models.FrontendPhrase{
-	Id:         5,
+	ID:         5,
 	Phrase:     "You can do it. Keep going. Breathe.",
 	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
 	Hint:       "T  p     . S    , s    , s    . R      .",
@@ -43,7 +43,7 @@ var mockPhrase5 = &models.FrontendPhrase{
 }
 
 var mockPhrase6 = &models.FrontendPhrase{
-	Id:         6,
+	ID:         6,
 	Phrase:     "You can do it. Keep going. Breathe.",
 	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
 	Hint:       "T  p     . S    , s    , s    . R      .",
@@ -51,7 +51,7 @@ var mockPhrase6 = &models.FrontendPhrase{
 }
 
 var mockPhrase7 = &models.FrontendPhrase{
-	Id:         7,
+	ID:         7,
 	Phrase:     "You can do it. Keep going. Breathe.",
 	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
 	Hint:       "T  p     . S    , s    , s    . R      .",
@@ -59,7 +59,7 @@ var mockPhrase7 = &models.FrontendPhrase{
 }
 
 var mockPhrase8 = &models.FrontendPhrase{
-	Id:         8,
+	ID:         8,
 	Phrase:     "You can do it. Keep going. Breathe.",
 	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
 	Hint:       "T  p     . S    , s    , s    . R      .",
@@ -67,7 +67,7 @@ var mockPhrase8 = &models.FrontendPhrase{
 }
 
 var mockPhrase9 = &models.FrontendPhrase{
-	Id:         9,
+	ID:         9,
 	Phrase:     "You can do it. Keep going. Breathe.",
 	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
 	Hint:       "T  p     . S    , s    , s    . R      .",
@@ -75,7 +75,7 @@ var mockPhrase9 = &models.FrontendPhrase{
 }
 
 var mockPhrase10 = &models.FrontendPhrase{
-	Id:         10,
+	ID:         10,
 	Phrase:     "You can do it. Keep going. Breathe.",
 	Translates: "Tú puedes. Sigue, sigue, sigue. Respira.",
 	Hint:       "T  p     . S    , s    , s    . R      .",

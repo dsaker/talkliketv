@@ -13,7 +13,6 @@ type userSignupForm struct {
 	Email               string `form:"email"`
 	Password            string `form:"password"`
 	Language            string `form:"language"`
-	Switch              bool   `form:"switch"`
 	validator.Validator `form:"-"`
 }
 
@@ -69,7 +68,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
@@ -281,4 +280,57 @@ func (app *application) userLanguageSwitch(w http.ResponseWriter, r *http.Reques
 	app.users.FlippedUpdate(userId)
 
 	http.Redirect(w, r, "/phrase/view", http.StatusSeeOther)
+}
+
+type accountLanguageUpdateForm struct {
+	Language            string `form:"language"`
+	validator.Validator `form:"-"`
+}
+
+func (app *application) accountLanguageUpdate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = accountLanguageUpdateForm{}
+
+	languages, err := app.languages.All()
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFoundResponse(w, r)
+		} else {
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	data.Languages = languages
+	app.render(w, r, http.StatusOK, "language.gohtml", data)
+}
+
+func (app *application) accountLanguageUpdatePost(w http.ResponseWriter, r *http.Request) {
+	var form accountLanguageUpdateForm
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	languageId, err := app.languages.GetId(form.Language)
+	if err != nil {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "language.gohtml", data)
+		return
+	}
+
+	err = app.users.LanguageUpdate(userId, languageId)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Your language has been updated!")
+
+	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }
