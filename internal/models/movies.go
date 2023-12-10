@@ -15,6 +15,7 @@ type Movie struct {
 	ID      int
 	Title   string
 	NumSubs string
+	Mp3     bool
 }
 
 type MovieModel struct {
@@ -86,7 +87,7 @@ func (m *MovieModel) Get(id int) (*Movie, error) {
 
 func (m *MovieModel) All(languageId int) ([]*Movie, error) {
 	// Write the SQL statement we want to execute.
-	stmt := `SELECT id, title, num_subs FROM movies where language_id = $1 ORDER BY id DESC LIMIT 10`
+	stmt := `SELECT id, title, num_subs, mp3 FROM movies where language_id = $1 ORDER BY id DESC LIMIT 10`
 
 	rows, err := m.DB.Query(stmt, languageId)
 	if err != nil {
@@ -100,7 +101,7 @@ func (m *MovieModel) All(languageId int) ([]*Movie, error) {
 	for rows.Next() {
 		v := &Movie{}
 
-		err = rows.Scan(&v.ID, &v.Title, &v.NumSubs)
+		err = rows.Scan(&v.ID, &v.Title, &v.NumSubs, &v.Mp3)
 		if err != nil {
 			return nil, err
 		}

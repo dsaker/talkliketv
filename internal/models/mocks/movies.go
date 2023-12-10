@@ -6,12 +6,14 @@ var mockMovie1 = &models.Movie{
 	ID:      1,
 	Title:   "Movie1",
 	NumSubs: "320",
+	Mp3:     true,
 }
 
 var mockMovie2 = &models.Movie{
 	ID:      2,
 	Title:   "Movie2",
 	NumSubs: "320",
+	Mp3:     false,
 }
 
 type MovieModel struct{}

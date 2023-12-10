@@ -118,6 +118,7 @@ production/configure/caddyfile:
 		sudo mv ~/Caddyfile /etc/caddy/ \
 		&& sudo systemctl reload caddy \'
 
+## production/redeploy/api: builds and redeploys api to production
 .PHONY: production/redeploy/api
 production/redeploy/api:
 	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/web

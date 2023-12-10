@@ -123,6 +123,11 @@ func TestViewsNotLoggedIn(t *testing.T) {
 			wantCode: http.StatusOK,
 			wantTag:  "<form action='/user/login' method='POST' novalidate>",
 		},
+		{
+			name:     "Account View ",
+			urlPath:  "/account/view",
+			wantCode: http.StatusSeeOther,
+		},
 	}
 
 	for _, tt := range tests {

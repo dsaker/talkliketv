@@ -24,6 +24,7 @@ type templateData struct {
 	Languages       []*models.Language
 	Sum             int
 	Total           int
+	Mp3             bool
 }
 
 func humanDate(t time.Time) string {

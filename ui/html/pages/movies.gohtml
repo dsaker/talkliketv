@@ -20,9 +20,11 @@
                     <button>Select</button>
                 </form>
             </td>
+            {{if .Mp3}}
             <td>
                 <a href="/movies/mp3/{{.ID}}">mp3 &#x21d3;</a>
             </td>
+            {{ end }}
         </tr>
         {{end}}
     </table>
