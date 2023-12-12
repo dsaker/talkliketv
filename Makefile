@@ -76,6 +76,13 @@ build/api:
 	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/web
 	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/web
 
+## build/web: build the cmd/web application
+.PHONY: build/web
+build/web:
+	@echo 'Building cmd/web...'
+	go build -ldflags=${linker_flags} -o=./bin/web ./cmd/web
+	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/web ./cmd/web
+
 # ==================================================================================== #
 # PRODUCTION
 # ==================================================================================== #
@@ -88,19 +95,19 @@ production/connect:
 	ssh talkliketv@${production_host_ip}
 
 ## production/deploy/api: deploy the api to production
-.PHONY: production/deploy/api
-production/deploy/api:
-	rsync -rP --delete ./bin/linux_amd64/api ./migrations talkliketv@${production_host_ip}:~
+.PHONY: production/deploy/web
+production/deploy/web:
+	rsync -rP --delete ./bin/linux_amd64/web ./migrations talkliketv@${production_host_ip}:~
 	ssh -t talkliketv@${production_host_ip} 'migrate -path ~/migrations -database $$TALKLIKETV_DB_DSN up'
 
-## production/configure/api.service: configure the production systemd api.service file
-.PHONY: production/configure/api.service
-production/configure/api.service:
-	rsync -P ./remote/production/api.service talkliketv@${production_host_ip}:~
+## production/configure/web.service: configure the production systemd web.service file
+.PHONY: production/configure/web.service
+production/configure/web.service:
+	rsync -P ./remote/production/web.service talkliketv@${production_host_ip}:~
 	ssh -t talkliketv@${production_host_ip} '\
-		sudo mv ~/api.service /etc/systemd/system/ \
-		&& sudo systemctl enable api \
-		&& sudo systemctl restart api \'
+		sudo mv ~/web.service /etc/systemd/system/ \
+		&& sudo systemctl enable web \
+		&& sudo systemctl restart web \'
 
 ## production/deploy/uploadcsv: deploy the scripts to production
 .PHONY: production/uploadcsv
@@ -118,11 +125,11 @@ production/configure/caddyfile:
 		sudo mv ~/Caddyfile /etc/caddy/ \
 		&& sudo systemctl reload caddy \'
 
-## production/redeploy/api: builds and redeploys api to production
-.PHONY: production/redeploy/api
-production/redeploy/api:
-	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/web
-	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/web
-	rsync -rP --delete ./bin/linux_amd64/api ./migrations talkliketv@${production_host_ip}:~
+## production/redeploy/web: builds and redeploys api to production
+.PHONY: production/redeploy/web
+production/redeploy/web:
+	go build -ldflags=${linker_flags} -o=./bin/web ./cmd/web
+	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/web ./cmd/web
+	rsync -rP --delete ./bin/linux_amd64/web talkliketv@${production_host_ip}:~
 	ssh -t talkliketv@${production_host_ip} '\
-		sudo systemctl restart api \'
+		sudo systemctl restart web'
