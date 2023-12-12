@@ -100,7 +100,7 @@ func main() {
 	// Setting this means that the cookie will only be sent by a user's web
 	// browser when an HTTPS connection is being used (and won't be sent over an
 	//// unsecure HTTP connection).
-	//sessionManager.Cookie.Secure = true
+	sessionManager.Cookie.Secure = true
 
 	// Initialize a models.UserModel instance and add it to the application
 	// dependencies.

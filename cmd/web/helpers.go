@@ -20,7 +20,7 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	ts, ok := app.templateCache[page]
 	if !ok {
 		err := fmt.Errorf("the template %s does not exist", page)
-		app.serverErrorResponse(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -32,7 +32,7 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	// and then return.
 	err := ts.ExecuteTemplate(buf, "base", data)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -123,10 +123,6 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	w.Write(js)
 
 	return nil
-}
-
-func (app *application) clientError(w http.ResponseWriter, status int) {
-	http.Error(w, http.StatusText(status), status)
 }
 
 func (app *application) readIDParam(r *http.Request) (int, error) {

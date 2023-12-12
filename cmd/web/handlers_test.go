@@ -124,8 +124,13 @@ func TestViewsNotLoggedIn(t *testing.T) {
 			wantTag:  "<form action='/user/login' method='POST' novalidate>",
 		},
 		{
-			name:     "Account View ",
+			name:     "Account View",
 			urlPath:  "/account/view",
+			wantCode: http.StatusSeeOther,
+		},
+		{
+			name:     "Movies Mp3",
+			urlPath:  "/movies/mp3/1",
 			wantCode: http.StatusSeeOther,
 		},
 	}

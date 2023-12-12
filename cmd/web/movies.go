@@ -15,13 +15,13 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 
 	user, err := app.users.Get(userId)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
 	movies, err := app.movies.All(user.LanguageId)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -34,16 +34,16 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
-		app.notFoundResponse(w, r)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	movie, err := app.movies.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFoundResponse(w, r)
+			app.notFound(w, r, err)
 		} else {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
@@ -51,14 +51,16 @@ func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
 	app.logger.PrintInfo("movie.Title = "+movie.Title, nil)
 	mp3, err := fs.ReadFile(ui.Files, "mp3/"+movie.Title+".mp3")
 	if err != nil {
-		app.notFoundResponse(w, r)
+		app.notFound(w, r, err)
+		return
 	}
 
 	w.Header().Set("Content-Disposition", "attachment; filename="+movie.Title+".mp3")
 	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 	_, err = w.Write(mp3)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.serverError(w, r, err)
+		return
 	}
 
 }
@@ -73,18 +75,19 @@ func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 
 	err := app.decodePostForm(r, &input)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	i, err := strconv.Atoi(input.MoviesId)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
+		return
 	}
 
 	err = app.movies.ChooseMovie(userId, i)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.notFound(w, r, err)
 		return
 	}
 

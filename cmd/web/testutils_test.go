@@ -26,11 +26,9 @@ type testServer struct {
 }
 
 var cfg config
-var debug *bool
 
 func init() {
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	debug = flag.Bool("debug", false, "Enable debug mode")
 }
 
 func login(t *testing.T, ts *testServer) string {
@@ -85,7 +83,6 @@ func newTestApplication(t *testing.T) *application {
 
 	return &application{
 		config:         cfg,
-		debug:          *debug,
 		logger:         logger,
 		phrases:        &mocks.PhraseModel{},
 		movies:         &mocks.MovieModel{},

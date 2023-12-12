@@ -4,7 +4,7 @@ import "talkliketv.net/internal/models"
 
 var mockMovie1 = &models.Movie{
 	ID:      1,
-	Title:   "Movie1",
+	Title:   "NothingToSeeHereS01E01",
 	NumSubs: "320",
 	Mp3:     true,
 }
@@ -35,5 +35,10 @@ func (m *MovieModel) All(id int) ([]*models.Movie, error) {
 	}
 }
 func (m *MovieModel) ChooseMovie(id int, i int) error {
-	return nil
+	switch i {
+	case 1:
+		return nil
+	default:
+		return models.ErrNoRecord
+	}
 }
