@@ -41,7 +41,7 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 				w.Header().Set("Connection", "close")
 				// Call the app.serverError helper method to return a 500
 				// Internal Server response.
-				app.serverErrorResponse(w, r, fmt.Errorf("%s", err))
+				app.serverError(w, r, fmt.Errorf("%s", err))
 			}
 		}()
 
@@ -94,6 +94,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		// database.
 		exists, err := app.users.Exists(id)
 		if err != nil {
+			app.sessionManager.Put(r.Context(), "flash", "Invalid Credentials")
 			app.invalidCredentialsResponse(w, r)
 			return
 		}

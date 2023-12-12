@@ -16,7 +16,6 @@ func TestMoviesChoose(t *testing.T) {
 
 	const (
 		validMovieId = "1"
-		validTag     = "<form action=\"/movies/choose\" method=\"POST\">"
 	)
 
 	tests := []struct {
@@ -24,7 +23,6 @@ func TestMoviesChoose(t *testing.T) {
 		movieId   string
 		csrfToken string
 		wantCode  int
-		wantTag   string
 	}{
 		{
 			name:      "Valid submission",
@@ -38,49 +36,18 @@ func TestMoviesChoose(t *testing.T) {
 			csrfToken: "wrongToken",
 			wantCode:  http.StatusBadRequest,
 		},
-		//{
-		//	name:      "Invalid MovieId",
-		//	movieId:   "-1",
-		//	csrfToken: validCSRFToken,
-		//	wantCode:  http.StatusUnprocessableEntity,
-		//	wantTag:   validTag,
-		//},
-		//{
-		//	name:                    "Empty New Password",
-		//	currentPassword:         validCurrentPassword,
-		//	newPassword:             "",
-		//	newPasswordConfirmation: validNewPasswordConfirmation,
-		//	csrfToken:               validCSRFToken,
-		//	wantCode:                http.StatusUnprocessableEntity,
-		//	wantTag:                 wantTag,
-		//},
-		//{
-		//	name:                    "Empty Password Confirmation",
-		//	currentPassword:         validCurrentPassword,
-		//	newPassword:             validNewPassword,
-		//	newPasswordConfirmation: "",
-		//	csrfToken:               validCSRFToken,
-		//	wantCode:                http.StatusUnprocessableEntity,
-		//	wantTag:                 wantTag,
-		//},
-		//{
-		//	name:                    "Incorrect Current Password",
-		//	currentPassword:         "wrong",
-		//	newPassword:             validNewPassword,
-		//	newPasswordConfirmation: validNewPasswordConfirmation,
-		//	csrfToken:               validCSRFToken,
-		//	wantCode:                http.StatusUnprocessableEntity,
-		//	wantTag:                 wantTag,
-		//},
-		//{
-		//	name:                    "New Password And Confirmation Do Not Match",
-		//	currentPassword:         validCurrentPassword,
-		//	newPassword:             "wrong",
-		//	newPasswordConfirmation: validNewPasswordConfirmation,
-		//	csrfToken:               validCSRFToken,
-		//	wantCode:                http.StatusUnprocessableEntity,
-		//	wantTag:                 wantTag,
-		//},
+		{
+			name:      "Invalid MovieId",
+			movieId:   "-2",
+			csrfToken: validCSRFToken,
+			wantCode:  http.StatusNotFound,
+		},
+		{
+			name:      "Invalid MovieId String",
+			movieId:   "A",
+			csrfToken: validCSRFToken,
+			wantCode:  http.StatusBadRequest,
+		},
 	}
 
 	for _, tt := range tests {
@@ -89,13 +56,60 @@ func TestMoviesChoose(t *testing.T) {
 			form.Add("movie_id", tt.movieId)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, body := ts.postForm(t, "/movies/choose", form)
+			code, _, _ := ts.postForm(t, "/movies/choose", form)
 
 			assert.Equal(t, code, tt.wantCode)
 
-			if tt.wantTag != "" {
-				assert.StringContains(t, body, tt.wantTag)
-			}
+		})
+	}
+}
+
+func TestMoviesMp3(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	_ = login(t, ts)
+
+	const (
+		validMovieId = "1"
+	)
+
+	tests := []struct {
+		name      string
+		movieId   string
+		csrfToken string
+		wantCode  int
+	}{
+		{
+			name:     "Valid submission",
+			movieId:  validMovieId,
+			wantCode: http.StatusOK,
+		},
+		{
+			name:     "Invalid MovieId",
+			movieId:  "-2",
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:     "Invalid MovieId String",
+			movieId:  "A",
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:     "Empty Movie String",
+			movieId:  "A",
+			wantCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			code, _, _ := ts.get(t, "/movies/mp3/"+tt.movieId)
+
+			assert.Equal(t, code, tt.wantCode)
+
 		})
 	}
 }

@@ -16,7 +16,7 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 		} else {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
@@ -31,24 +31,25 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 	phrases, err := app.phrases.NextTen(userId, user.MovieId, user.Flipped)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFoundResponse(w, r)
+			app.notFound(w, r, err)
 		} else {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
 
 	sum, total, err := app.phrases.PercentageDone(userId, user.MovieId, user.Flipped)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.serverError(w, r, err)
+		return
 	}
 
 	movie, err := app.movies.Get(user.MovieId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFoundResponse(w, r)
+			app.notFound(w, r, err)
 		} else {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
@@ -67,7 +68,7 @@ func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 
 	user, err := app.users.Get(userId)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -78,23 +79,25 @@ func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 
 	err = app.decodePostForm(r, &input)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	phraseId, err := strconv.Atoi(input.PhraseId)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
+		return
 	}
 
 	movieId, err := strconv.Atoi(input.MovieId)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
+		return
 	}
 
 	err = app.phrases.PhraseCorrect(userId, phraseId, movieId, user.Flipped)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 }

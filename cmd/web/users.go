@@ -24,7 +24,7 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 		} else {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
@@ -34,9 +34,9 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 	languages, err := app.languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFoundResponse(w, r)
+			app.notFound(w, r, err)
 		} else {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
@@ -52,9 +52,9 @@ func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	languages, err := app.languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFoundResponse(w, r)
+			app.notFound(w, r, err)
 		} else {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
@@ -68,7 +68,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
@@ -87,7 +87,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 
 	languageId, err := app.languages.GetId(form.Language)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 	err = app.users.Insert(form.Name, form.Email, form.Password, languageId)
@@ -100,9 +100,9 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 			languages, err2 := app.languages.All()
 			if err2 != nil {
 				if errors.Is(err2, models.ErrNoRecord) {
-					app.notFoundResponse(w, r)
+					app.notFound(w, r, err)
 				} else {
-					app.serverErrorResponse(w, r, err2)
+					app.serverError(w, r, err2)
 				}
 				return
 			}
@@ -110,7 +110,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 			data.Languages = languages
 			app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
 		} else {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 
 		return
@@ -143,7 +143,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
@@ -169,14 +169,14 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 
 			app.render(w, r, http.StatusUnprocessableEntity, "login.gohtml", data)
 		} else {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
 
 	err = app.sessionManager.RenewToken(r.Context())
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -199,7 +199,7 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	// ID again.
 	err := app.sessionManager.RenewToken(r.Context())
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -234,7 +234,7 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
@@ -263,7 +263,7 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 
 			app.render(w, r, http.StatusUnprocessableEntity, "password.gohtml", data)
 		} else if err != nil {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
@@ -294,9 +294,9 @@ func (app *application) accountLanguageUpdate(w http.ResponseWriter, r *http.Req
 	languages, err := app.languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFoundResponse(w, r)
+			app.notFound(w, r, err)
 		} else {
-			app.serverErrorResponse(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
@@ -310,7 +310,7 @@ func (app *application) accountLanguageUpdatePost(w http.ResponseWriter, r *http
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
@@ -326,7 +326,7 @@ func (app *application) accountLanguageUpdatePost(w http.ResponseWriter, r *http
 
 	err = app.users.LanguageUpdate(userId, languageId)
 	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
