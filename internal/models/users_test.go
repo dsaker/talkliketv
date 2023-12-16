@@ -1,22 +1,26 @@
 package models
 
 import (
-	"database/sql"
-	"os"
+	"github.com/stretchr/testify/suite"
 	"talkliketv.net/internal/assert"
 	"testing"
 )
 
-var testDbInstance *sql.DB
-
-func TestMain(m *testing.M) {
-	testDB := SetupTestDatabase()
-	testDbInstance = testDB.DbInstance
-	defer testDB.TearDown()
-	os.Exit(m.Run())
+type UserModelTestSuite struct {
+	suite.Suite
+	testDb *TestDatabase
 }
 
-func TestUserModelExists(t *testing.T) {
+func (suite *UserModelTestSuite) SetupSuite() {
+	suite.testDb = SetupTestDatabase()
+}
+
+func (suite *UserModelTestSuite) TearDownSuite() {
+	defer suite.testDb.TearDown()
+}
+
+func (suite *UserModelTestSuite) TestUserModelExists() {
+	t := suite.T()
 	// Skip the test if the "-short" flag is provided when running the test.
 	if testing.Short() {
 		t.Skip("models: skipping integration test")
@@ -47,14 +51,9 @@ func TestUserModelExists(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Call the newTestDB() helper function to get a connection pool to
-			// our test database. Calling this here -- inside t.Run() -- means
-			// that fresh database tables and data will be set up and torn down
-			// for each subtest.
-			db := testDbInstance
 
 			// Create a new instance of the UserModel.
-			m := UserModel{db}
+			m := UserModel{suite.testDb.DbInstance}
 
 			// Call the UserModel.Exists() method and check that the return
 			// value and error match the expected values for the sub-test.
@@ -64,4 +63,8 @@ func TestUserModelExists(t *testing.T) {
 			assert.NilError(t, err)
 		})
 	}
+}
+
+func TestUserModelTestSuite(t *testing.T) {
+	suite.Run(t, new(UserModelTestSuite))
 }

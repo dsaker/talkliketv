@@ -1,11 +1,4 @@
 
--- INSERT INTO languages (id, language) VALUES (1,
---                                              'Spanish'),
---                                             (2,
---                                              'French'),
---                                             (-1,
---                                              'Not a Language');
-
 INSERT into movies (id, title, num_subs, language_id) VALUES (1,
                                                               'MissAdrenalineS01E01',
                                                               642,
@@ -113,13 +106,25 @@ INSERT INTO phrases (id, movie_id, phrase, translates, phrase_hint, translates_h
 
 INSERT INTO users (id, movie_id, name, email, hashed_password, created, language_id) VALUES (
                                                                                                 9999,
-                                                                                                -1, 'user2',
+                                                                                                1, 'user2',
                                                                                                 'user2@email.com',
                                                                                                 '\\x2432612431322445396a71444c59364b5173736e616130536757572f754367383872534367776c314f626b443550365142313958436b476754325836',
                                                                                                 '2023-11-14 08:21:57-08',
                                                                                                 2);
 
-
+INSERT INTO users_phrases(user_id, phrase_id, movie_id, phrase_correct, flipped_correct) VALUES
+                                                                                             (9999, 2, 1, 0, 0),
+                                                                                             (9999, 3, 1, 0, 0),
+                                                                                             (9999, 4, 1, 0, 0),
+                                                                                             (9999, 5, 1, 0, 0),
+                                                                                             (9999, 6, 1, 0, 0),
+                                                                                             (9999, 7, 1, 0, 0),
+                                                                                             (9999, 8, 1, 0, 0),
+                                                                                             (9999, 9, 1, 0, 0),
+                                                                                             (9999, 10, 1, 0, 0),
+                                                                                             (9999, 11, 1, 0, 0),
+                                                                                             (9999, 12, 1, 0, 0),
+                                                                                             (9999, 13, 1, 0, 0);
 -- COPY users_phrases (user_id, phrase_id, movie_id, correct) FROM stdin;
 -- 1	2093	25	0
 -- 1	2094	25	0
