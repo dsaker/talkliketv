@@ -104,8 +104,12 @@ func (m *PhraseModel) NextTen(id int, id2 int, flipped bool) ([]*models.Frontend
 	}
 }
 
-func (m *PhraseModel) PhraseCorrect(id int, id2 int, id3 int, flipped bool) error {
-	return nil
+func (m *PhraseModel) PhraseCorrect(userId int, phraseId int, movieId int, flipped bool) error {
+	if phraseId == 1 && movieId == 1 {
+		return nil
+	} else {
+		return models.ErrNoRecord
+	}
 }
 
 func (m *PhraseModel) PercentageDone(id int, id2 int, flipped bool) (int, int, error) {
