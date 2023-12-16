@@ -26,6 +26,11 @@ func (suite *PhraseModelTestSuite) TestNextTen() {
 		t.Skip("models: skipping integration test")
 	}
 
+	const (
+		validMovieId = 1
+		validUserId  = 9999
+	)
+
 	// Set up a suite of table-driven tests and expected results.
 	tests := []struct {
 		name       string
@@ -36,14 +41,14 @@ func (suite *PhraseModelTestSuite) TestNextTen() {
 	}{
 		{
 			name:       "Valid ID",
-			movieId:    1,
-			userId:     9999,
+			movieId:    validMovieId,
+			userId:     validUserId,
 			numPhrases: 10,
 			flipped:    false,
 		},
 		{
 			name:       "Invalid userId",
-			movieId:    1,
+			movieId:    validMovieId,
 			userId:     -9999,
 			flipped:    false,
 			numPhrases: 0,
