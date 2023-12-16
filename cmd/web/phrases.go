@@ -97,7 +97,11 @@ func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 
 	err = app.phrases.PhraseCorrect(userId, phraseId, movieId, user.Flipped)
 	if err != nil {
-		app.serverError(w, r, err)
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w, r, err)
+		} else {
+			app.serverError(w, r, err)
+		}
 		return
 	}
 }

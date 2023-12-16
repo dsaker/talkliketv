@@ -98,8 +98,8 @@ func TestMoviesMp3(t *testing.T) {
 		},
 		{
 			name:     "Empty Movie String",
-			movieId:  "A",
-			wantCode: http.StatusBadRequest,
+			movieId:  "",
+			wantCode: http.StatusNotFound,
 		},
 	}
 
