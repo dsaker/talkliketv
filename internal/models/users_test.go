@@ -10,10 +10,12 @@ import (
 type UserModelTestSuite struct {
 	suite.Suite
 	testDb *TestDatabase
+	m      UserModel
 }
 
 func (suite *UserModelTestSuite) SetupSuite() {
 	suite.testDb = SetupTestDatabase()
+	suite.m = UserModel{suite.testDb.DbInstance}
 }
 
 func (suite *UserModelTestSuite) TearDownSuite() {
@@ -33,22 +35,22 @@ func (suite *UserModelTestSuite) TestUserModelExists() {
 	// Set up a suite of table-driven tests and expected results.
 	tests := []struct {
 		name   string
-		userID int
+		userId int
 		want   bool
 	}{
 		{
 			name:   "Valid ID",
-			userID: validUserId,
+			userId: validUserId,
 			want:   true,
 		},
 		{
 			name:   "Zero ID",
-			userID: 0,
+			userId: 0,
 			want:   false,
 		},
 		{
 			name:   "Non-existent ID",
-			userID: -1,
+			userId: -1,
 			want:   false,
 		},
 	}
@@ -56,12 +58,9 @@ func (suite *UserModelTestSuite) TestUserModelExists() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// Create a new instance of the UserModel.
-			m := UserModel{suite.testDb.DbInstance}
-
 			// Call the UserModel.Exists() method and check that the return
 			// value and error match the expected values for the sub-test.
-			exists, err := m.Exists(tt.userID)
+			exists, err := suite.m.Exists(tt.userId)
 
 			assert.Equal(t, exists, tt.want)
 			assert.NilError(t, err)
@@ -111,10 +110,7 @@ func (suite *UserModelTestSuite) TestUserModelInsert() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// Create a new instance of the UserModel.
-			m := UserModel{suite.testDb.DbInstance}
-
-			err := m.Insert(tt.userName, tt.userEmail, tt.userPassword, tt.userLanguage)
+			err := suite.m.Insert(tt.userName, tt.userEmail, tt.userPassword, tt.userLanguage)
 
 			if err != nil {
 				assert.Equal(t, err, tt.wantErr)
@@ -128,20 +124,18 @@ func (suite *UserModelTestSuite) TestUserModelInsert() {
 func (suite *UserModelTestSuite) TestUserModelAuthenticate() {
 	t := suite.T()
 
-	m := UserModel{suite.testDb.DbInstance}
+	if testing.Short() {
+		t.Skip("models: skipping integration test")
+	}
 
 	const (
 		validUserEmail    = "authenticateuser@email.com"
 		validUserPassword = "password"
 	)
 
-	insertErr := m.Insert("newUser", validUserEmail, validUserPassword, 2)
+	insertErr := suite.m.Insert("newUser", validUserEmail, validUserPassword, 2)
 	if insertErr != nil {
 		log.Fatal("failed to setup test", insertErr)
-	}
-	// Skip the test if the "-short" flag is provided when running the test.
-	if testing.Short() {
-		t.Skip("models: skipping integration test")
 	}
 
 	// Set up a suite of table-driven tests and expected results.
@@ -175,15 +169,12 @@ func (suite *UserModelTestSuite) TestUserModelAuthenticate() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// Create a new instance of the UserModel.
-			m := UserModel{suite.testDb.DbInstance}
-
-			userId, err := m.Authenticate(tt.userEmail, tt.userPassword)
+			UserId, err := suite.m.Authenticate(tt.userEmail, tt.userPassword)
 
 			if tt.wantUserId {
-				assert.NotEqual(t, userId, 0)
+				assert.NotEqual(t, UserId, 0)
 			} else {
-				assert.Equal(t, userId, 0)
+				assert.Equal(t, UserId, 0)
 			}
 
 			if err != nil {
@@ -222,10 +213,7 @@ func (suite *UserModelTestSuite) TestUserModelGet() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// Create a new instance of the UserModel.
-			m := UserModel{suite.testDb.DbInstance}
-
-			_, err := m.Get(tt.userId)
+			_, err := suite.m.Get(tt.userId)
 
 			if err != nil {
 				assert.Equal(t, err, tt.wantErr)
@@ -234,6 +222,134 @@ func (suite *UserModelTestSuite) TestUserModelGet() {
 			}
 		})
 	}
+}
+
+func (suite *UserModelTestSuite) TestUserModelPasswordUpdate() {
+	t := suite.T()
+
+	const (
+		validUserEmail    = "passwordupdateuser@email.com"
+		validUserPassword = "password"
+	)
+
+	err := suite.m.Insert("newUser", validUserEmail, validUserPassword, 2)
+	if err != nil {
+		log.Fatal("failed to insert user: TestUserModelPasswordUpdate ", err)
+	}
+
+	validUserId, err := suite.m.Authenticate(validUserEmail, validUserPassword)
+	if err != nil {
+		log.Fatal("failed to authenticate user: TestUserModelPasswordUpdate ", err)
+	}
+
+	tests := []struct {
+		name                string
+		userId              int
+		userCurrentPassword string
+		userNewPassword     string
+		wantErr             error
+	}{
+		{
+			name:                "Valid Authenticate",
+			userId:              validUserId,
+			userNewPassword:     "newPassword",
+			userCurrentPassword: validUserPassword,
+		},
+		{
+			name:                "Valid Authenticate",
+			userId:              validUserId,
+			userNewPassword:     "newPassword",
+			userCurrentPassword: "wrongPassword",
+			wantErr:             ErrInvalidCredentials,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			err := suite.m.PasswordUpdate(tt.userId, tt.userCurrentPassword, tt.userNewPassword)
+
+			if err != nil {
+				assert.Equal(t, err, tt.wantErr)
+			} else {
+				assert.NilError(t, err)
+			}
+		})
+	}
+}
+
+func (suite *UserModelTestSuite) TestUserModelLanguageUpdate() {
+	t := suite.T()
+	// Skip the test if the "-short" flag is provided when running the test.
+	if testing.Short() {
+		t.Skip("models: skipping integration test")
+	}
+
+	const (
+		validUserId     = 9999
+		validLanguageId = 2
+	)
+	// Set up a suite of table-driven tests and expected results.
+	tests := []struct {
+		name       string
+		userId     int
+		languageId int
+	}{
+		{
+			name:       "Valid ID",
+			userId:     validUserId,
+			languageId: validLanguageId,
+		},
+		{
+			name:       "Zero User ID",
+			userId:     0,
+			languageId: validLanguageId,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			err := suite.m.LanguageUpdate(tt.userId, tt.languageId)
+
+			assert.NilError(t, err)
+		})
+	}
+}
+
+func (suite *UserModelTestSuite) TestUserModelFlippedUpdate() {
+	t := suite.T()
+
+	const (
+		validUserEmail    = "flippedupdateuser@email.com"
+		validUserPassword = "password"
+	)
+
+	err := suite.m.Insert("newUser", validUserEmail, validUserPassword, 2)
+	if err != nil {
+		log.Fatal("failed to insert user: TestUserModelFlippedUpdate ", err)
+	}
+
+	validUserId, err := suite.m.Authenticate(validUserEmail, validUserPassword)
+	if err != nil {
+		log.Fatal("failed to authenticate user: TestUserModelFlippedUpdate ", err)
+	}
+
+	user, err := suite.m.Get(validUserId)
+	if err != nil {
+		log.Fatal("failed to get user: TestUserModelFlippedUpdate ", err)
+	}
+
+	flippedBefore := user.Flipped
+
+	t.Run("Flipped After", func(t *testing.T) {
+
+		err = suite.m.FlippedUpdate(validUserId)
+		assert.NilError(t, err)
+
+		user, err = suite.m.Get(validUserId)
+		assert.NotEqual(t, flippedBefore, user.Flipped)
+	})
 }
 
 func TestUserModelTestSuite(t *testing.T) {

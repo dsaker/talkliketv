@@ -9,17 +9,19 @@ import (
 type MovieModelTestSuite struct {
 	suite.Suite
 	testDb *TestDatabase
+	m      MovieModel
 }
 
 func (suite *MovieModelTestSuite) SetupSuite() {
 	suite.testDb = SetupTestDatabase()
+	suite.m = MovieModel{suite.testDb.DbInstance}
 }
 
 func (suite *MovieModelTestSuite) TearDownSuite() {
 	defer suite.testDb.TearDown()
 }
 
-func (suite *MovieModelTestSuite) TestChooseMovie() {
+func (suite *MovieModelTestSuite) TestMovieModelChooseMovie() {
 	t := suite.T()
 	// Skip the test if the "-short" flag is provided when running the test.
 	if testing.Short() {
@@ -52,11 +54,50 @@ func (suite *MovieModelTestSuite) TestChooseMovie() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// Create a new instance of the MovieModel.
-			m := MovieModel{suite.testDb.DbInstance}
-
-			err := m.ChooseMovie(tt.userId, tt.movieId)
+			err := suite.m.ChooseMovie(tt.userId, tt.movieId)
 			assert.NilError(t, err)
+		})
+	}
+}
+
+func (suite *MovieModelTestSuite) TestMovieModelGet() {
+	t := suite.T()
+	// Skip the test if the "-short" flag is provided when running the test.
+	if testing.Short() {
+		t.Skip("models: skipping integration test")
+	}
+
+	const (
+		validMovieId = 1
+	)
+
+	// Set up a suite of table-driven tests and expected results.
+	tests := []struct {
+		name    string
+		userId  int
+		movieId int
+		wantErr error
+	}{
+		{
+			name:    "Valid Id",
+			movieId: validMovieId,
+		},
+		{
+			name:    "Invalid Movie Id",
+			movieId: -99,
+			wantErr: ErrNoRecord,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			_, err := suite.m.Get(tt.movieId)
+			if tt.wantErr != nil {
+				assert.Equal(t, err, tt.wantErr)
+			} else {
+				assert.NilError(t, err)
+			}
 		})
 	}
 }
