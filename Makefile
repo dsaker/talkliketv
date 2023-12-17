@@ -17,28 +17,28 @@ confirm:
 # DEVELOPMENT
 # ==================================================================================== #
 
-## run: run the cmd/api application
+## run: run the cmd/web application
 run:
 	go run ./cmd/web -db-dsn=${TALKTV_DB_DSN}
 
+## run: run the docker container
+run/docker:
+	docker run -d --name talkliketv talkliketv:latest
+
 ## db/psql: connect to the database using psql
-.PHONY: db/psql
 db/psql:
 	psql ${TALKTV_DB_DSN}
 
 ## db/testdb: connect to the database using psql
-.PHONY: db/testdb
 db/testdb:
 	psql ${TEST_DB_DSN}
 
 ## db/migrations/new name=$1: create a new database migration
-.PHONY: db/migrations/new
 db/migrations/new:
 	@echo 'Creating migration files for ${name}...'
 	migrate create -seq -ext=.sql -dir=./migrations ${name}
 
 ## db/migrations/up: apply all up database migrations
-.PHONY: db/migrations/up
 db/migrations/up: confirm
 	@echo 'Running up migrations...'
 	migrate -path ./migrations -database ${TALKTV_DB_DSN} up
@@ -48,7 +48,6 @@ db/migrations/up: confirm
 # ==================================================================================== #
 
 ## audit: tidy dependencies and format, vet and test all code
-.PHONY: audit
 audit:
 	@echo 'Tidying and verifying module dependencies...'
 	go mod tidy
@@ -70,18 +69,21 @@ git_description = $(shell git describe --always --dirty --tags --long)
 linker_flags = '-s -X main.buildTime=${current_time} -X main.version=${git_description}'
 
 ## build/api: build the cmd/api application
-.PHONY: build/api
 build/api:
 	@echo 'Building cmd/web...'
-	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/web
-	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/web
+	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/api
+	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/api
 
 ## build/web: build the cmd/web application
-.PHONY: build/web
 build/web:
 	@echo 'Building cmd/web...'
 	go build -ldflags=${linker_flags} -o=./bin/web ./cmd/web
 	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/web ./cmd/web
+
+## build/docker: build the talkliketv container
+build/docker:
+	@echo 'Building container...'
+	docker build --build-arg LINKER_FLAGS=${linker_flags} --build-arg DB_DSN=${DOCKER_DB_DSN} --tag talkliketv:latest .
 
 # ==================================================================================== #
 # PRODUCTION
@@ -90,18 +92,15 @@ build/web:
 production_host_ip = "164.92.111.120"
 
 ## production/connect: connect to the production server
-.PHONY: production/connect
 production/connect:
 	ssh talkliketv@${production_host_ip}
 
 ## production/deploy/api: deploy the api to production
-.PHONY: production/deploy/web
 production/deploy/web:
 	rsync -rP --delete ./bin/linux_amd64/web ./migrations talkliketv@${production_host_ip}:~
 	ssh -t talkliketv@${production_host_ip} 'migrate -path ~/migrations -database $$TALKLIKETV_DB_DSN up'
 
 ## production/configure/web.service: configure the production systemd web.service file
-.PHONY: production/configure/web.service
 production/configure/web.service:
 	rsync -P ./remote/production/web.service talkliketv@${production_host_ip}:~
 	ssh -t talkliketv@${production_host_ip} '\
@@ -110,7 +109,6 @@ production/configure/web.service:
 		&& sudo systemctl restart web \'
 
 ## production/deploy/uploadcsv: deploy the scripts to production
-.PHONY: production/uploadcsv
 production/uploadcsv:
 	## rsync -rP --delete ./scripts/uploadcsv.py talkliketv@${production_host_ip}:~/uploadcsv/
 	## rsync -rP --delete ./scripts/csvfile talkliketv@${production_host_ip}:~/uploadcsv
@@ -118,7 +116,6 @@ production/uploadcsv:
 
 
 ## production/configure/caddyfile: configure the production Caddyfile
-.PHONY: production/configure/caddyfile
 production/configure/caddyfile:
 	rsync -P ./remote/production/Caddyfile talkliketv@${production_host_ip}:~
 	ssh -t talkliketv@${production_host_ip} '\
@@ -126,7 +123,6 @@ production/configure/caddyfile:
 		&& sudo systemctl reload caddy \'
 
 ## production/redeploy/web: builds and redeploys api to production
-.PHONY: production/redeploy/web
 production/redeploy/web:
 	go build -ldflags=${linker_flags} -o=./bin/web ./cmd/web
 	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/web ./cmd/web
