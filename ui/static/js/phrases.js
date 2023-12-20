@@ -7,7 +7,6 @@ function nextPhrase() {
     document.getElementById("phrase" + count).style.display = "none";
     count ++;
     document.getElementById("phrase" + count).style.display = "block";
-    console.log(count)
 }
 
 document.getElementsByName("rejectButton").forEach(
@@ -20,7 +19,6 @@ document.getElementsByName("hintButton").forEach(
     function (e) {e.addEventListener("click", hint)});
 function hint() {
     let hint = document.getElementById("phraseHint" + count).value;
-    console.log(hint)
     document.getElementById("solution" + count).placeholder = hint;
 }
 

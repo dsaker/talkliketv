@@ -1,20 +1,25 @@
-curl 'http://localhost:4000/user/login' \
--H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7' \
--H 'Accept-Language: en-US,en;q=0.9' \
--H 'Cache-Control: max-age=0' \
--H 'Connection: keep-alive' \
--H 'Content-Type: application/x-www-form-urlencoded' \
--H 'Cookie: Goland-4a8411e8=2f7db337-ae04-4e7a-9818-4f89d326afb5; csrf_token=kLrbC6rxMYWi9s6/Bn8b4xm4C3fOnk+hQMdz1F1pHfY=; session=lr2lN6-6MRCJfGb_CZsTSLATeT5T1U8p2mqwHl-tAUw' \
--H 'Origin: http://localhost:4000' \
--H 'Referer: http://localhost:4000/user/login' \
--H 'Sec-Fetch-Dest: document' \
--H 'Sec-Fetch-Mode: navigate' \
--H 'Sec-Fetch-Site: same-origin' \
--H 'Sec-Fetch-User: ?1' \
--H 'Upgrade-Insecure-Requests: 1' \
--H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36' \
--H 'sec-ch-ua: "Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"' \
--H 'sec-ch-ua-mobile: ?0' \
--H 'sec-ch-ua-platform: "macOS"' \
---data-raw 'csrf_token=kPT9xujXbMOb3j4kjm6Bck4fLh%2Bwa2%2FD4KtYCZF6uogATibNQiZdRjko8JuIEZqRV6claH71IGKgbCvdzBOnfg%3D%3D&email=user1%40email.com&password=password' \
---compressed
+# talkliketv
+
+talkliketv is a simple web application to learn a language by using subtitle from popular tv shows
+
+# Dependencies
+
+- Go version 1.21
+
+# Make
+
+To list available make commands
+
+`make help`
+
+# Build
+
+To run locally
+
+`make run`
+
+# Build
+
+To build the web application
+
+`make build/web`
