@@ -33,7 +33,7 @@ jobs:
   coverage:
     name: Coverage
     needs: 
-      - format-check
+      - audit
       - lint
     runs-on: ubuntu-latest
     steps:
