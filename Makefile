@@ -1,5 +1,7 @@
 # Include variables from the .envrc file
-include .envrc
+ifneq (,$(wildcard ./.envrc))
+    include .envrc
+endif
 
 # ==================================================================================== #
 # HELPERS

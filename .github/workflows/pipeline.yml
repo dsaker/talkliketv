@@ -16,18 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.x 
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
         go-version: ^1.21
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Run Audit
       run: make audit
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Lint
         uses: golangci/golangci-lint-action@v2 
   coverage:
@@ -38,11 +38,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.x 
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
         go-version: ^1.21
     - name: Check out code into the Go module directory 
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Coverage Check
       run: make coverage
     - name: Generate Report
@@ -52,7 +52,7 @@ jobs:
            mkdir  reports
            cp cover.html reports/.
     - name: Archive
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
           name: reports
           path: reports
@@ -63,11 +63,11 @@ jobs:
     needs: audit
     steps:
     - name: Set up Go 1.x
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
         go-version: ^1.21
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Build
       run: make build/web
     - name: Copy Files
@@ -75,7 +75,7 @@ jobs:
            mkdir  artifacts
            cp web artifacts/.
     - name: Archive
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
           name: api
           path: artifacts
