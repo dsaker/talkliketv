@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Lint
-        uses: golangci/golangci-lint-action@v2 
+        uses: golangci/golangci-lint-action@v3
   coverage:
     name: Coverage
     needs: 

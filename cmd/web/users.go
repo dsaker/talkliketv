@@ -277,7 +277,10 @@ func (app *application) userLanguageSwitch(w http.ResponseWriter, r *http.Reques
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	app.users.FlippedUpdate(userId)
+	err := app.users.FlippedUpdate(userId)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
 
 	http.Redirect(w, r, "/phrase/view", http.StatusSeeOther)
 }

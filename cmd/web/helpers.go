@@ -43,7 +43,11 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	// Write the contents of the buffer to the http.ResponseWriter. Note: this
 	// is another time when we pass our http.ResponseWriter to a function that
 	// takes an io.Writer.
-	buf.WriteTo(w)
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 }
 
 func (app *application) newTemplateData(r *http.Request) *templateData {
@@ -120,7 +124,10 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write(js)
+	_, err = w.Write(js)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
