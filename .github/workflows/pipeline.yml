@@ -1,0 +1,81 @@
+name: CI Checks
+
+env:
+  IMAGE_NAME: talkliketv
+  
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+jobs:
+  format-check:
+    name: Audit
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go 1.x 
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.21
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+    - name: Run Audit
+      run: make audit
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint
+        uses: golangci/golangci-lint-action@v2 
+  test:
+    name: Coverage
+    needs: 
+      - format-check
+      - lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go 1.x 
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.21
+    - name: Check out code into the Go module directory 
+      uses: actions/checkout@v2
+    - name: Coverage Check
+      run: make coverage
+    - name: Generate Report
+      run: make report
+    - name: Copy Files 
+      run: |
+           mkdir  reports
+           cp cover.html reports/.
+    - name: Archive
+      uses: actions/upload-artifact@v2
+      with:
+          name: reports
+          path: reports
+
+  build:
+    name: Build App
+    runs-on: ubuntu-latest
+    needs: audit
+    steps:
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.21
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+    - name: Build
+      run: make build/web
+    - name: Copy Files
+      run: |
+           mkdir  artifacts
+           cp web artifacts/.
+    - name: Archive
+      uses: actions/upload-artifact@v2
+      with:
+          name: api
+          path: artifacts
