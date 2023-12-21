@@ -18,7 +18,7 @@ jobs:
     - name: Set up Go 1.x 
       uses: actions/setup-go@v4
       with:
-        go-version: ^1.21
+        go-version: 1.21.0
     - name: Check out code into the Go module directory
       uses: actions/checkout@v4
     - name: Run Audit
@@ -44,7 +44,7 @@ jobs:
     - name: Set up Go 1.x 
       uses: actions/setup-go@v4
       with:
-        go-version: ^1.21
+        go-version: 1.21.0
     - name: Check out code into the Go module directory 
       uses: actions/checkout@v4
     - name: Coverage Check
@@ -69,7 +69,7 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v4
       with:
-        go-version: ^1.21
+        go-version: 1.21.0
     - name: Check out code into the Go module directory
       uses: actions/checkout@v4
     - name: Build
