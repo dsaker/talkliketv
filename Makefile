@@ -69,6 +69,15 @@ staticcheck:
 lint:
 	 golangci-lint run ./...
 
+## coverage
+coverage:
+	go tool cover -func coverage.out \
+	| grep "total:" | awk '{print ((int($$3) > 80) != 1) }'
+
+## coverage report
+report:
+	go tool cover -html=coverage.out -o cover.html
+
 # ==================================================================================== #
 # BUILD
 # ==================================================================================== #
