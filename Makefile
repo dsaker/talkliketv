@@ -59,7 +59,7 @@ audit:
 	@echo 'Vetting code...'
 	go vet ./...
 	@echo 'Running tests...'
-	go test -race -vet=off ./...
+	go test -race -vet=off ./... -coverprofile=coverage.out
 
 ## staticcheck:  detect bugs, suggest code simplifications, and point out dead code
 staticcheck:
