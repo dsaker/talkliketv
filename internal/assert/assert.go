@@ -1,10 +1,13 @@
 package assert
 
 import (
-	"cmp"
 	"strings"
 	"testing"
 )
+
+type LocalOrdered interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr | ~float32 | ~float64 | ~string
+}
 
 func Equal[E comparable](t *testing.T, actual, expected E) {
 	t.Helper()
@@ -14,7 +17,7 @@ func Equal[E comparable](t *testing.T, actual, expected E) {
 	}
 }
 
-func GreaterThan[E cmp.Ordered](t *testing.T, actual, expected E) {
+func GreaterThan[E LocalOrdered](t *testing.T, actual, expected E) {
 	t.Helper()
 
 	if actual <= expected {
