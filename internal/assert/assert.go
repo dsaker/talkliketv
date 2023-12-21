@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Equal[T comparable](t *testing.T, actual, expected T) {
+func Equal[E comparable](t *testing.T, actual, expected E) {
 	t.Helper()
 
 	if actual != expected {
@@ -14,7 +14,7 @@ func Equal[T comparable](t *testing.T, actual, expected T) {
 	}
 }
 
-func GreaterThan[T cmp.Ordered](t *testing.T, actual, expected T) {
+func GreaterThan[E cmp.Ordered](t *testing.T, actual, expected E) {
 	t.Helper()
 
 	if actual <= expected {
