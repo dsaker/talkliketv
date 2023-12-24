@@ -15,6 +15,11 @@ help:
 confirm:
 	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
 
+## copy-hooks: adds script to run before git push
+copy-hooks:
+	chmod +x scripts/hooks/*
+	cp -r scripts/hooks .git/.
+
 # ==================================================================================== #
 # DEVELOPMENT
 # ==================================================================================== #
@@ -102,6 +107,11 @@ build/web:
 build/docker:
 	@echo 'Building container...'
 	docker build --build-arg LINKER_FLAGS=${linker_flags} --build-arg DB_DSN=${DOCKER_DB_DSN} --tag talkliketv:latest .
+
+## build/pack: build the talkliketv container using build pack
+build/pack:
+	@echo 'Building container with buildpack'
+	pack build talkliketv --env "LINKER_FLAGS=${linker_flags}" --env "DB_DSN=${DOCKER_DB_DSN}" --builder paketobuildpacks/builder-jammy-base
 
 # ==================================================================================== #
 # PRODUCTION

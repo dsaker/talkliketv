@@ -14,3 +14,10 @@ ADD . .
 EXPOSE 4000
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$LINKER_FLAGS" -o=./web ./cmd/web
 CMD /talkliketv/web -db-dsn=$DB_DSN
+
+FROM scratch as prod
+
+WORKDIR /
+EXPOSE 4000
+COPY --from=dev /talkliketv/web /
+CMD ["/web"]
