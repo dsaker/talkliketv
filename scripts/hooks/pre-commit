@@ -9,5 +9,5 @@ else
   done
 fi
 
-golang-ci run
-make audit
+golangci-lint run
+make audit/local

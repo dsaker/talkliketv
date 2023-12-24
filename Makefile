@@ -54,8 +54,8 @@ db/migrations/up: confirm
 # QUALITY CONTROL
 # ==================================================================================== #
 
-## audit: tidy dependencies and format, vet and test all code
-audit:
+## audit/pipeline: tidy dependencies and format, vet and test all code (race on)
+audit/pipeline:
 	@echo 'Tidying and verifying module dependencies...'
 	go mod tidy
 	go mod verify
@@ -65,6 +65,18 @@ audit:
 	go vet ./...
 	@echo 'Running tests...'
 	go test -race -vet=off ./... -coverprofile=coverage.out
+
+## audit/local: tidy dependencies and format, vet and test all code (race off)
+audit/local:
+	@echo 'Tidying and verifying module dependencies...'
+	go mod tidy
+	go mod verify
+	@echo 'Formatting code...'
+	go fmt ./...
+	@echo 'Vetting code...'
+	go vet ./...
+	@echo 'Running tests...'
+	go test -vet=off ./... -coverprofile=coverage.out
 
 ## staticcheck:  detect bugs, suggest code simplifications, and point out dead code
 staticcheck:

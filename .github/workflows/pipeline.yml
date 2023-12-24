@@ -22,7 +22,7 @@ jobs:
       with:
         go-version: '1.21.0'
     - name: Run Audit
-      run: make audit
+      run: make audit/pipeline
     - name: Coverage Check
       run: make coverage
     - name: Generate Report
