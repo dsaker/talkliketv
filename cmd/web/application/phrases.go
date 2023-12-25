@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"errors"
@@ -7,11 +7,11 @@ import (
 	"talkliketv.net/internal/models"
 )
 
-func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
+func (app *Application) phraseView(w http.ResponseWriter, r *http.Request) {
 
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.SessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.users.Get(userId)
+	user, err := app.Users.Get(userId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
@@ -22,13 +22,13 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.MovieId == -1 {
-		app.sessionManager.Put(r.Context(), "flash", "Please choose a movie")
+		app.SessionManager.Put(r.Context(), "flash", "Please choose a movie")
 		data := app.newTemplateData(r)
 		app.render(w, r, http.StatusOK, "phrases.gohtml", data)
 		return
 	}
 
-	phrases, err := app.phrases.NextTen(userId, user.MovieId, user.Flipped)
+	phrases, err := app.Phrases.NextTen(userId, user.MovieId, user.Flipped)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -38,13 +38,13 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sum, total, err := app.phrases.PercentageDone(userId, user.MovieId, user.Flipped)
+	sum, total, err := app.Phrases.PercentageDone(userId, user.MovieId, user.Flipped)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	movie, err := app.movies.Get(user.MovieId)
+	movie, err := app.Movies.Get(user.MovieId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -63,10 +63,10 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "phrases.gohtml", data)
 }
 
-func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+func (app *Application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
+	userId := app.SessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.users.Get(userId)
+	user, err := app.Users.Get(userId)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -95,7 +95,7 @@ func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.phrases.PhraseCorrect(userId, phraseId, movieId, user.Flipped)
+	err = app.Phrases.PhraseCorrect(userId, phraseId, movieId, user.Flipped)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)

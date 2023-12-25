@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"errors"
@@ -9,17 +9,17 @@ import (
 	"talkliketv.net/ui"
 )
 
-func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
+func (app *Application) moviesView(w http.ResponseWriter, r *http.Request) {
 
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.SessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.users.Get(userId)
+	user, err := app.Users.Get(userId)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	movies, err := app.movies.All(user.LanguageId)
+	movies, err := app.Movies.All(user.LanguageId)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -31,14 +31,14 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "movies.gohtml", data)
 }
 
-func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
+func (app *Application) moviesMp3(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
 		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	movie, err := app.movies.Get(id)
+	movie, err := app.Movies.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -48,7 +48,7 @@ func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.logger.PrintInfo("movie.Title = "+movie.Title, nil)
+	app.Logger.PrintInfo("movie.Title = "+movie.Title, nil)
 	mp3, err := fs.ReadFile(ui.Files, "mp3/"+movie.Title+".mp3")
 	if err != nil {
 		app.notFound(w, r, err)
@@ -65,9 +65,9 @@ func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
+func (app *Application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.SessionManager.GetInt(r.Context(), "authenticatedUserID")
 
 	var input struct {
 		MoviesId string `form:"movie_id"`
@@ -85,7 +85,7 @@ func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.movies.ChooseMovie(userId, i)
+	err = app.Movies.ChooseMovie(userId, i)
 	if err != nil {
 		app.notFound(w, r, err)
 		return

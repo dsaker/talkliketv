@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"html/template"
@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type templateData struct {
+type TemplateData struct {
 	CurrentYear     int
 	Phrase          *models.Phrase
 	Phrases         []*models.FrontendPhrase
@@ -44,7 +44,7 @@ var functions = template.FuncMap{
 	"humanDate": humanDate,
 }
 
-func newTemplateCache() (map[string]*template.Template, error) {
+func NewTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
 
 	//Use fs.Glob() to get a slice of all filepaths in the ui.Files embedded

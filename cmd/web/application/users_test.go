@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 
 func TestUserSignupPost(t *testing.T) {
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	_, _, body := ts.get(t, "/user/signup")
@@ -135,7 +135,7 @@ func TestUserSignupPost(t *testing.T) {
 
 func TestAccountLanguageUpdatePost(t *testing.T) {
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	validCSRFToken := login(t, ts)
@@ -199,7 +199,7 @@ func TestAccountLanguageUpdatePost(t *testing.T) {
 
 func TestUserLoginPost(t *testing.T) {
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	_, _, body := ts.get(t, "/user/login")
@@ -280,7 +280,7 @@ func TestUserLoginPost(t *testing.T) {
 func TestUserLogoutPost(t *testing.T) {
 
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	validCSRFToken := login(t, ts)
@@ -305,7 +305,7 @@ func TestUserLogoutPost(t *testing.T) {
 
 func TestAccountPasswordUpdatePost(t *testing.T) {
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	validCSRFToken := login(t, ts)

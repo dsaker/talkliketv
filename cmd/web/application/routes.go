@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"github.com/julienschmidt/httprouter"
@@ -7,7 +7,7 @@ import (
 	"talkliketv.net/ui"
 )
 
-func (app *application) routes() http.Handler {
+func (app *Application) Routes() http.Handler {
 	router := httprouter.New()
 
 	router.MethodNotAllowed = http.HandlerFunc(app.notFoundResponse)
@@ -22,7 +22,7 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 
-	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
+	dynamic := alice.New(app.SessionManager.LoadAndSave, noSurf, app.authenticate)
 
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
 	router.Handler(http.MethodGet, "/about", dynamic.ThenFunc(app.about))

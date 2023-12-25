@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 
 func TestMoviesChoose(t *testing.T) {
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	validCSRFToken := login(t, ts)
@@ -66,7 +66,7 @@ func TestMoviesChoose(t *testing.T) {
 
 func TestMoviesMp3(t *testing.T) {
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	_ = login(t, ts)

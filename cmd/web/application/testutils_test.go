@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"bytes"
@@ -25,10 +25,10 @@ type testServer struct {
 	*httptest.Server
 }
 
-var cfg config
+var cfg Config
 
 func init() {
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
 }
 
 func login(t *testing.T, ts *testServer) string {
@@ -65,9 +65,9 @@ func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (i
 	return rs.StatusCode, rs.Header, string(body)
 }
 
-func newTestApplication(t *testing.T) *application {
+func newTestApplication(t *testing.T) *Application {
 	// Create an instance of the template cache.
-	templateCache, err := newTemplateCache()
+	templateCache, err := NewTemplateCache()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,16 +81,16 @@ func newTestApplication(t *testing.T) *application {
 
 	flag.Parse()
 
-	return &application{
-		config:         cfg,
-		logger:         logger,
-		phrases:        &mocks.PhraseModel{},
-		movies:         &mocks.MovieModel{},
-		languages:      &mocks.LanguageModel{},
-		users:          &mocks.UserModel{},
-		templateCache:  templateCache,
-		formDecoder:    formDecoder,
-		sessionManager: sessionManager,
+	return &Application{
+		Config:         cfg,
+		Logger:         logger,
+		Phrases:        &mocks.PhraseModel{},
+		Movies:         &mocks.MovieModel{},
+		Languages:      &mocks.LanguageModel{},
+		Users:          &mocks.UserModel{},
+		TemplateCache:  templateCache,
+		FormDecoder:    formDecoder,
+		SessionManager: sessionManager,
 	}
 }
 

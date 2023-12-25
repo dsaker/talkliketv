@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"errors"
@@ -7,8 +7,8 @@ import (
 	"talkliketv.net/internal/validator"
 )
 
-// Create a new userSignupForm struct.
-type userSignupForm struct {
+// Create a new UsersignupForm struct.
+type UsersignupForm struct {
 	Name                string `form:"name"`
 	Email               string `form:"email"`
 	Password            string `form:"password"`
@@ -16,10 +16,10 @@ type userSignupForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
-	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+func (app *Application) accountView(w http.ResponseWriter, r *http.Request) {
+	userID := app.SessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.users.Get(userID)
+	user, err := app.Users.Get(userID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
@@ -31,7 +31,7 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.User = user
-	languages, err := app.languages.All()
+	Languages, err := app.Languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -41,15 +41,15 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Languages = languages
+	data.Languages = Languages
 	app.render(w, r, http.StatusOK, "account.gohtml", data)
 }
 
 // Update the handler so it displays the signup page.
-func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
+func (app *Application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-	data.Form = userSignupForm{}
-	languages, err := app.languages.All()
+	data.Form = UsersignupForm{}
+	Languages, err := app.Languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -59,12 +59,12 @@ func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Languages = languages
+	data.Languages = Languages
 	app.render(w, r, http.StatusOK, "signup.gohtml", data)
 }
 
-func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-	var form userSignupForm
+func (app *Application) userSignupPost(w http.ResponseWriter, r *http.Request) {
+	var form UsersignupForm
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {
@@ -85,19 +85,19 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	languageId, err := app.languages.GetId(form.Language)
+	languageId, err := app.Languages.GetId(form.Language)
 	if err != nil {
 		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
-	err = app.users.Insert(form.Name, form.Email, form.Password, languageId)
+	err = app.Users.Insert(form.Name, form.Email, form.Password, languageId)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
 
 			data := app.newTemplateData(r)
 			data.Form = form
-			languages, err2 := app.languages.All()
+			Languages, err2 := app.Languages.All()
 			if err2 != nil {
 				if errors.Is(err2, models.ErrNoRecord) {
 					app.notFound(w, r, err)
@@ -107,7 +107,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			data.Languages = languages
+			data.Languages = Languages
 			app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
 		} else {
 			app.serverError(w, r, err)
@@ -118,7 +118,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 
 	// Otherwise add a confirmation flash message to the session confirming that
 	// their signup worked.
-	app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please log in.")
+	app.SessionManager.Put(r.Context(), "flash", "Your signup was successful. Please log in.")
 
 	// And redirect the user to the login page.
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
@@ -132,13 +132,13 @@ type userLoginForm struct {
 }
 
 // Update the handler so it displays the login page.
-func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
+func (app *Application) userLogin(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = userLoginForm{}
 	app.render(w, r, http.StatusOK, "login.gohtml", data)
 }
 
-func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
+func (app *Application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	var form userLoginForm
 
 	err := app.decodePostForm(r, &form)
@@ -159,7 +159,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := app.users.Authenticate(form.Email, form.Password)
+	id, err := app.Users.Authenticate(form.Email, form.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			form.AddNonFieldError("Email or password is incorrect")
@@ -174,18 +174,18 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.sessionManager.RenewToken(r.Context())
+	err = app.SessionManager.RenewToken(r.Context())
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+	app.SessionManager.Put(r.Context(), "authenticatedUserID", id)
 
 	// Use the PopString method to retrieve and remove a value from the session
 	// data in one step. If no matching key exists this will return the empty
 	// string.
-	path := app.sessionManager.PopString(r.Context(), "redirectPathAfterLogin")
+	path := app.SessionManager.PopString(r.Context(), "redirectPathAfterLogin")
 	if path != "" {
 		http.Redirect(w, r, path, http.StatusSeeOther)
 		return
@@ -194,10 +194,10 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/phrase/view", http.StatusSeeOther)
 }
 
-func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+func (app *Application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	// Use the RenewToken() method on the current session to change the session
 	// ID again.
-	err := app.sessionManager.RenewToken(r.Context())
+	err := app.SessionManager.RenewToken(r.Context())
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -205,11 +205,11 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 
 	// Remove the authenticatedUserID from the session data so that the user is
 	// 'logged out'.
-	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+	app.SessionManager.Remove(r.Context(), "authenticatedUserID")
 
 	// Add a flash message to the session to confirm to the user that they've been
 	// logged out.
-	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
+	app.SessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
 
 	// Redirect the user to the application home page.
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -222,14 +222,14 @@ type accountPasswordUpdateForm struct {
 	validator.Validator     `form:"-"`
 }
 
-func (app *application) accountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
+func (app *Application) accountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = accountPasswordUpdateForm{}
 
 	app.render(w, r, http.StatusOK, "password.gohtml", data)
 }
 
-func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
+func (app *Application) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
 	var form accountPasswordUpdateForm
 
 	err := app.decodePostForm(r, &form)
@@ -251,9 +251,9 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 		app.render(w, r, http.StatusUnprocessableEntity, "password.gohtml", data)
 		return
 	}
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.SessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	err = app.users.PasswordUpdate(userId, form.CurrentPassword, form.NewPassword)
+	err = app.Users.PasswordUpdate(userId, form.CurrentPassword, form.NewPassword)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			form.AddFieldError("currentPassword", "Current password is incorrect")
@@ -268,16 +268,16 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "flash", "Your password has been updated!")
+	app.SessionManager.Put(r.Context(), "flash", "Your password has been updated!")
 
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }
 
-func (app *application) userLanguageSwitch(w http.ResponseWriter, r *http.Request) {
+func (app *Application) userLanguageSwitch(w http.ResponseWriter, r *http.Request) {
 
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.SessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	err := app.users.FlippedUpdate(userId)
+	err := app.Users.FlippedUpdate(userId)
 	if err != nil {
 		app.serverError(w, r, err)
 	}
@@ -290,11 +290,11 @@ type accountLanguageUpdateForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (app *application) accountLanguageUpdate(w http.ResponseWriter, r *http.Request) {
+func (app *Application) accountLanguageUpdate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = accountLanguageUpdateForm{}
 
-	languages, err := app.languages.All()
+	Languages, err := app.Languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -304,11 +304,11 @@ func (app *application) accountLanguageUpdate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	data.Languages = languages
+	data.Languages = Languages
 	app.render(w, r, http.StatusOK, "languageUpdate.gohtml", data)
 }
 
-func (app *application) accountLanguageUpdatePost(w http.ResponseWriter, r *http.Request) {
+func (app *Application) accountLanguageUpdatePost(w http.ResponseWriter, r *http.Request) {
 	var form accountLanguageUpdateForm
 
 	err := app.decodePostForm(r, &form)
@@ -317,9 +317,9 @@ func (app *application) accountLanguageUpdatePost(w http.ResponseWriter, r *http
 		return
 	}
 
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.SessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	languageId, err := app.languages.GetId(form.Language)
+	languageId, err := app.Languages.GetId(form.Language)
 	if err != nil {
 		data := app.newTemplateData(r)
 		data.Form = form
@@ -327,13 +327,13 @@ func (app *application) accountLanguageUpdatePost(w http.ResponseWriter, r *http
 		return
 	}
 
-	err = app.users.LanguageUpdate(userId, languageId)
+	err = app.Users.LanguageUpdate(userId, languageId)
 	if err != nil {
 		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "flash", "Your language has been updated!")
+	app.SessionManager.Put(r.Context(), "flash", "Your language has been updated!")
 
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }

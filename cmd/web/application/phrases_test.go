@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 
 func TestPhraseCorrect(t *testing.T) {
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	validCSRFToken := login(t, ts)

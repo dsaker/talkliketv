@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"bytes"
@@ -16,8 +16,8 @@ import (
 // Define an envelope type.
 type envelope map[string]interface{}
 
-func (app *application) render(w http.ResponseWriter, r *http.Request, status int, page string, data *templateData) {
-	ts, ok := app.templateCache[page]
+func (app *Application) render(w http.ResponseWriter, r *http.Request, status int, page string, data *TemplateData) {
+	ts, ok := app.TemplateCache[page]
 	if !ok {
 		err := fmt.Errorf("the template %s does not exist", page)
 		app.serverError(w, r, err)
@@ -50,19 +50,19 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	}
 }
 
-func (app *application) newTemplateData(r *http.Request) *templateData {
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+func (app *Application) newTemplateData(r *http.Request) *TemplateData {
+	userId := app.SessionManager.GetInt(r.Context(), "authenticatedUserID")
 	var email string
 	if userId != 0 {
-		user, _ := app.users.Get(userId)
+		user, _ := app.Users.Get(userId)
 		email = user.Email
 	} else {
 		email = ""
 	}
 
-	return &templateData{
+	return &TemplateData{
 		CurrentYear:     time.Now().Year(),
-		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+		Flash:           app.SessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: app.isAuthenticated(r),
 		Email:           email,
 		CSRFToken:       nosurf.Token(r), // Add the CSRF token.
@@ -71,7 +71,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 
 // Create a new decodePostForm() helper method. The second parameter here, dst,
 // is the target destination that we want to decode the form data into.
-func (app *application) decodePostForm(r *http.Request, dst any) error {
+func (app *Application) decodePostForm(r *http.Request, dst any) error {
 	// Call ParseForm() on the request, in the same way that we did in our
 	// createSnippetPost handler.
 	err := r.ParseForm()
@@ -81,7 +81,7 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 
 	// Call Decode() on our decoder instance, passing the target destination as
 	// the first parameter.
-	err = app.formDecoder.Decode(dst, r.PostForm)
+	err = app.FormDecoder.Decode(dst, r.PostForm)
 	if err != nil {
 		// If we try to use an invalid target destination, the Decode() method
 		// will return an error with the type *form.InvalidDecoderError.We use
@@ -100,7 +100,7 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 	return nil
 }
 
-func (app *application) isAuthenticated(r *http.Request) bool {
+func (app *Application) isAuthenticated(r *http.Request) bool {
 	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
 	if !ok {
 		return false
@@ -110,7 +110,7 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 }
 
 // Change the data parameter to have the type envelope instead of interface{}.
-func (app *application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
+func (app *Application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err
@@ -132,7 +132,7 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	return nil
 }
 
-func (app *application) readIDParam(r *http.Request) (int, error) {
+func (app *Application) readIDParam(r *http.Request) (int, error) {
 	params := httprouter.ParamsFromContext(r.Context())
 
 	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)

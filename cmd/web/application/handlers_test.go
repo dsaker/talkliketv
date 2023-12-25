@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 func TestHealthCheck(t *testing.T) {
 	app := newTestApplication(t)
 
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	code, _, body := ts.get(t, "/v1/healthcheck")
@@ -37,7 +37,7 @@ func TestHealthCheck(t *testing.T) {
 func TestViewsLoggedIn(t *testing.T) {
 
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	_ = login(t, ts)
@@ -90,7 +90,7 @@ func TestViewsLoggedIn(t *testing.T) {
 func TestViewsNotLoggedIn(t *testing.T) {
 
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
+	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
 	tests := []struct {
