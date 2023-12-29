@@ -13,7 +13,7 @@ func TestHealthCheck(t *testing.T) {
 	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
-	code, _, body := ts.get(t, "/v1/healthcheck")
+	code, _, body := ts.Get(t, "/v1/healthcheck")
 
 	assert.Equal(t, code, http.StatusOK)
 
@@ -76,7 +76,7 @@ func TestViewsLoggedIn(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, _, body := ts.get(t, tt.urlPath)
+			code, _, body := ts.Get(t, tt.urlPath)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -118,7 +118,7 @@ func TestViewsNotLoggedIn(t *testing.T) {
 			wantTag:  "<form action='/user/signup' method='POST' novalidate>",
 		},
 		{
-			name:     "User Login View",
+			name:     "User login View",
 			urlPath:  "/user/login",
 			wantCode: http.StatusOK,
 			wantTag:  "<form action='/user/login' method='POST' novalidate>",
@@ -137,7 +137,7 @@ func TestViewsNotLoggedIn(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, _, body := ts.get(t, tt.urlPath)
+			code, _, body := ts.Get(t, tt.urlPath)
 
 			assert.Equal(t, code, tt.wantCode)
 

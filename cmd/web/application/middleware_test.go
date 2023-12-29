@@ -33,7 +33,7 @@ func TestSecureHeaders(t *testing.T) {
 	// execute it.
 	secureHeaders(next).ServeHTTP(rr, r)
 
-	// Call the Result() method on the http.ResponseRecorder to get the results
+	// Call the Result() method on the http.ResponseRecorder to Get the results
 	// of the test.
 	rs := rr.Result()
 

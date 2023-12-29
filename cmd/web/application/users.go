@@ -7,8 +7,8 @@ import (
 	"talkliketv.net/internal/validator"
 )
 
-// Create a new UsersignupForm struct.
-type UsersignupForm struct {
+// Create a new UserSignupForm struct.
+type UserSignupForm struct {
 	Name                string `form:"name"`
 	Email               string `form:"email"`
 	Password            string `form:"password"`
@@ -48,7 +48,7 @@ func (app *Application) accountView(w http.ResponseWriter, r *http.Request) {
 // Update the handler so it displays the signup page.
 func (app *Application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-	data.Form = UsersignupForm{}
+	data.Form = UserSignupForm{}
 	Languages, err := app.Languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
@@ -64,7 +64,7 @@ func (app *Application) userSignup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-	var form UsersignupForm
+	var form UserSignupForm
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {

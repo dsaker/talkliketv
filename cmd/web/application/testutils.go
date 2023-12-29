@@ -32,8 +32,8 @@ func init() {
 }
 
 func login(t *testing.T, ts *testServer) string {
-	_, _, body := ts.get(t, "/user/login")
-	validCSRFToken := extractCSRFToken(t, body)
+	_, _, body := ts.Get(t, "/user/login")
+	validCSRFToken := ExtractCSRFToken(t, body)
 
 	form := url.Values{}
 	form.Add("email", "alice@example.com")
@@ -120,10 +120,10 @@ func newTestServer(t *testing.T, h http.Handler) *testServer {
 	return &testServer{ts}
 }
 
-// Implement a get() method on our custom testServer type. This makes a GET
+// Implement a Get() method on our custom testServer type. This makes a GET
 // request to a given url path using the test server client, and returns the
 // response status code, headers and body.
-func (ts *testServer) get(t *testing.T, urlPath string) (int, http.Header, string) {
+func (ts *testServer) Get(t *testing.T, urlPath string) (int, http.Header, string) {
 	rs, err := ts.Client().Get(ts.URL + urlPath)
 	if err != nil {
 		t.Fatal(err)
@@ -141,14 +141,14 @@ func (ts *testServer) get(t *testing.T, urlPath string) (int, http.Header, strin
 
 // Define a regular expression which captures the CSRF token value from the
 // HTML for our user signup page.
-var csrfTokenRX = regexp.MustCompile(`<input type='hidden' name='csrf_token' value='(.+)'>`)
+var CsrfTokenRX = regexp.MustCompile(`<input type='hidden' name='csrf_token' value='(.+)'>`)
 
-func extractCSRFToken(t *testing.T, body string) string {
+func ExtractCSRFToken(t *testing.T, body string) string {
 	// Use the FindStringSubmatch method to extract the token from the HTML body.
 	// Note that this returns an array with the entire matched pattern in the
 	// first position, and the values of any captured data in the subsequent
 	// positions.
-	matches := csrfTokenRX.FindStringSubmatch(body)
+	matches := CsrfTokenRX.FindStringSubmatch(body)
 	if len(matches) < 2 {
 		t.Fatal("no csrf token found in body")
 	}

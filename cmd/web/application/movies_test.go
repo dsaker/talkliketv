@@ -106,7 +106,7 @@ func TestMoviesMp3(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			code, _, _ := ts.get(t, "/movies/mp3/"+tt.movieId)
+			code, _, _ := ts.Get(t, "/movies/mp3/"+tt.movieId)
 
 			assert.Equal(t, code, tt.wantCode)
 

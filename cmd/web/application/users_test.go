@@ -12,8 +12,8 @@ func TestUserSignupPost(t *testing.T) {
 	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
-	_, _, body := ts.get(t, "/user/signup")
-	validCSRFToken := extractCSRFToken(t, body)
+	_, _, body := ts.Get(t, "/user/signup")
+	validCSRFToken := ExtractCSRFToken(t, body)
 
 	const (
 		validName     = "user12"
@@ -202,8 +202,8 @@ func TestUserLoginPost(t *testing.T) {
 	ts := newTestServer(t, app.Routes())
 	defer ts.Close()
 
-	_, _, body := ts.get(t, "/user/login")
-	validCSRFToken := extractCSRFToken(t, body)
+	_, _, body := ts.Get(t, "/user/login")
+	validCSRFToken := ExtractCSRFToken(t, body)
 
 	const (
 		validPassword = "pa$$word"
@@ -288,7 +288,7 @@ func TestUserLogoutPost(t *testing.T) {
 	t.Run("Get Phrases", func(t *testing.T) {
 		form := url.Values{}
 		form.Add("csrf_token", validCSRFToken)
-		code, _, body := ts.get(t, "/phrase/view")
+		code, _, body := ts.Get(t, "/phrase/view")
 
 		assert.Equal(t, code, http.StatusOK)
 		assert.StringContains(t, body, "<td><button id=\"startButton\">Start</button></td>")

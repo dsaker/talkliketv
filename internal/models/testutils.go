@@ -40,29 +40,15 @@ func SetupTestDatabase() *TestDatabase {
 		log.Fatal("failed to setup test", err)
 	}
 
-	_, path, _, ok := runtime.Caller(0)
-	println("path is : " + path)
-	if !ok {
-		log.Fatal(err)
-	}
-
-	dir, _ := filepath.Split(path)
-	fmt.Println("Dir:", dir)
+	databaseURL := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", DbUser, DbPass, dbAddr, DbName)
 
 	// migrate db schema
-	err = migrateDb(dbAddr)
+	err = MigrateDb(databaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	script, err := os.ReadFile(dir + "/testdata/setup.sql")
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = db.Exec(string(script))
-	if err != nil {
-		log.Fatal(err)
-	}
+	err = SetupDb(db)
 
 	if err != nil {
 		log.Fatal("failed to perform db migration", err)
@@ -123,16 +109,35 @@ func createContainer(ctx context.Context) (testcontainers.Container, *sql.DB, st
 	return container, db, dbAddr, nil
 }
 
-func migrateDb(dbAddr string) error {
-	databaseURL := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", DbUser, DbPass, dbAddr, DbName)
+func MigrateDb(databaseUrl string) error {
 
-	err := migrateUp("file://../../../migrations", databaseURL)
+	err := migrateUp("file://../../../migrations", databaseUrl)
 	if err != nil {
 		return err
 	}
 
 	log.Println("migration done")
 
+	return nil
+}
+
+func SetupDb(db *sql.DB) error {
+	_, path, _, ok := runtime.Caller(0)
+	println("path is : " + path)
+	if !ok {
+		log.Fatal("something went wrong: SetupDb")
+	}
+
+	dir, _ := filepath.Split(path)
+	fmt.Println("Dir:", dir)
+	script, err := os.ReadFile(dir + "/testdata/setup.sql")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(string(script))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

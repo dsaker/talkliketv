@@ -47,7 +47,7 @@ var functions = template.FuncMap{
 func NewTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
 
-	//Use fs.Glob() to get a slice of all filepaths in the ui.Files embedded
+	//Use fs.Glob() to Get a slice of all filepaths in the ui.Files embedded
 	//filesystem which match the pattern 'html/pages/*.tmpl'. This essentially
 	//gives us a slice of all the 'page' templates for the application, just
 	//like before.
