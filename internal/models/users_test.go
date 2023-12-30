@@ -189,6 +189,10 @@ func (suite *UserModelTestSuite) TestUserModelAuthenticate() {
 func (suite *UserModelTestSuite) TestUserModelGet() {
 	t := suite.T()
 
+	if testing.Short() {
+		t.Skip("models: skipping integration test")
+	}
+
 	const (
 		validUserId = 9999
 	)
@@ -226,6 +230,10 @@ func (suite *UserModelTestSuite) TestUserModelGet() {
 
 func (suite *UserModelTestSuite) TestUserModelPasswordUpdate() {
 	t := suite.T()
+
+	if testing.Short() {
+		t.Skip("models: skipping integration test")
+	}
 
 	const (
 		validUserEmail    = "passwordupdateuser@email.com"
@@ -319,6 +327,10 @@ func (suite *UserModelTestSuite) TestUserModelLanguageUpdate() {
 
 func (suite *UserModelTestSuite) TestUserModelFlippedUpdate() {
 	t := suite.T()
+
+	if testing.Short() {
+		t.Skip("models: skipping integration test")
+	}
 
 	const (
 		validUserEmail    = "flippedupdateuser@email.com"

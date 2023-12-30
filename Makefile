@@ -148,11 +148,11 @@ production/configure/web.service:
 		&& sudo systemctl enable web \
 		&& sudo systemctl restart web \'
 
-## production/deploy/uploadcsv: deploy the scripts to production
+## production/uploadcsv: deploy the scripts to production
 production/uploadcsv:
 	## rsync -rP --delete ./scripts/uploadcsv.py talkliketv@${production_host_ip}:~/uploadcsv/
 	## rsync -rP --delete ./scripts/csvfile talkliketv@${production_host_ip}:~/uploadcsv
-    scp ./scripts/csvfile/NothingToSeeHereS01E01.csv  talkliketv@${production_host_ip}:~/uploadcsv
+	scp /Users/dustysaker/Downloads/MissAdrenalineS01E01.csv  talkliketv@${production_host_ip}:~/uploadcsv
 
 
 ## production/configure/caddyfile: configure the production Caddyfile

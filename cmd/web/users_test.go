@@ -11,7 +11,6 @@ import (
 	"github.com/go-playground/form/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/ory/dockertest"
-	"github.com/ory/dockertest/docker"
 	"io"
 	"log"
 	"net/http/cookiejar"
@@ -37,6 +36,11 @@ var (
 )
 
 func TestFeatures(t *testing.T) {
+
+	if testing.Short() {
+		t.Skip("models: skipping features test")
+	}
+
 	testSuite = godog.TestSuite{
 		TestSuiteInitializer: InitializeTestSuite,
 		ScenarioInitializer:  InitializeScenario,
@@ -47,12 +51,8 @@ func TestFeatures(t *testing.T) {
 		},
 	}
 
-	if testing.Short() {
-		t.Skip("models: skipping integration test")
-	} else {
-		if testSuite.Run() != 0 {
-			t.Fatal("non-zero status returned, failed to run feature tests")
-		}
+	if testSuite.Run() != 0 {
+		t.Fatal("non-zero status returned, failed to run feature tests")
 	}
 }
 
@@ -125,38 +125,24 @@ func InitializeTestSuite(sc *godog.TestSuiteContext) {
 		}
 
 		// pulls an image, creates a container based on it and runs it
-		//postgres, err := pool.Run("postgres", "14", []string{
-		//	"POSTGRES_PASSWORD=secret",
-		//	"POSTGRES_USER=user",
-		//	"POSTGRES_DB=testdb",
-		//})
-
-		postgres, err := pool.RunWithOptions(&dockertest.RunOptions{
-			Repository: "postgres",
-			Tag:        "14",
-			Env: []string{
-				"POSTGRES_PASSWORD=secret",
-				"POSTGRES_USER=user",
-				"POSTGRES_DB=testdb",
-			},
-		}, func(config *docker.HostConfig) {
-			// set AutoRemove to true so that stopped container goes away by itself
-			config.AutoRemove = true
-			config.RestartPolicy = docker.RestartPolicy{
-				Name: "no",
-			}
+		postgres, err := pool.Run("postgres", "14", []string{
+			"POSTGRES_PASSWORD=secret",
+			"POSTGRES_USER=user",
+			"POSTGRES_DB=testdb",
 		})
-
-		time.Sleep(2 * time.Second)
-		postgres.Expire(60)
 
 		if err != nil {
 			log.Fatalf("Could not start resource: %s", err)
 		}
 
-		port := postgres.GetPort("5432/tcp")
+		time.Sleep(2 * time.Second)
 
-		time.Sleep(time.Second)
+		err = postgres.Expire(60)
+		if err != nil {
+			log.Fatal("failed to expire postgres container", err)
+		}
+
+		port := postgres.GetPort("5432/tcp")
 
 		dbAddr := fmt.Sprintf("localhost:%s", port)
 		// migrate db schema
