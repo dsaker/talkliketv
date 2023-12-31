@@ -43,12 +43,12 @@ func SetupTestDatabase() *TestDatabase {
 	databaseURL := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", DbUser, DbPass, dbAddr, DbName)
 
 	// migrate db schema
-	err = MigrateDb(databaseURL)
+	err = migrateDb(databaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = SetupDb(db)
+	err = setupDb(db)
 
 	if err != nil {
 		log.Fatal("failed to perform db migration", err)
@@ -109,7 +109,7 @@ func createContainer(ctx context.Context) (testcontainers.Container, *sql.DB, st
 	return container, db, dbAddr, nil
 }
 
-func MigrateDb(databaseUrl string) error {
+func migrateDb(databaseUrl string) error {
 
 	err := migrateUp("file://../../../migrations", databaseUrl)
 	if err != nil {
@@ -121,11 +121,11 @@ func MigrateDb(databaseUrl string) error {
 	return nil
 }
 
-func SetupDb(db *sql.DB) error {
+func setupDb(db *sql.DB) error {
 	_, path, _, ok := runtime.Caller(0)
 	println("path is : " + path)
 	if !ok {
-		log.Fatal("something went wrong: SetupDb")
+		log.Fatal("something went wrong: setupDb")
 	}
 
 	dir, _ := filepath.Split(path)

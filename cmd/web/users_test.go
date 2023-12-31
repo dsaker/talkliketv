@@ -3,14 +3,12 @@ package main
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/alexedwards/scs/v2"
 	"github.com/cucumber/godog"
 	"github.com/go-playground/form/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/ory/dockertest"
 	"io"
 	"log"
 	"net/http/cookiejar"
@@ -31,8 +29,8 @@ type apiFeature struct {
 }
 
 var (
-	db        *sql.DB
 	testSuite godog.TestSuite
+	testDb    *models.TestDatabase
 )
 
 func TestFeatures(t *testing.T) {
@@ -83,14 +81,14 @@ func (api *apiFeature) iSendARequestTo(method, route string) error {
 
 	validCSRFToken := application.ExtractCSRFToken(testSuite.Options.TestingT, string(body))
 
-	form := url.Values{}
-	form.Add("name", api.payload.Name)
-	form.Add("email", api.payload.Email)
-	form.Add("language", api.payload.Language)
-	form.Add("password", api.payload.Password)
-	form.Add("csrf_token", validCSRFToken)
+	formValues := url.Values{}
+	formValues.Add("name", api.payload.Name)
+	formValues.Add("email", api.payload.Email)
+	formValues.Add("language", api.payload.Language)
+	formValues.Add("password", api.payload.Password)
+	formValues.Add("csrf_token", validCSRFToken)
 
-	resp, err = api.server.Client().PostForm(api.server.URL+route, form)
+	resp, err = api.server.Client().PostForm(api.server.URL+route, formValues)
 
 	if err != nil {
 		return err
@@ -113,65 +111,13 @@ func (api *apiFeature) theResponseCodeShouldBe(expectedStatus int) error {
 func InitializeTestSuite(sc *godog.TestSuiteContext) {
 
 	sc.BeforeSuite(func() {
-		// uses a sensible default on windows (tcp/http) and linux/osx (socket)
-		pool, err := dockertest.NewPool("")
-		if err != nil {
-			log.Fatalf("Could not construct pool: %s", err)
-		}
-		// uses pool to try to connect to Docker
-		err = pool.Client.Ping()
-		if err != nil {
-			log.Fatalf("Could not connect to Docker: %s", err)
-		}
-
-		// pulls an image, creates a container based on it and runs it
-		postgres, err := pool.Run("postgres", "14", []string{
-			"POSTGRES_PASSWORD=secret",
-			"POSTGRES_USER=user",
-			"POSTGRES_DB=testdb",
-		})
-
-		if err != nil {
-			log.Fatalf("Could not start resource: %s", err)
-		}
+		testDb = models.SetupTestDatabase()
 
 		time.Sleep(2 * time.Second)
-
-		err = postgres.Expire(60)
-		if err != nil {
-			log.Fatal("failed to expire postgres container", err)
-		}
-
-		port := postgres.GetPort("5432/tcp")
-
-		dbAddr := fmt.Sprintf("localhost:%s", port)
-		// migrate db schema
-		databaseURL := fmt.Sprintf("postgres://user:secret@%s/testdb?sslmode=disable", dbAddr)
-
-		db, err = sql.Open("postgres", databaseURL)
-		if err != nil {
-			log.Fatalf("Could not connect to Docker postgres: %s", err)
-		}
-
-		err = models.MigrateDb(databaseURL)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = models.SetupDb(db)
-		if err != nil {
-			log.Fatal(err)
-		}
 
 		log.Println("db setup done")
 	})
 
-	sc.AfterSuite(func() {
-		err := db.Close()
-		if err != nil {
-			log.Fatalf("Could not close db: %s", err)
-		}
-	})
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
@@ -192,6 +138,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 		logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
+		db := testDb.DbInstance
 		app := &application.Application{
 			Logger:         logger,
 			Phrases:        &models.PhraseModel{DB: db},
