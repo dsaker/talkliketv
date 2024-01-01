@@ -151,7 +151,6 @@ production/configure/web.service:
 ## production/deploy/uploadcsv: deploy the scripts to production
 production/uploadcsv:
 	## rsync -rP --delete ./scripts/uploadcsv.py talkliketv@${production_host_ip}:~/uploadcsv/
-	## rsync -rP --delete ./scripts/csvfile talkliketv@${production_host_ip}:~/uploadcsv
     scp ./scripts/csvfile/NothingToSeeHereS01E01.csv  talkliketv@${production_host_ip}:~/uploadcsv
 
 
