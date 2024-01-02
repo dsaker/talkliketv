@@ -71,7 +71,6 @@ func (suite *MovieModelTestSuite) TestMovieModelGet() {
 		validMovieId = 1
 	)
 
-	// Set up a suite of table-driven tests and expected results.
 	tests := []struct {
 		name    string
 		userId  int

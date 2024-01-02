@@ -15,7 +15,7 @@ import (
 	"regexp"
 	"talkliketv.net/internal/assert"
 	"talkliketv.net/internal/jsonlog"
-	"talkliketv.net/internal/models/mocks"
+	"talkliketv.net/internal/models"
 	"testing"
 	"time"
 )
@@ -31,20 +31,51 @@ func init() {
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 }
 
-func login(t *testing.T, ts *testServer) string {
+func (ts *testServer) setupUser(t *testing.T) string {
+	ts.signup(t)
+	validToken := ts.login(t)
+
+	setupUserForm := url.Values{}
+	setupUserForm.Add("movie_id", "1")
+	setupUserForm.Add("csrf_token", validToken)
+
+	code, _, _ := ts.postForm(t, "/movies/choose", setupUserForm)
+
+	assert.Equal(t, code, http.StatusSeeOther)
+
+	return validToken
+}
+
+func (ts *testServer) login(t *testing.T) string {
 	_, _, body := ts.get(t, "/user/login")
 	validCSRFToken := extractCSRFToken(t, body)
 
-	form := url.Values{}
-	form.Add("email", "alice@example.com")
-	form.Add("password", "pa$$word")
-	form.Add("csrf_token", validCSRFToken)
+	loginForm := url.Values{}
+	loginForm.Add("email", "user99@email.com")
+	loginForm.Add("password", "password")
+	loginForm.Add("csrf_token", validCSRFToken)
 
-	code, _, _ := ts.postForm(t, "/user/login", form)
+	code, _, _ := ts.postForm(t, "/user/login", loginForm)
 
 	assert.Equal(t, code, http.StatusSeeOther)
 
 	return validCSRFToken
+}
+
+func (ts *testServer) signup(t *testing.T) {
+	_, _, body := ts.get(t, "/user/login")
+	validCSRFToken := extractCSRFToken(t, body)
+
+	signupForm := url.Values{}
+	signupForm.Add("name", "user99")
+	signupForm.Add("email", "user99@email.com")
+	signupForm.Add("password", "password")
+	signupForm.Add("language", "Spanish")
+	signupForm.Add("csrf_token", validCSRFToken)
+
+	code, _, _ := ts.postForm(t, "/user/signup", signupForm)
+
+	assert.Equal(t, code, http.StatusSeeOther)
 }
 
 func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (int, http.Header, string) {
@@ -65,8 +96,8 @@ func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (i
 	return rs.StatusCode, rs.Header, string(body)
 }
 
-func newTestApplication(t *testing.T) *application {
-	// Create an instance of the template cache.
+func newTestApplication(t *testing.T) (*application, *models.TestDatabase) {
+	testDb := models.SetupTestDatabase()
 	templateCache, err := newTemplateCache()
 	if err != nil {
 		t.Fatal(err)
@@ -84,14 +115,14 @@ func newTestApplication(t *testing.T) *application {
 	return &application{
 		config:         cfg,
 		logger:         logger,
-		phrases:        &mocks.PhraseModel{},
-		movies:         &mocks.MovieModel{},
-		languages:      &mocks.LanguageModel{},
-		users:          &mocks.UserModel{},
+		phrases:        &models.PhraseModel{DB: testDb.DbInstance},
+		movies:         &models.MovieModel{DB: testDb.DbInstance},
+		languages:      &models.LanguageModel{DB: testDb.DbInstance},
+		users:          &models.UserModel{DB: testDb.DbInstance},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
-	}
+	}, testDb
 }
 
 func newTestServer(t *testing.T, h http.Handler) *testServer {

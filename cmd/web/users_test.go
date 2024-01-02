@@ -7,13 +7,12 @@ import (
 	"testing"
 )
 
-func TestUserSignupPost(t *testing.T) {
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
+func (suite *WebTestSuite) TestUserSignupPost() {
 
-	_, _, body := ts.get(t, "/user/signup")
-	validCSRFToken := extractCSRFToken(t, body)
+	t := suite.T()
+
+	_, _, body := suite.ts.get(t, "/user/signup")
+	signUpCSRFToken := extractCSRFToken(t, body)
 
 	const (
 		validName     = "user12"
@@ -39,7 +38,7 @@ func TestUserSignupPost(t *testing.T) {
 			userEmail:    validEmail,
 			userLanguage: validLanguage,
 			userPassword: validPassword,
-			csrfToken:    validCSRFToken,
+			csrfToken:    signUpCSRFToken,
 			wantCode:     http.StatusSeeOther,
 		},
 		{
@@ -57,7 +56,7 @@ func TestUserSignupPost(t *testing.T) {
 			userEmail:    validEmail,
 			userLanguage: validLanguage,
 			userPassword: validPassword,
-			csrfToken:    validCSRFToken,
+			csrfToken:    signUpCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
@@ -67,7 +66,7 @@ func TestUserSignupPost(t *testing.T) {
 			userEmail:    "",
 			userLanguage: validLanguage,
 			userPassword: validPassword,
-			csrfToken:    validCSRFToken,
+			csrfToken:    signUpCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
@@ -77,7 +76,7 @@ func TestUserSignupPost(t *testing.T) {
 			userEmail:    validEmail,
 			userLanguage: validLanguage,
 			userPassword: "",
-			csrfToken:    validCSRFToken,
+			csrfToken:    signUpCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
@@ -87,7 +86,7 @@ func TestUserSignupPost(t *testing.T) {
 			userEmail:    "bob@example.",
 			userLanguage: validLanguage,
 			userPassword: validPassword,
-			csrfToken:    validCSRFToken,
+			csrfToken:    signUpCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
@@ -97,22 +96,21 @@ func TestUserSignupPost(t *testing.T) {
 			userEmail:    validEmail,
 			userLanguage: validLanguage,
 			userPassword: "pa$$",
-			csrfToken:    validCSRFToken,
+			csrfToken:    signUpCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
 		{
 			name:         "Duplicate email",
 			userName:     validName,
-			userEmail:    "dupe@example.com",
+			userEmail:    "user2@email.com",
 			userLanguage: validLanguage,
 			userPassword: validPassword,
-			csrfToken:    validCSRFToken,
+			csrfToken:    signUpCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			form := url.Values{}
@@ -122,7 +120,7 @@ func TestUserSignupPost(t *testing.T) {
 			form.Add("password", tt.userPassword)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, body := ts.postForm(t, "/user/signup", form)
+			code, _, body := suite.ts.postForm(t, "/user/signup", form)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -133,12 +131,8 @@ func TestUserSignupPost(t *testing.T) {
 	}
 }
 
-func TestAccountLanguageUpdatePost(t *testing.T) {
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	validCSRFToken := login(t, ts)
+func (suite *WebTestSuite) TestAccountLanguageUpdatePost() {
+	t := suite.T()
 
 	const (
 		validLanguage = "Spanish"
@@ -155,7 +149,7 @@ func TestAccountLanguageUpdatePost(t *testing.T) {
 		{
 			name:         "Valid submission",
 			userLanguage: validLanguage,
-			csrfToken:    validCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusSeeOther,
 		},
 		{
@@ -167,14 +161,14 @@ func TestAccountLanguageUpdatePost(t *testing.T) {
 		{
 			name:         "Empty language",
 			userLanguage: "",
-			csrfToken:    validCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantTag:      formTag,
 		},
 		{
 			name:         "Wrong language",
 			userLanguage: "Invalid Language",
-			csrfToken:    validCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantTag:      formTag,
 		},
@@ -186,7 +180,7 @@ func TestAccountLanguageUpdatePost(t *testing.T) {
 			form.Add("language", tt.userLanguage)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, body := ts.postForm(t, "/account/language/update", form)
+			code, _, body := suite.ts.postForm(t, "/account/language/update", form)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -197,13 +191,8 @@ func TestAccountLanguageUpdatePost(t *testing.T) {
 	}
 }
 
-func TestUserLoginPost(t *testing.T) {
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	_, _, body := ts.get(t, "/user/login")
-	validCSRFToken := extractCSRFToken(t, body)
+func (suite *WebTestSuite) TestUserLoginPost() {
+	t := suite.T()
 
 	const (
 		validPassword = "pa$$word"
@@ -230,7 +219,7 @@ func TestUserLoginPost(t *testing.T) {
 			name:         "Empty email",
 			userEmail:    "",
 			userPassword: validPassword,
-			csrfToken:    validCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
@@ -238,7 +227,7 @@ func TestUserLoginPost(t *testing.T) {
 			name:         "Empty password",
 			userEmail:    validEmail,
 			userPassword: "",
-			csrfToken:    validCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
@@ -246,16 +235,9 @@ func TestUserLoginPost(t *testing.T) {
 			name:         "Invalid email",
 			userEmail:    "bob@example.",
 			userPassword: validPassword,
-			csrfToken:    validCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
-		},
-		{
-			name:         "Valid submission",
-			userEmail:    validEmail,
-			userPassword: validPassword,
-			csrfToken:    validCSRFToken,
-			wantCode:     http.StatusSeeOther,
 		},
 	}
 
@@ -266,7 +248,7 @@ func TestUserLoginPost(t *testing.T) {
 			form.Add("password", tt.userPassword)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, body := ts.postForm(t, "/user/login", form)
+			code, _, body := suite.ts.postForm(t, "/user/login", form)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -277,43 +259,13 @@ func TestUserLoginPost(t *testing.T) {
 	}
 }
 
-func TestUserLogoutPost(t *testing.T) {
-
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	validCSRFToken := login(t, ts)
-
-	t.Run("Get Phrases", func(t *testing.T) {
-		form := url.Values{}
-		form.Add("csrf_token", validCSRFToken)
-		code, _, body := ts.get(t, "/phrase/view")
-
-		assert.Equal(t, code, http.StatusOK)
-		assert.StringContains(t, body, "<td><button id=\"startButton\">Start</button></td>")
-	})
-
-	t.Run("Valid Logout", func(t *testing.T) {
-		form := url.Values{}
-		form.Add("csrf_token", validCSRFToken)
-		code, _, _ := ts.postForm(t, "/user/logout", form)
-
-		assert.Equal(t, code, http.StatusSeeOther)
-	})
-}
-
-func TestAccountPasswordUpdatePost(t *testing.T) {
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	validCSRFToken := login(t, ts)
+func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
+	t := suite.T()
 
 	const (
-		validCurrentPassword         = "pa$$word"
-		validNewPassword             = "newpa$$word"
-		validNewPasswordConfirmation = "newpa$$word"
+		validCurrentPassword         = "password"
+		validNewPassword             = "newpassword"
+		validNewPasswordConfirmation = "newpassword"
 		wantTag                      = "<form action='/account/password/update' method='POST' novalidate>"
 	)
 
@@ -331,7 +283,7 @@ func TestAccountPasswordUpdatePost(t *testing.T) {
 			currentPassword:         validCurrentPassword,
 			newPassword:             validNewPassword,
 			newPasswordConfirmation: validNewPasswordConfirmation,
-			csrfToken:               validCSRFToken,
+			csrfToken:               suite.validCSRFToken,
 			wantCode:                http.StatusSeeOther,
 		},
 		{
@@ -347,7 +299,7 @@ func TestAccountPasswordUpdatePost(t *testing.T) {
 			currentPassword:         "",
 			newPassword:             validNewPassword,
 			newPasswordConfirmation: validNewPasswordConfirmation,
-			csrfToken:               validCSRFToken,
+			csrfToken:               suite.validCSRFToken,
 			wantCode:                http.StatusUnprocessableEntity,
 			wantTag:                 wantTag,
 		},
@@ -356,7 +308,7 @@ func TestAccountPasswordUpdatePost(t *testing.T) {
 			currentPassword:         validCurrentPassword,
 			newPassword:             "",
 			newPasswordConfirmation: validNewPasswordConfirmation,
-			csrfToken:               validCSRFToken,
+			csrfToken:               suite.validCSRFToken,
 			wantCode:                http.StatusUnprocessableEntity,
 			wantTag:                 wantTag,
 		},
@@ -365,7 +317,7 @@ func TestAccountPasswordUpdatePost(t *testing.T) {
 			currentPassword:         validCurrentPassword,
 			newPassword:             validNewPassword,
 			newPasswordConfirmation: "",
-			csrfToken:               validCSRFToken,
+			csrfToken:               suite.validCSRFToken,
 			wantCode:                http.StatusUnprocessableEntity,
 			wantTag:                 wantTag,
 		},
@@ -374,7 +326,7 @@ func TestAccountPasswordUpdatePost(t *testing.T) {
 			currentPassword:         "wrong",
 			newPassword:             validNewPassword,
 			newPasswordConfirmation: validNewPasswordConfirmation,
-			csrfToken:               validCSRFToken,
+			csrfToken:               suite.validCSRFToken,
 			wantCode:                http.StatusUnprocessableEntity,
 			wantTag:                 wantTag,
 		},
@@ -383,7 +335,7 @@ func TestAccountPasswordUpdatePost(t *testing.T) {
 			currentPassword:         validCurrentPassword,
 			newPassword:             "wrong",
 			newPasswordConfirmation: validNewPasswordConfirmation,
-			csrfToken:               validCSRFToken,
+			csrfToken:               suite.validCSRFToken,
 			wantCode:                http.StatusUnprocessableEntity,
 			wantTag:                 wantTag,
 		},
@@ -397,7 +349,7 @@ func TestAccountPasswordUpdatePost(t *testing.T) {
 			form.Add("newPasswordConfirmation", tt.newPasswordConfirmation)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, body := ts.postForm(t, "/account/password/update", form)
+			code, _, body := suite.ts.postForm(t, "/account/password/update", form)
 
 			assert.Equal(t, code, tt.wantCode)
 

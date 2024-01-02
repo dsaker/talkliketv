@@ -13,7 +13,13 @@ INSERT into movies (id, title, num_subs, language_id) VALUES (1,
                                                               1);
 
 INSERT INTO phrases (id, movie_id, phrase, translates, phrase_hint, translates_hint) VALUES
-             (2,
+(1,
+1,
+'Have you always been blind?',
+'¿Siempre has sido ciego?.',
+'H   y  a     b   b    ? ',
+'¿S      h  s   c    ?.'),
+(2,
 1,
 'Have you always been blind?',
 '¿Siempre has sido ciego?.',

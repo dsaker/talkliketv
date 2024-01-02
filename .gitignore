@@ -1,5 +1,6 @@
 .envrc
 bin/
+tls/
 
 # Binaries for programs and plugins
 *.exe

@@ -2,13 +2,43 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/suite"
 	"net/http"
+	"net/url"
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/models"
 	"testing"
 )
 
+type WebTestSuite struct {
+	suite.Suite
+	ts             *testServer
+	testDb         *models.TestDatabase
+	validCSRFToken string
+}
+
+func (suite *WebTestSuite) SetupSuite() {
+	t := suite.T()
+	app, testDb := newTestApplication(t)
+	suite.testDb = testDb
+	suite.ts = newTestServer(t, app.routes())
+	suite.validCSRFToken = suite.ts.setupUser(t)
+}
+
+func (suite *WebTestSuite) TearDownSuite() {
+	defer suite.testDb.TearDown()
+	defer suite.ts.Close()
+	suite.T().Run("Valid Logout", func(t *testing.T) {
+		form := url.Values{}
+		form.Add("csrf_token", suite.validCSRFToken)
+		code, _, _ := suite.ts.postForm(t, "/user/logout", form)
+
+		assert.Equal(t, code, http.StatusSeeOther)
+	})
+}
+
 func TestHealthCheck(t *testing.T) {
-	app := newTestApplication(t)
+	app, _ := newTestApplication(t)
 
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
@@ -34,13 +64,9 @@ func TestHealthCheck(t *testing.T) {
 	assert.Equal(t, input.SystemInfo.Version, "")
 }
 
-func TestViewsLoggedIn(t *testing.T) {
+func (suite *WebTestSuite) TestViewsLoggedIn() {
 
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	_ = login(t, ts)
+	t := suite.T()
 
 	tests := []struct {
 		name     string
@@ -64,7 +90,7 @@ func TestViewsLoggedIn(t *testing.T) {
 			name:     "Phrase View",
 			urlPath:  "/phrase/view",
 			wantCode: http.StatusOK,
-			wantTag:  "<form action='/user/language/switch' method='POST' id=\"switchSliderForm\">",
+			wantTag:  "<form action='/user/language/switch' method='POST' id='switchSliderForm'>",
 		},
 		{
 			name:     "Account Password Update",
@@ -76,7 +102,7 @@ func TestViewsLoggedIn(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, _, body := ts.get(t, tt.urlPath)
+			code, _, body := suite.ts.get(t, tt.urlPath)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -89,7 +115,7 @@ func TestViewsLoggedIn(t *testing.T) {
 
 func TestViewsNotLoggedIn(t *testing.T) {
 
-	app := newTestApplication(t)
+	app, _ := newTestApplication(t)
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
 
@@ -146,4 +172,8 @@ func TestViewsNotLoggedIn(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestWebTestSuite(t *testing.T) {
+	suite.Run(t, new(WebTestSuite))
 }
