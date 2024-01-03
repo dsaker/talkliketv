@@ -7,7 +7,9 @@ import (
 )
 
 func (app *application) clientError(w http.ResponseWriter, r *http.Request, status int, err error) {
-	app.logError(r, err)
+	if err != nil {
+		app.logError(r, err)
+	}
 	http.Error(w, http.StatusText(status), status)
 }
 
@@ -35,10 +37,6 @@ func (app *application) serverError(w http.ResponseWriter, r *http.Request, err 
 // JSON response to the client.
 func (app *application) notFound(w http.ResponseWriter, r *http.Request, err error) {
 	app.clientError(w, r, http.StatusNotFound, err)
-}
-
-func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request) {
-	app.clientError(w, r, http.StatusNotFound, nil)
 }
 
 // The methodNotAllowedResponse() method will be used to send a 405 Method Not Allowed

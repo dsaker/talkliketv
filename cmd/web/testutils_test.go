@@ -5,6 +5,7 @@ import (
 	"flag"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
+	"github.com/stretchr/testify/suite"
 	"html"
 	"io"
 	"net/http"
@@ -29,6 +30,62 @@ var cfg config
 
 func init() {
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+}
+
+type WebTestSuite struct {
+	suite.Suite
+	ts             *testServer
+	testDb         *models.TestDatabase
+	validCSRFToken string
+	app            *application
+}
+
+func (suite *WebTestSuite) SetupSuite() {
+	t := suite.T()
+	suite.app, suite.testDb = newTestApplication(t)
+	suite.ts = newTestServer(t, suite.app.routes())
+	suite.validCSRFToken = suite.ts.setupUser(t)
+}
+
+func (suite *WebTestSuite) TearDownSuite() {
+	defer suite.testDb.TearDown()
+	defer suite.ts.Close()
+	suite.T().Run("Valid Logout", func(t *testing.T) {
+		form := url.Values{}
+		form.Add("csrf_token", suite.validCSRFToken)
+		code, _, _ := suite.ts.postForm(t, "/user/logout", form)
+
+		assert.Equal(t, code, http.StatusSeeOther)
+	})
+}
+
+func TestWebTestSuite(t *testing.T) {
+	suite.Run(t, new(WebTestSuite))
+}
+
+type WebNoLoginTestSuite struct {
+	suite.Suite
+	ts             *testServer
+	testDb         *models.TestDatabase
+	validCSRFToken string
+}
+
+func (suite *WebNoLoginTestSuite) SetupSuite() {
+	t := suite.T()
+	app, testDb := newTestApplication(t)
+	suite.testDb = testDb
+	suite.ts = newTestServer(t, app.routes())
+	_, _, body := suite.ts.get(t, "/user/login")
+	suite.validCSRFToken = extractCSRFToken(t, body)
+}
+
+func (suite *WebNoLoginTestSuite) TearDownSuite() {
+	defer suite.testDb.TearDown()
+	defer suite.ts.Close()
+}
+
+func TestWebNoLoginTestSuite(t *testing.T) {
+	suite.Run(t, new(WebNoLoginTestSuite))
 }
 
 func (ts *testServer) setupUser(t *testing.T) string {

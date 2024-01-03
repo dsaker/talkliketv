@@ -2,48 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/suite"
 	"net/http"
 	"net/url"
 	"talkliketv.net/internal/assert"
-	"talkliketv.net/internal/models"
 	"testing"
 )
 
-type WebTestSuite struct {
-	suite.Suite
-	ts             *testServer
-	testDb         *models.TestDatabase
-	validCSRFToken string
-}
-
-func (suite *WebTestSuite) SetupSuite() {
+func (suite *WebTestSuite) TestHealthCheck() {
 	t := suite.T()
-	app, testDb := newTestApplication(t)
-	suite.testDb = testDb
-	suite.ts = newTestServer(t, app.routes())
-	suite.validCSRFToken = suite.ts.setupUser(t)
-}
-
-func (suite *WebTestSuite) TearDownSuite() {
-	defer suite.testDb.TearDown()
-	defer suite.ts.Close()
-	suite.T().Run("Valid Logout", func(t *testing.T) {
-		form := url.Values{}
-		form.Add("csrf_token", suite.validCSRFToken)
-		code, _, _ := suite.ts.postForm(t, "/user/logout", form)
-
-		assert.Equal(t, code, http.StatusSeeOther)
-	})
-}
-
-func TestHealthCheck(t *testing.T) {
-	app, _ := newTestApplication(t)
-
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	code, _, body := ts.get(t, "/v1/healthcheck")
+	code, _, body := suite.ts.get(t, "/v1/healthcheck")
 
 	assert.Equal(t, code, http.StatusOK)
 
@@ -62,6 +29,15 @@ func TestHealthCheck(t *testing.T) {
 	assert.Equal(t, input.Status, "available")
 	assert.Equal(t, input.SystemInfo.Environment, "development")
 	assert.Equal(t, input.SystemInfo.Version, "")
+}
+
+func (suite *WebTestSuite) TestMethodNotAllowed() {
+	t := suite.T()
+	form := url.Values{}
+	code, _, body := suite.ts.postForm(t, "/about", form)
+
+	assert.Equal(t, code, http.StatusMethodNotAllowed)
+	assert.StringContains(t, body, "Method Not Allowed")
 }
 
 func (suite *WebTestSuite) TestViewsLoggedIn() {
@@ -93,10 +69,22 @@ func (suite *WebTestSuite) TestViewsLoggedIn() {
 			wantTag:  "<form action='/user/language/switch' method='POST' id='switchSliderForm'>",
 		},
 		{
+			name:     "Movies View",
+			urlPath:  "/movies/view",
+			wantCode: http.StatusOK,
+			wantTag:  "<form action='/movies/choose' method='POST'>",
+		},
+		{
 			name:     "Account Password Update",
 			urlPath:  "/account/password/update",
 			wantCode: http.StatusOK,
 			wantTag:  "<form action='/account/password/update' method='POST' novalidate>",
+		},
+		{
+			name:     "Get User Logout",
+			urlPath:  "/user/logout",
+			wantCode: http.StatusMethodNotAllowed,
+			wantTag:  "Method Not Allowed",
 		},
 	}
 
@@ -113,12 +101,8 @@ func (suite *WebTestSuite) TestViewsLoggedIn() {
 	}
 }
 
-func TestViewsNotLoggedIn(t *testing.T) {
-
-	app, _ := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
+func (suite *WebNoLoginTestSuite) TestViewsNotLoggedIn() {
+	t := suite.T()
 	tests := []struct {
 		name     string
 		urlPath  string
@@ -163,7 +147,7 @@ func TestViewsNotLoggedIn(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, _, body := ts.get(t, tt.urlPath)
+			code, _, body := suite.ts.get(t, tt.urlPath)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -172,8 +156,4 @@ func TestViewsNotLoggedIn(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestWebTestSuite(t *testing.T) {
-	suite.Run(t, new(WebTestSuite))
 }

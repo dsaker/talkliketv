@@ -7,12 +7,9 @@ import (
 	"testing"
 )
 
-func (suite *WebTestSuite) TestUserSignupPost() {
+func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 
 	t := suite.T()
-
-	_, _, body := suite.ts.get(t, "/user/signup")
-	signUpCSRFToken := extractCSRFToken(t, body)
 
 	const (
 		validName     = "user12"
@@ -33,12 +30,12 @@ func (suite *WebTestSuite) TestUserSignupPost() {
 		wantFormTag  string
 	}{
 		{
-			name:         "Valid submission",
+			name:         "Valid Submission",
 			userName:     validName,
 			userEmail:    validEmail,
 			userLanguage: validLanguage,
 			userPassword: validPassword,
-			csrfToken:    signUpCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusSeeOther,
 		},
 		{
@@ -51,62 +48,82 @@ func (suite *WebTestSuite) TestUserSignupPost() {
 			wantCode:     http.StatusBadRequest,
 		},
 		{
-			name:         "Empty name",
+			name:         "Empty Name",
 			userName:     "",
 			userEmail:    validEmail,
 			userLanguage: validLanguage,
 			userPassword: validPassword,
-			csrfToken:    signUpCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
 		{
-			name:         "Empty email",
+			name:         "Empty Email",
 			userName:     validName,
 			userEmail:    "",
 			userLanguage: validLanguage,
 			userPassword: validPassword,
-			csrfToken:    signUpCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
 		{
-			name:         "Empty password",
+			name:         "Empty Password",
 			userName:     validName,
 			userEmail:    validEmail,
 			userLanguage: validLanguage,
 			userPassword: "",
-			csrfToken:    signUpCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
 		{
-			name:         "Invalid email",
+			name:         "Invalid Email",
 			userName:     validName,
 			userEmail:    "bob@example.",
 			userLanguage: validLanguage,
 			userPassword: validPassword,
-			csrfToken:    signUpCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
 		{
-			name:         "Short password",
+			name:         "Short Password",
 			userName:     validName,
 			userEmail:    validEmail,
 			userLanguage: validLanguage,
 			userPassword: "pa$$",
-			csrfToken:    signUpCSRFToken,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},
 		{
-			name:         "Duplicate email",
+			name:         "Duplicate Email",
 			userName:     validName,
 			userEmail:    "user2@email.com",
 			userLanguage: validLanguage,
 			userPassword: validPassword,
-			csrfToken:    signUpCSRFToken,
+			csrfToken:    suite.validCSRFToken,
+			wantCode:     http.StatusUnprocessableEntity,
+			wantFormTag:  formTag,
+		},
+		{
+			name:         "Invalid Language",
+			userName:     "validName1",
+			userEmail:    "validName1@email.com",
+			userLanguage: "Made Up Language",
+			userPassword: validPassword,
+			csrfToken:    suite.validCSRFToken,
+			wantCode:     http.StatusBadRequest,
+			wantFormTag:  "Bad Request",
+		},
+		{
+			name:         "Duplicate Name",
+			userName:     "user2",
+			userEmail:    "validName1@email.com",
+			userLanguage: validLanguage,
+			userPassword: validPassword,
+			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
 		},

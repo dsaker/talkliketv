@@ -33,11 +33,7 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 	data.User = user
 	languages, err := app.languages.All()
 	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			app.notFound(w, r, err)
-		} else {
-			app.serverError(w, r, err)
-		}
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -61,6 +57,23 @@ func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 
 	data.Languages = languages
 	app.render(w, r, http.StatusOK, "signup.gohtml", data)
+}
+
+func (app *application) duplicateError(w http.ResponseWriter, r *http.Request, form userSignupForm, err error) {
+	data := app.newTemplateData(r)
+	data.Form = form
+	languages, err2 := app.languages.All()
+	if err2 != nil {
+		if errors.Is(err2, models.ErrNoRecord) {
+			app.notFound(w, r, err)
+		} else {
+			app.serverError(w, r, err2)
+		}
+		return
+	}
+
+	data.Languages = languages
+	app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
 }
 
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
@@ -94,25 +107,13 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
-
-			data := app.newTemplateData(r)
-			data.Form = form
-			languages, err2 := app.languages.All()
-			if err2 != nil {
-				if errors.Is(err2, models.ErrNoRecord) {
-					app.notFound(w, r, err)
-				} else {
-					app.serverError(w, r, err2)
-				}
-				return
-			}
-
-			data.Languages = languages
-			app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
+			app.duplicateError(w, r, form, err)
+		} else if errors.Is(err, models.ErrDuplicateUserName) {
+			form.AddFieldError("name", "User name is already in use")
+			app.duplicateError(w, r, form, err)
 		} else {
 			app.serverError(w, r, err)
 		}
-
 		return
 	}
 

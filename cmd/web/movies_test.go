@@ -88,10 +88,46 @@ func (suite *WebTestSuite) TestMoviesMp3() {
 			movieId:  "A",
 			wantCode: http.StatusBadRequest,
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			code, _, _ := suite.ts.get(t, "/movies/mp3/"+tt.movieId)
+
+			assert.Equal(t, code, tt.wantCode)
+
+		})
+	}
+}
+
+func (suite *WebTestSuite) TestMoviesAll() {
+	t := suite.T()
+
+	const (
+		validMovieId = "1"
+	)
+
+	tests := []struct {
+		name      string
+		movieId   string
+		csrfToken string
+		wantCode  int
+	}{
 		{
-			name:     "Empty Movie String",
-			movieId:  "",
-			wantCode: http.StatusNotFound,
+			name:     "Valid submission",
+			movieId:  validMovieId,
+			wantCode: http.StatusOK,
+		},
+		{
+			name:     "Invalid MovieId",
+			movieId:  "-2",
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:     "Invalid MovieId String",
+			movieId:  "A",
+			wantCode: http.StatusBadRequest,
 		},
 	}
 

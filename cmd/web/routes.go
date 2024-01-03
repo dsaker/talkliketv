@@ -10,9 +10,13 @@ import (
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
-	router.MethodNotAllowed = http.HandlerFunc(app.notFoundResponse)
-	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
+	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.notFound(w, r, nil)
+	})
 
+	router.MethodNotAllowed = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.methodNotAllowedResponse(w, r)
+	})
 	// Take the ui.Files embedded filesystem and convert it to a http.FS type so
 	// that it satisfies the http.FileSystem interface. We then pass that to the
 	// http.FileServer() function to create the file server handler.

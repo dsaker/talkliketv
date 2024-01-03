@@ -1,27 +1,11 @@
 package models
 
 import (
-	"github.com/stretchr/testify/suite"
 	"talkliketv.net/internal/assert"
 	"testing"
 )
 
-type MovieModelTestSuite struct {
-	suite.Suite
-	testDb *TestDatabase
-	m      MovieModel
-}
-
-func (suite *MovieModelTestSuite) SetupSuite() {
-	suite.testDb = SetupTestDatabase()
-	suite.m = MovieModel{suite.testDb.DbInstance}
-}
-
-func (suite *MovieModelTestSuite) TearDownSuite() {
-	defer suite.testDb.TearDown()
-}
-
-func (suite *MovieModelTestSuite) TestMovieModelChooseMovie() {
+func (suite *ModelTestSuite) TestMovieModelChooseMovie() {
 	t := suite.T()
 	// Skip the test if the "-short" flag is provided when running the test.
 	if testing.Short() {
@@ -60,7 +44,7 @@ func (suite *MovieModelTestSuite) TestMovieModelChooseMovie() {
 	}
 }
 
-func (suite *MovieModelTestSuite) TestMovieModelGet() {
+func (suite *ModelTestSuite) TestMovieModelGet() {
 	t := suite.T()
 	// Skip the test if the "-short" flag is provided when running the test.
 	if testing.Short() {
@@ -101,6 +85,46 @@ func (suite *MovieModelTestSuite) TestMovieModelGet() {
 	}
 }
 
-func TestMovieModelTestSuite(t *testing.T) {
-	suite.Run(t, new(MovieModelTestSuite))
+func (suite *ModelTestSuite) TestMovieModelAll() {
+	t := suite.T()
+	// Skip the test if the "-short" flag is provided when running the test.
+	if testing.Short() {
+		t.Skip("models: skipping integration test")
+	}
+
+	const (
+		validLanguageId = 1
+	)
+
+	tests := []struct {
+		name       string
+		userId     int
+		languageId int
+		wantErr    error
+		numMovies  int
+	}{
+		{
+			name:       "Valid Id",
+			languageId: validLanguageId,
+			numMovies:  2,
+		},
+		{
+			name:       "Invalid Language Id",
+			languageId: -99,
+			numMovies:  0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			movies, err := suite.m.All(tt.languageId)
+			if tt.wantErr != nil {
+				assert.Equal(t, err, tt.wantErr)
+			} else {
+				assert.NilError(t, err)
+			}
+			assert.Equal(t, len(movies), tt.numMovies)
+		})
+	}
 }
