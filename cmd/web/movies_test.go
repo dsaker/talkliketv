@@ -7,12 +7,8 @@ import (
 	"testing"
 )
 
-func TestMoviesChoose(t *testing.T) {
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	validCSRFToken := login(t, ts)
+func (suite *WebTestSuite) TestMoviesChoose() {
+	t := suite.T()
 
 	const (
 		validMovieId = "1"
@@ -27,7 +23,7 @@ func TestMoviesChoose(t *testing.T) {
 		{
 			name:      "Valid submission",
 			movieId:   validMovieId,
-			csrfToken: validCSRFToken,
+			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusSeeOther,
 		},
 		{
@@ -39,13 +35,13 @@ func TestMoviesChoose(t *testing.T) {
 		{
 			name:      "Invalid MovieId",
 			movieId:   "-2",
-			csrfToken: validCSRFToken,
+			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusNotFound,
 		},
 		{
 			name:      "Invalid MovieId String",
 			movieId:   "A",
-			csrfToken: validCSRFToken,
+			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusBadRequest,
 		},
 	}
@@ -56,7 +52,7 @@ func TestMoviesChoose(t *testing.T) {
 			form.Add("movie_id", tt.movieId)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, _ := ts.postForm(t, "/movies/choose", form)
+			code, _, _ := suite.ts.postForm(t, "/movies/choose", form)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -64,12 +60,8 @@ func TestMoviesChoose(t *testing.T) {
 	}
 }
 
-func TestMoviesMp3(t *testing.T) {
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	_ = login(t, ts)
+func (suite *WebTestSuite) TestMoviesMp3() {
+	t := suite.T()
 
 	const (
 		validMovieId = "1"
@@ -96,17 +88,53 @@ func TestMoviesMp3(t *testing.T) {
 			movieId:  "A",
 			wantCode: http.StatusBadRequest,
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			code, _, _ := suite.ts.get(t, "/movies/mp3/"+tt.movieId)
+
+			assert.Equal(t, code, tt.wantCode)
+
+		})
+	}
+}
+
+func (suite *WebTestSuite) TestMoviesAll() {
+	t := suite.T()
+
+	const (
+		validMovieId = "1"
+	)
+
+	tests := []struct {
+		name      string
+		movieId   string
+		csrfToken string
+		wantCode  int
+	}{
 		{
-			name:     "Empty Movie String",
-			movieId:  "",
-			wantCode: http.StatusNotFound,
+			name:     "Valid submission",
+			movieId:  validMovieId,
+			wantCode: http.StatusOK,
+		},
+		{
+			name:     "Invalid MovieId",
+			movieId:  "-2",
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:     "Invalid MovieId String",
+			movieId:  "A",
+			wantCode: http.StatusBadRequest,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			code, _, _ := ts.get(t, "/movies/mp3/"+tt.movieId)
+			code, _, _ := suite.ts.get(t, "/movies/mp3/"+tt.movieId)
 
 			assert.Equal(t, code, tt.wantCode)
 

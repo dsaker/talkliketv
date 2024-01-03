@@ -3,17 +3,14 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"talkliketv.net/internal/assert"
 	"testing"
 )
 
-func TestHealthCheck(t *testing.T) {
-	app := newTestApplication(t)
-
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	code, _, body := ts.get(t, "/v1/healthcheck")
+func (suite *WebTestSuite) TestHealthCheck() {
+	t := suite.T()
+	code, _, body := suite.ts.get(t, "/v1/healthcheck")
 
 	assert.Equal(t, code, http.StatusOK)
 
@@ -34,13 +31,18 @@ func TestHealthCheck(t *testing.T) {
 	assert.Equal(t, input.SystemInfo.Version, "")
 }
 
-func TestViewsLoggedIn(t *testing.T) {
+func (suite *WebTestSuite) TestMethodNotAllowed() {
+	t := suite.T()
+	form := url.Values{}
+	code, _, body := suite.ts.postForm(t, "/about", form)
 
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
+	assert.Equal(t, code, http.StatusMethodNotAllowed)
+	assert.StringContains(t, body, "Method Not Allowed")
+}
 
-	_ = login(t, ts)
+func (suite *WebTestSuite) TestViewsLoggedIn() {
+
+	t := suite.T()
 
 	tests := []struct {
 		name     string
@@ -64,7 +66,13 @@ func TestViewsLoggedIn(t *testing.T) {
 			name:     "Phrase View",
 			urlPath:  "/phrase/view",
 			wantCode: http.StatusOK,
-			wantTag:  "<form action='/user/language/switch' method='POST' id=\"switchSliderForm\">",
+			wantTag:  "<form action='/user/language/switch' method='POST' id='switchSliderForm'>",
+		},
+		{
+			name:     "Movies View",
+			urlPath:  "/movies/view",
+			wantCode: http.StatusOK,
+			wantTag:  "<form action='/movies/choose' method='POST'>",
 		},
 		{
 			name:     "Account Password Update",
@@ -72,11 +80,17 @@ func TestViewsLoggedIn(t *testing.T) {
 			wantCode: http.StatusOK,
 			wantTag:  "<form action='/account/password/update' method='POST' novalidate>",
 		},
+		{
+			name:     "Get User Logout",
+			urlPath:  "/user/logout",
+			wantCode: http.StatusMethodNotAllowed,
+			wantTag:  "Method Not Allowed",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, _, body := ts.get(t, tt.urlPath)
+			code, _, body := suite.ts.get(t, tt.urlPath)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -87,12 +101,8 @@ func TestViewsLoggedIn(t *testing.T) {
 	}
 }
 
-func TestViewsNotLoggedIn(t *testing.T) {
-
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
+func (suite *WebNoLoginTestSuite) TestViewsNotLoggedIn() {
+	t := suite.T()
 	tests := []struct {
 		name     string
 		urlPath  string
@@ -137,7 +147,7 @@ func TestViewsNotLoggedIn(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, _, body := ts.get(t, tt.urlPath)
+			code, _, body := suite.ts.get(t, tt.urlPath)
 
 			assert.Equal(t, code, tt.wantCode)
 

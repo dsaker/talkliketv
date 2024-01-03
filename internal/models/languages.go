@@ -30,12 +30,21 @@ func (m *LanguageModel) GetId(language string) (int, error) {
 	err := m.DB.QueryRow(query, language).Scan(&id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, ErrInvalidCredentials
+			return 0, ErrNoRecord
 		} else {
 			return 0, err
 		}
 	}
 	return id, nil
+
+	//stmt := "SELECT EXISTS(SELECT true FROM languages WHERE language = $1)"
+	//
+	//var exists bool
+	//err := m.DB.QueryRow(stmt, language).Scan(&exists)
+	//
+	//if !exists {
+	//	return -1, ErrNoRecord
+	//}
 }
 
 func (m *LanguageModel) All() ([]*Language, error) {

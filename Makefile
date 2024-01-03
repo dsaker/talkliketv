@@ -93,6 +93,7 @@ coverage:
 
 ## coverage report
 report:
+	go test -vet=off ./... -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o cover.html
 
 # ==================================================================================== #

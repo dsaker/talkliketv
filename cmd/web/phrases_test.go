@@ -7,15 +7,11 @@ import (
 	"testing"
 )
 
-func TestPhraseCorrect(t *testing.T) {
-	app := newTestApplication(t)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
-	validCSRFToken := login(t, ts)
+func (suite *WebTestSuite) TestPhraseCorrect() {
+	t := suite.T()
 
 	const (
-		validPhraseId = "1"
+		validPhraseId = "2"
 		validMovieId  = "1"
 	)
 
@@ -30,7 +26,7 @@ func TestPhraseCorrect(t *testing.T) {
 			name:      "Valid submission",
 			phraseId:  validPhraseId,
 			movieId:   validMovieId,
-			csrfToken: validCSRFToken,
+			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusOK,
 		},
 		{
@@ -44,21 +40,21 @@ func TestPhraseCorrect(t *testing.T) {
 			name:      "Not Found PhraseId",
 			phraseId:  "-2",
 			movieId:   validMovieId,
-			csrfToken: validCSRFToken,
+			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusNotFound,
 		},
 		{
 			name:      "Invalid PhraseId String",
 			phraseId:  "A",
 			movieId:   validMovieId,
-			csrfToken: validCSRFToken,
+			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusBadRequest,
 		},
 		{
 			name:      "Not Found MovieId",
 			phraseId:  validPhraseId,
 			movieId:   "-2",
-			csrfToken: validCSRFToken,
+			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusNotFound,
 		},
 	}
@@ -70,10 +66,24 @@ func TestPhraseCorrect(t *testing.T) {
 			form.Add("movie_id", tt.movieId)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, _ := ts.postForm(t, "/phrase/correct", form)
+			code, _, _ := suite.ts.postForm(t, "/phrase/correct", form)
 
 			assert.Equal(t, code, tt.wantCode)
 
 		})
 	}
+}
+
+func (suite *WebTestSuite) TestGetPhrase() {
+
+	t := suite.T()
+
+	t.Run("Get Phrases", func(t *testing.T) {
+		form := url.Values{}
+		form.Add("csrf_token", suite.validCSRFToken)
+		code, _, body := suite.ts.get(t, "/phrase/view")
+
+		assert.Equal(t, code, http.StatusOK)
+		assert.StringContains(t, body, "<td><button id=\"startButton\">Start</button></td>")
+	})
 }

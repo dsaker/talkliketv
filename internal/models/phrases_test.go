@@ -1,27 +1,11 @@
 package models
 
 import (
-	"github.com/stretchr/testify/suite"
 	"talkliketv.net/internal/assert"
 	"testing"
 )
 
-type PhraseModelTestSuite struct {
-	suite.Suite
-	testDb *TestDatabase
-	m      PhraseModel
-}
-
-func (suite *PhraseModelTestSuite) SetupSuite() {
-	suite.testDb = SetupTestDatabase()
-	suite.m = PhraseModel{suite.testDb.DbInstance}
-}
-
-func (suite *PhraseModelTestSuite) TearDownSuite() {
-	defer suite.testDb.TearDown()
-}
-
-func (suite *PhraseModelTestSuite) TestPhraseModelNextTen() {
+func (suite *ModelTestSuite) TestPhraseModelNextTen() {
 	t := suite.T()
 	// Skip the test if the "-short" flag is provided when running the test.
 	if testing.Short() {
@@ -60,7 +44,7 @@ func (suite *PhraseModelTestSuite) TestPhraseModelNextTen() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			frontendPhrases, err := suite.m.NextTen(tt.userId, tt.movieId, tt.flipped)
+			frontendPhrases, err := suite.p.NextTen(tt.userId, tt.movieId, tt.flipped)
 
 			assert.Equal(t, len(frontendPhrases), tt.numPhrases)
 			assert.NilError(t, err)
@@ -68,7 +52,7 @@ func (suite *PhraseModelTestSuite) TestPhraseModelNextTen() {
 	}
 }
 
-func (suite *PhraseModelTestSuite) TestPhraseModelPhraseCorrect() {
+func (suite *ModelTestSuite) TestPhraseModelPhraseCorrect() {
 	t := suite.T()
 	// Skip the test if the "-short" flag is provided when running the test.
 	if testing.Short() {
@@ -84,17 +68,13 @@ func (suite *PhraseModelTestSuite) TestPhraseModelPhraseCorrect() {
 
 	t.Run("Phrase Correct", func(t *testing.T) {
 
-		sumBefore, totalBefore, err := suite.m.PercentageDone(validUserId, validMovieId, validFlipped)
+		sumBefore, totalBefore, err := suite.p.PercentageDone(validUserId, validMovieId, validFlipped)
 		assert.NilError(t, err)
-		err = suite.m.PhraseCorrect(validUserId, validPhraseId, validMovieId, validFlipped)
+		err = suite.p.PhraseCorrect(validUserId, validPhraseId, validMovieId, validFlipped)
 		assert.NilError(t, err)
-		sumAfter, totalAfter, err := suite.m.PercentageDone(validUserId, validMovieId, validFlipped)
+		sumAfter, totalAfter, err := suite.p.PercentageDone(validUserId, validMovieId, validFlipped)
 		assert.NilError(t, err)
 		assert.GreaterThan(t, sumAfter, sumBefore)
 		assert.Equal(t, totalBefore, totalAfter)
 	})
-}
-
-func TestPhraseModelTestSuite(t *testing.T) {
-	suite.Run(t, new(PhraseModelTestSuite))
 }

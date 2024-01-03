@@ -1,0 +1,1 @@
+ALTER TABLE users DROP CONSTRAINT if exists users_name_unique_key;

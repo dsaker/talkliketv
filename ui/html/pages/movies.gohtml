@@ -14,7 +14,7 @@
             <td>{{.Title}}</td>
             <td>{{.NumSubs}}</td>
             <td>
-                <form action="/movies/choose" method="POST">
+                <form action='/movies/choose' method='POST'>
                     <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
                     <input type='hidden' name='movie_id' value='{{.ID}}'>
                     <button>Select</button>

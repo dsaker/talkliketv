@@ -48,9 +48,16 @@ func (m *PhraseModel) PhraseCorrect(userId int, phraseId int, movieId int, flipp
 			WHERE user_id = $1 and phrase_id = $2 and movie_id = $3`
 	}
 
-	_, err := m.DB.Exec(query, args...)
+	result, err := m.DB.Exec(query, args...)
 	if err != nil {
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNoRecord
 	}
 
 	return nil
