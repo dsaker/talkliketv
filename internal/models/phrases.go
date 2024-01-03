@@ -49,6 +49,9 @@ func (m *PhraseModel) PhraseCorrect(userId int, phraseId int, movieId int, flipp
 	}
 
 	result, err := m.DB.Exec(query, args...)
+	if err != nil {
+		return err
+	}
 	rows, err := result.RowsAffected()
 	if err != nil {
 		return err
