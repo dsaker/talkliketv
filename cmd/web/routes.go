@@ -24,7 +24,7 @@ func (app *application) routes() http.Handler {
 
 	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
 
-	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
+	router.HandlerFunc(http.MethodGet, "/healthcheck", app.healthcheckHandler)
 
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 

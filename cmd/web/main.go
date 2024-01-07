@@ -37,10 +37,7 @@ type config struct {
 type application struct {
 	config         config
 	logger         *jsonlog.Logger
-	phrases        models.PhraseModelInterface
-	movies         models.MovieModelInterface
-	languages      models.LanguageModelInterface
-	users          models.UserModelInterface
+	models         models.Models
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
@@ -108,10 +105,7 @@ func main() {
 		config:         cfg,
 		debug:          *debug,
 		logger:         logger,
-		phrases:        &models.PhraseModel{DB: db},
-		movies:         &models.MovieModel{DB: db},
-		languages:      &models.LanguageModel{DB: db},
-		users:          &models.UserModel{DB: db},
+		models:         models.NewModels(db),
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,

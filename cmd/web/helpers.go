@@ -54,7 +54,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 	var email string
 	if userId != 0 {
-		user, _ := app.users.Get(userId)
+		user, _ := app.models.Users.Get(userId)
 		email = user.Email
 	} else {
 		email = ""

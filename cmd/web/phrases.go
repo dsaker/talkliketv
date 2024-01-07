@@ -11,7 +11,7 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.users.Get(userId)
+	user, err := app.models.Users.Get(userId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
@@ -28,7 +28,7 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	phrases, err := app.phrases.NextTen(userId, user.MovieId, user.Flipped)
+	phrases, err := app.models.Phrases.NextTen(userId, user.MovieId, user.Flipped)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -38,13 +38,13 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sum, total, err := app.phrases.PercentageDone(userId, user.MovieId, user.Flipped)
+	sum, total, err := app.models.Phrases.PercentageDone(userId, user.MovieId, user.Flipped)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	movie, err := app.movies.Get(user.MovieId)
+	movie, err := app.models.Movies.Get(user.MovieId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -66,7 +66,7 @@ func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
 func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.users.Get(userId)
+	user, err := app.models.Users.Get(userId)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -95,7 +95,7 @@ func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.phrases.PhraseCorrect(userId, phraseId, movieId, user.Flipped)
+	err = app.models.Phrases.PhraseCorrect(userId, phraseId, movieId, user.Flipped)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)

@@ -19,7 +19,7 @@ type userSignupForm struct {
 func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.users.Get(userID)
+	user, err := app.models.Users.Get(userID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
@@ -31,7 +31,7 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.User = user
-	languages, err := app.languages.All()
+	languages, err := app.models.Languages.All()
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -45,7 +45,7 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = userSignupForm{}
-	languages, err := app.languages.All()
+	languages, err := app.models.Languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -62,7 +62,7 @@ func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 func (app *application) duplicateError(w http.ResponseWriter, r *http.Request, form userSignupForm, err error) {
 	data := app.newTemplateData(r)
 	data.Form = form
-	languages, err2 := app.languages.All()
+	languages, err2 := app.models.Languages.All()
 	if err2 != nil {
 		if errors.Is(err2, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -85,11 +85,11 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
-	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
-	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
-	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
-	form.CheckField(validator.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
+	form.CheckField(form.NotBlank(form.Name), "name", "This field cannot be blank")
+	form.CheckField(form.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(form.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.CheckField(form.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(form.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
@@ -98,12 +98,12 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	languageId, err := app.languages.GetId(form.Language)
+	languageId, err := app.models.Languages.GetId(form.Language)
 	if err != nil {
 		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
-	err = app.users.Insert(form.Name, form.Email, form.Password, languageId)
+	err = app.models.Users.Insert(form.Name, form.Email, form.Password, languageId)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
@@ -148,9 +148,9 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
-	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
-	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(form.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(form.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.CheckField(form.NotBlank(form.Password), "password", "This field cannot be blank")
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
@@ -160,7 +160,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := app.users.Authenticate(form.Email, form.Password)
+	id, err := app.models.Users.Authenticate(form.Email, form.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			form.AddNonFieldError("Email or password is incorrect")
@@ -239,10 +239,10 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 		return
 	}
 
-	form.CheckField(validator.NotBlank(form.CurrentPassword), "currentPassword", "This field cannot be blank")
-	form.CheckField(validator.NotBlank(form.NewPassword), "newPassword", "This field cannot be blank")
-	form.CheckField(validator.MinChars(form.NewPassword, 8), "newPassword", "This field must be at least 8 characters long")
-	form.CheckField(validator.NotBlank(form.NewPasswordConfirmation), "newPasswordConfirmation", "This field cannot be blank")
+	form.CheckField(form.NotBlank(form.CurrentPassword), "currentPassword", "This field cannot be blank")
+	form.CheckField(form.NotBlank(form.NewPassword), "newPassword", "This field cannot be blank")
+	form.CheckField(form.MinChars(form.NewPassword, 8), "newPassword", "This field must be at least 8 characters long")
+	form.CheckField(form.NotBlank(form.NewPasswordConfirmation), "newPasswordConfirmation", "This field cannot be blank")
 	form.CheckField(form.NewPassword == form.NewPasswordConfirmation, "newPasswordConfirmation", "Passwords do not match")
 
 	if !form.Valid() {
@@ -254,7 +254,7 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 	}
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	err = app.users.PasswordUpdate(userId, form.CurrentPassword, form.NewPassword)
+	err = app.models.Users.PasswordUpdate(userId, form.CurrentPassword, form.NewPassword)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			form.AddFieldError("currentPassword", "Current password is incorrect")
@@ -278,7 +278,7 @@ func (app *application) userLanguageSwitch(w http.ResponseWriter, r *http.Reques
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	err := app.users.FlippedUpdate(userId)
+	err := app.models.Users.FlippedUpdate(userId)
 	if err != nil {
 		app.serverError(w, r, err)
 	}
@@ -295,7 +295,7 @@ func (app *application) accountLanguageUpdate(w http.ResponseWriter, r *http.Req
 	data := app.newTemplateData(r)
 	data.Form = accountLanguageUpdateForm{}
 
-	languages, err := app.languages.All()
+	languages, err := app.models.Languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -320,7 +320,7 @@ func (app *application) accountLanguageUpdatePost(w http.ResponseWriter, r *http
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	languageId, err := app.languages.GetId(form.Language)
+	languageId, err := app.models.Languages.GetId(form.Language)
 	if err != nil {
 		data := app.newTemplateData(r)
 		data.Form = form
@@ -328,7 +328,7 @@ func (app *application) accountLanguageUpdatePost(w http.ResponseWriter, r *http
 		return
 	}
 
-	err = app.users.LanguageUpdate(userId, languageId)
+	err = app.models.Users.LanguageUpdate(userId, languageId)
 	if err != nil {
 		app.clientError(w, r, http.StatusBadRequest, err)
 		return

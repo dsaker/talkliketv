@@ -10,7 +10,7 @@ import (
 
 func (suite *WebTestSuite) TestHealthCheck() {
 	t := suite.T()
-	code, _, body := suite.ts.get(t, "/v1/healthcheck")
+	code, _, body := suite.ts.get(t, "/healthcheck")
 
 	assert.Equal(t, code, http.StatusOK)
 

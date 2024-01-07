@@ -24,9 +24,13 @@ copy-hooks:
 # DEVELOPMENT
 # ==================================================================================== #
 
-## run: run the cmd/web application
-run:
+## run/web: run the cmd/web application
+run/web:
 	go run ./cmd/web -db-dsn=${TALKTV_DB_DSN}
+
+## run/api: run the cmd/api application
+run/api:
+	go run ./cmd/api -db-dsn=${TALKTV_DB_DSN}
 
 ## run: run the docker container
 run/docker:
@@ -54,8 +58,7 @@ db/migrations/up: confirm
 # QUALITY CONTROL
 # ==================================================================================== #
 
-## audit/pipeline: tidy dependencies and format, vet and test all code (race on)
-audit/pipeline:
+audit:
 	@echo 'Tidying and verifying module dependencies...'
 	go mod tidy
 	go mod verify
@@ -64,18 +67,15 @@ audit/pipeline:
 	@echo 'Vetting code...'
 	go vet ./...
 	@echo 'Running tests...'
+
+## audit/pipeline: tidy dependencies and format, vet and test all code (race on)
+audit/pipeline:
+	make audit
 	go test -race -vet=off ./... -coverprofile=coverage.out
 
 ## audit/local: tidy dependencies and format, vet and test all code (race off)
 audit/local:
-	@echo 'Tidying and verifying module dependencies...'
-	go mod tidy
-	go mod verify
-	@echo 'Formatting code...'
-	go fmt ./...
-	@echo 'Vetting code...'
-	go vet ./...
-	@echo 'Running tests...'
+	make audit
 	go test -vet=off ./... -coverprofile=coverage.out
 
 ## staticcheck:  detect bugs, suggest code simplifications, and point out dead code
@@ -106,7 +106,7 @@ linker_flags = '-s -X main.buildTime=${current_time} -X main.version=${git_descr
 
 ## build/api: build the cmd/api application
 build/api:
-	@echo 'Building cmd/web...'
+	@echo 'Building cmd/api...'
 	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/api
 	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/api
 
@@ -153,8 +153,7 @@ production/configure/web.service:
 production/uploadcsv:
 	## rsync -rP --delete ./scripts/uploadcsv.py talkliketv@${production_host_ip}:~/uploadcsv/
 	## rsync -rP --delete ./scripts/csvfile talkliketv@${production_host_ip}:~/uploadcsv
-    scp ./scripts/csvfile/NothingToSeeHereS01E01.csv  talkliketv@${production_host_ip}:~/uploadcsv
-
+	scp /Users/dustysaker/Downloads/TheMannyS01E01.csv  talkliketv@${production_host_ip}:~/uploadcsv
 
 ## production/configure/caddyfile: configure the production Caddyfile
 production/configure/caddyfile:
@@ -163,10 +162,17 @@ production/configure/caddyfile:
 		sudo mv ~/Caddyfile /etc/caddy/ \
 		&& sudo systemctl reload caddy \'
 
-## production/redeploy/web: builds and redeploys api to production
+## production/redeploy/web: builds and redeploys web to production
 production/redeploy/web:
-	go build -ldflags=${linker_flags} -o=./bin/web ./cmd/web
 	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/web ./cmd/web
 	rsync -rP --delete ./bin/linux_amd64/web talkliketv@${production_host_ip}:~
+	ssh -t talkliketv@${production_host_ip} '\
+		sudo systemctl restart web'
+
+
+## production/redeploy/api: builds and redeploys api to production
+production/redeploy/api:
+	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/api
+	rsync -rP --delete ./bin/linux_amd64/api talkliketv@${production_host_ip}:~
 	ssh -t talkliketv@${production_host_ip} '\
 		sudo systemctl restart web'

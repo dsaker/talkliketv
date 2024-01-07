@@ -51,9 +51,9 @@ func (suite *WebTestSuite) TearDownSuite() {
 	defer suite.testDb.TearDown()
 	defer suite.ts.Close()
 	suite.T().Run("Valid Logout", func(t *testing.T) {
-		form := url.Values{}
-		form.Add("csrf_token", suite.validCSRFToken)
-		code, _, _ := suite.ts.postForm(t, "/user/logout", form)
+		logoutForm := url.Values{}
+		logoutForm.Add("csrf_token", suite.validCSRFToken)
+		code, _, _ := suite.ts.postForm(t, "/user/logout", logoutForm)
 
 		assert.Equal(t, code, http.StatusSeeOther)
 	})
@@ -142,7 +142,13 @@ func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (i
 	}
 
 	// Read the response body from the test server.
-	defer rs.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}(rs.Body)
+
 	body, err := io.ReadAll(rs.Body)
 	if err != nil {
 		t.Fatal(err)
@@ -172,10 +178,7 @@ func newTestApplication(t *testing.T) (*application, *models.TestDatabase) {
 	return &application{
 		config:         cfg,
 		logger:         logger,
-		phrases:        &models.PhraseModel{DB: testDb.DbInstance},
-		movies:         &models.MovieModel{DB: testDb.DbInstance},
-		languages:      &models.LanguageModel{DB: testDb.DbInstance},
-		users:          &models.UserModel{DB: testDb.DbInstance},
+		models:         models.NewModels(testDb.DbInstance),
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
@@ -217,7 +220,13 @@ func (ts *testServer) get(t *testing.T, urlPath string) (int, http.Header, strin
 		t.Fatal(err)
 	}
 
-	defer rs.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}(rs.Body)
+
 	body, err := io.ReadAll(rs.Body)
 	if err != nil {
 		t.Fatal(err)

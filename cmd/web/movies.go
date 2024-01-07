@@ -13,13 +13,13 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.users.Get(userId)
+	user, err := app.models.Users.Get(userId)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	movies, err := app.movies.All(user.LanguageId)
+	movies, err := app.models.Movies.All(user.LanguageId)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -38,7 +38,7 @@ func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	movie, err := app.movies.Get(id)
+	movie, err := app.models.Movies.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -85,7 +85,7 @@ func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.movies.ChooseMovie(userId, i)
+	err = app.models.Movies.ChooseMovie(userId, i)
 	if err != nil {
 		app.notFound(w, r, err)
 		return

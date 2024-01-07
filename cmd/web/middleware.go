@@ -92,7 +92,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		// Otherwise, we check to see if a user with that ID exists in our
 		// database.
-		exists, err := app.users.Exists(id)
+		exists, err := app.models.Users.Exists(id)
 		if err != nil {
 			app.sessionManager.Put(r.Context(), "flash", "Invalid Credentials")
 			app.invalidCredentialsResponse(w, r)
