@@ -119,7 +119,7 @@ func main() {
 	defer func(db *sql.DB) {
 		err = db.Close()
 		if err != nil {
-
+			logger.PrintFatal(err, nil)
 		}
 	}(db)
 

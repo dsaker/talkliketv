@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/suite"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -29,10 +30,9 @@ func init() {
 
 type ApiTestSuite struct {
 	suite.Suite
-	ts             *testServer
-	testDb         *models.TestDatabase
-	validCSRFToken string
-	app            *application
+	ts     *testServer
+	testDb *models.TestDatabase
+	app    *application
 }
 
 func (suite *ApiTestSuite) SetupSuite() {
@@ -51,15 +51,14 @@ func TestApiTestSuite(t *testing.T) {
 
 type ApiNoLoginTestSuite struct {
 	suite.Suite
-	ts             *testServer
-	testDb         *models.TestDatabase
-	validCSRFToken string
+	ts     *testServer
+	testDb *models.TestDatabase
+	app    *application
 }
 
 func (suite *ApiNoLoginTestSuite) SetupSuite() {
-	app, testDb := newTestApplication()
-	suite.testDb = testDb
-	suite.ts = newTestServer(app.routes())
+	suite.app, suite.testDb = newTestApplication()
+	suite.ts = newTestServer(suite.app.routes())
 }
 
 func (suite *ApiNoLoginTestSuite) TearDownSuite() {
@@ -90,15 +89,10 @@ func (ts *testServer) register(t *testing.T) {
 	assert.Equal(t, code, http.StatusAccepted)
 }
 
-func (ts *testServer) post(t *testing.T, urlPath string, json []byte) (int, http.Header, string) {
-	rs, err := ts.Client().Post(ts.URL+urlPath, "application/json", bytes.NewReader(json))
-	if err != nil {
-		t.Fatal(err)
-	}
-
+func newResponse(t *testing.T, rs *http.Response) (int, http.Header, string) {
 	// Read the response body from the test server.
 	defer func(Body io.ReadCloser) {
-		err = Body.Close()
+		err := Body.Close()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -112,6 +106,29 @@ func (ts *testServer) post(t *testing.T, urlPath string, json []byte) (int, http
 
 	// Return the response status, headers and body.
 	return rs.StatusCode, rs.Header, string(body)
+}
+func (ts *testServer) post(t *testing.T, urlPath string, json []byte) (int, http.Header, string) {
+	rs, err := ts.Client().Post(ts.URL+urlPath, "application/json", bytes.NewReader(json))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return newResponse(t, rs)
+}
+
+func (ts *testServer) put(t *testing.T, urlPath string, json []byte) (int, http.Header, string) {
+	req, err := http.NewRequest(http.MethodPut, ts.URL+urlPath, bytes.NewBuffer(json))
+	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resp, err := ts.Client().Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return newResponse(t, resp)
 }
 
 func newTestApplication() (*application, *models.TestDatabase) {

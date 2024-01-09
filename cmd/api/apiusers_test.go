@@ -5,8 +5,59 @@ import (
 	"fmt"
 	"net/http"
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/models"
 	"testing"
+	"time"
 )
+
+func (suite *ApiNoLoginTestSuite) TestActivateUserHandler() {
+	t := suite.T()
+	data := map[string]interface{}{
+		"name":     "ActivateUserHandler",
+		"password": "password12",
+		"email":    "activateuserhandler@email.com",
+		"language": "Spanish",
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	code, _, body := suite.ts.post(t, "/v1/users", jsonData)
+
+	assert.Equal(t, code, http.StatusAccepted)
+
+	//user := models.User{}
+	var userStruct struct {
+		User models.User `json:"user"`
+	}
+	//userString := "{\n\t\"user\": {\n\t\t\"id\": 1,\n\t\t\"created_at\": \"2024-01-09T17:08:48Z\",\n\t\t\"name\": \"ActivateUserHandler\",\n\t\t\"email\": \"activateuserhandler@email.com\",\n\t\t\"activated\": false,\n\t\t\"movieId\": 0,\n\t\t\"languageId\": 1,\n\t\t\"flipped\": false\n\t}\n}"
+	//userString2 := "{'user': {'id\": 1,\n\t\t\"created_at\": \"2024-01-09T17:08:48Z\",\n\t\t\"name\": \"ActivateUserHandler\",\n\t\t\"email\": \"activateuserhandler@email.com\",\n\t\t\"activated\": false,\n\t\t\"movieId\": 0,\n\t\t\"languageId\": 1,\n\t\t\"flipped\": false\n\t}\n}"
+	err = json.Unmarshal([]byte(body), &userStruct)
+	//err = json.Unmarshal([]byte(), &user)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	token, err := suite.app.models.Tokens.New(userStruct.User.ID, 24*time.Hour, models.ScopeActivation)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data = map[string]interface{}{
+		"token": token.Plaintext,
+	}
+
+	jsonToken, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	code, _, body = suite.ts.put(t, "/v1/users/activated", jsonToken)
+
+	assert.Equal(t, code, http.StatusOK)
+}
 
 func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 
