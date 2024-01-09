@@ -7,15 +7,6 @@ import (
 	"talkliketv.net/internal/validator"
 )
 
-// Create a new userSignupForm struct.
-type userSignupForm struct {
-	Name                string `form:"name"`
-	Email               string `form:"email"`
-	Password            string `form:"password"`
-	Language            string `form:"language"`
-	validator.Validator `form:"-"`
-}
-
 func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
@@ -44,7 +35,7 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 // Update the handler so it displays the signup page.
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-	data.Form = userSignupForm{}
+	data.Form = models.UserSignupForm{}
 	languages, err := app.models.Languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
@@ -59,7 +50,7 @@ func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "signup.gohtml", data)
 }
 
-func (app *application) duplicateError(w http.ResponseWriter, r *http.Request, form userSignupForm, err error) {
+func (app *application) duplicateError(w http.ResponseWriter, r *http.Request, form models.UserSignupForm, err error) {
 	data := app.newTemplateData(r)
 	data.Form = form
 	languages, err2 := app.models.Languages.All()
@@ -77,7 +68,7 @@ func (app *application) duplicateError(w http.ResponseWriter, r *http.Request, f
 }
 
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-	var form userSignupForm
+	var form models.UserSignupForm
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {
@@ -85,11 +76,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form.CheckField(form.NotBlank(form.Name), "name", "This field cannot be blank")
-	form.CheckField(form.NotBlank(form.Email), "email", "This field cannot be blank")
-	form.CheckField(form.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
-	form.CheckField(form.NotBlank(form.Password), "password", "This field cannot be blank")
-	form.CheckField(form.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
+	models.ValidateUser(&form)
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
@@ -103,13 +90,21 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
-	err = app.models.Users.Insert(form.Name, form.Email, form.Password, languageId)
+
+	user := &models.User{
+		Name:       form.Name,
+		Email:      form.Email,
+		LanguageId: languageId,
+		Activated:  false,
+	}
+
+	err = app.models.Users.Insert(user, form.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
 			app.duplicateError(w, r, form, err)
 		} else if errors.Is(err, models.ErrDuplicateUserName) {
-			form.AddFieldError("name", "User name is already in use")
+			form.AddFieldError("name", "Username is already in use")
 			app.duplicateError(w, r, form, err)
 		} else {
 			app.serverError(w, r, err)

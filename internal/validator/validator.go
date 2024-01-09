@@ -13,18 +13,41 @@ var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9
 type Validator struct {
 	NonFieldErrors []string
 	FieldErrors    map[string]string
-	Errors         map[string]string
 }
 
 // New is a helper which creates a new Validator instance with an empty errors map.
 func New() *Validator {
-	return &Validator{Errors: make(map[string]string)}
+	return &Validator{FieldErrors: make(map[string]string)}
 }
 
 // Valid Update the Valid() method to also check that the NonFieldErrors slice is
 // empty.
 func (v *Validator) Valid() bool {
 	return len(v.FieldErrors) == 0 && len(v.NonFieldErrors) == 0
+}
+
+// CheckField adds an error message to the FieldErrors map only if a
+// validation check is not 'ok'.
+func (v *Validator) CheckField(ok bool, key, message string) {
+	if !ok {
+		v.AddFieldError(key, message)
+	}
+}
+
+// NotBlank returns true if a value is not an empty string.
+func NotBlank(value string) bool {
+	return strings.TrimSpace(value) != ""
+}
+
+// Matches returns true if a value matches a provided compiled regular
+// expression pattern.
+func Matches(value string, rx *regexp.Regexp) bool {
+	return rx.MatchString(value)
+}
+
+// MinChars returns true if a value contains at least n characters.
+func MinChars(value string, n int) bool {
+	return utf8.RuneCountInString(value) >= n
 }
 
 // AddNonFieldError Create an AddNonFieldError() helper for adding error messages to the new
@@ -47,14 +70,6 @@ func (v *Validator) AddFieldError(key, message string) {
 	}
 }
 
-// CheckField adds an error message to the FieldErrors map only if a
-// validation check is not 'ok'.
-func (v *Validator) CheckField(ok bool, key, message string) {
-	if !ok {
-		v.AddFieldError(key, message)
-	}
-}
-
 // NotBlank returns true if a value is not an empty string.
 func (v *Validator) NotBlank(value string) bool {
 	return strings.TrimSpace(value) != ""
@@ -69,19 +84,4 @@ func (v *Validator) MinChars(value string, n int) bool {
 // expression pattern.
 func (v *Validator) Matches(value string, rx *regexp.Regexp) bool {
 	return rx.MatchString(value)
-}
-
-// AddError adds an error message to the map (so long as no entry already exists for
-// the given key).
-func (v *Validator) AddError(key, message string) {
-	if _, exists := v.Errors[key]; !exists {
-		v.Errors[key] = message
-	}
-}
-
-// Check adds an error message to the map only if a validation check is not 'ok'.
-func (v *Validator) Check(ok bool, key, message string) {
-	if !ok {
-		v.AddError(key, message)
-	}
 }

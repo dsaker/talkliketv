@@ -168,7 +168,7 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 	// validator instance and return the default value.
 	i, err := strconv.Atoi(s)
 	if err != nil {
-		v.AddError(key, "must be an integer value")
+		v.AddFieldError(key, "must be an integer value")
 		return defaultValue
 	}
 

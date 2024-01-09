@@ -68,8 +68,8 @@ func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error
 
 // ValidateTokenPlaintext Check that the plaintext token has been provided and is exactly 52 bytes long.
 func ValidateTokenPlaintext(v *validator.Validator, tokenPlaintext string) {
-	v.Check(tokenPlaintext != "", "token", "must be provided")
-	v.Check(len(tokenPlaintext) == 26, "token", "must be 26 bytes long")
+	v.CheckField(tokenPlaintext != "", "token", "must be provided")
+	v.CheckField(len(tokenPlaintext) == 26, "token", "must be 26 bytes long")
 }
 
 // TokenModel Define the TokenModel type.

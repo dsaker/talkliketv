@@ -6,18 +6,9 @@ import (
 	"database/sql"
 	"errors"
 	"golang.org/x/crypto/bcrypt"
+	"talkliketv.net/internal/validator"
 	"time"
 )
-
-//type UserModelInterface interface {
-//	Insert(name, email, password string, language int) error
-//	Authenticate(email, password string) (int, error)
-//	Exists(id int) (bool, error)
-//	Get(id int) (*User, error)
-//	PasswordUpdate(id int, currentPassword, newPassword string) error
-//	LanguageUpdate(userId int, languageId int) error
-//	FlippedUpdate(int) error
-//}
 
 // AnonymousUser Declare a new AnonymousUser variable.
 var AnonymousUser = &User{}
@@ -40,12 +31,28 @@ type UserModel struct {
 	DB *sql.DB
 }
 
+type UserSignupForm struct {
+	Name                string `form:"name"`
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	Language            string `form:"language"`
+	validator.Validator `form:"-"`
+}
+
 // IsAnonymous Check if a User instance is the AnonymousUser.
 func (u *User) IsAnonymous() bool {
 	return u == AnonymousUser
 }
 
-func (m UserModel) Insert(name, email, password string, language int) error {
+func ValidateUser(form *UserSignupForm) {
+	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(validator.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
+}
+
+func (m UserModel) Insert(user *User, password string) error {
 	// Create a bcrypt hash of the plain-text password.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
@@ -54,14 +61,15 @@ func (m UserModel) Insert(name, email, password string, language int) error {
 
 	query := `
         INSERT INTO users (name, email, hashed_password, movie_id, language_id) 
-        VALUES ($1, $2, $3, -1, $4)`
+        VALUES ($1, $2, $3, -1, $4)
+        RETURNING id, created, version, activated`
 
-	args := []interface{}{name, email, hashedPassword, language}
+	args := []interface{}{user.Name, user.Email, hashedPassword, user.LanguageId}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err = m.DB.ExecContext(ctx, query, args...)
+	err = m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.Created, &user.Version, &user.Activated)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:

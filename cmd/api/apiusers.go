@@ -9,44 +9,44 @@ import (
 )
 
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
-		Language int    `json:"language"`
-	}
 
-	err := app.readJSON(w, r, &input)
+	var form models.UserSignupForm
+
+	err := app.readJSON(w, r, &form)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
+	languageId, err := app.models.Languages.GetId(form.Language)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	models.ValidateUser(&form)
+
+	if !form.Valid() {
+		app.failedValidationResponse(w, r, form.FieldErrors)
+		return
+	}
+
 	user := &models.User{
-		Name:       input.Name,
-		Email:      input.Email,
-		LanguageId: input.Language,
+		Name:       form.Name,
+		Email:      form.Email,
+		LanguageId: languageId,
 		Activated:  false,
 	}
 
-	v := validator.New()
-
-	v.Check(user.Name != "", "name", "must be provided")
-	v.Check(len(user.Name) <= 500, "name", "must not be more than 500 bytes long")
-	v.Check(v.Matches(user.Email, validator.EmailRX), "email", "This field must be a valid email address")
-	v.Check(v.NotBlank(input.Password), "password", "This field cannot be blank")
-	v.Check(v.MinChars(input.Password, 8), "password", "This field must be at least 8 characters long")
-
-	if !v.Valid() {
-		app.failedValidationResponse(w, r, v.Errors)
-	}
-
-	err = app.models.Users.Insert(user.Name, user.Email, input.Password, user.LanguageId)
+	err = app.models.Users.Insert(user, form.Password)
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrDuplicateEmail):
-			v.AddError("email", "a user with this email address already exists")
-			app.failedValidationResponse(w, r, v.Errors)
+			form.AddFieldError("email", "a user with this email address already exists")
+			app.failedValidationResponse(w, r, form.FieldErrors)
+		case errors.Is(err, models.ErrDuplicateUserName):
+			form.AddFieldError("username", "a user with this username already exists")
+			app.failedValidationResponse(w, r, form.FieldErrors)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
@@ -81,7 +81,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	v := validator.New()
 
 	if models.ValidateTokenPlaintext(v, input.TokenPlaintext); !v.Valid() {
-		app.failedValidationResponse(w, r, v.Errors)
+		app.failedValidationResponse(w, r, v.FieldErrors)
 		return
 	}
 
@@ -92,8 +92,8 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrNoRecord):
-			v.AddError("token", "invalid or expired activation token")
-			app.failedValidationResponse(w, r, v.Errors)
+			v.AddFieldError("token", "invalid or expired activation token")
+			app.failedValidationResponse(w, r, v.FieldErrors)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}

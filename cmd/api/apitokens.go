@@ -29,7 +29,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 	v.MinChars(input.Password, 8)
 
 	if !v.Valid() {
-		app.failedValidationResponse(w, r, v.Errors)
+		app.failedValidationResponse(w, r, v.FieldErrors)
 		return
 	}
 
