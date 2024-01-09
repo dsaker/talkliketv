@@ -118,7 +118,12 @@ func (suite *ModelTestSuite) TestUserModelInsert() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := suite.u.Insert(tt.userName, tt.userEmail, tt.userPassword, tt.userLanguage)
+			user := &User{
+				Name:       tt.userName,
+				Email:      tt.userEmail,
+				LanguageId: tt.userLanguage,
+			}
+			err := suite.u.Insert(user, tt.userPassword)
 
 			if err != nil {
 				assert.Equal(t, err, tt.wantErr)
@@ -141,7 +146,13 @@ func (suite *ModelTestSuite) TestUserModelAuthenticate() {
 		validUserPassword = "password"
 	)
 
-	insertErr := suite.u.Insert("newUser", validUserEmail, validUserPassword, 2)
+	user := &User{
+		Name:       "newUser",
+		Email:      validUserEmail,
+		LanguageId: 2,
+	}
+
+	insertErr := suite.u.Insert(user, validUserPassword)
 	if insertErr != nil {
 		log.Fatal("failed to setup test", insertErr)
 	}
@@ -240,7 +251,13 @@ func (suite *ModelTestSuite) TestUserModelPasswordUpdate() {
 		validUserPassword = "password"
 	)
 
-	err := suite.u.Insert("passwordUpdateUser", validUserEmail, validUserPassword, 2)
+	user := &User{
+		Name:       "passwordUpdateUser",
+		Email:      validUserEmail,
+		LanguageId: 2,
+	}
+
+	err := suite.u.Insert(user, validUserPassword)
 	if err != nil {
 		log.Fatal("failed to insert user: TestUserModelPasswordUpdate ", err)
 	}
@@ -333,7 +350,12 @@ func (suite *ModelTestSuite) TestUserModelFlippedUpdate() {
 		validUserPassword = "password"
 	)
 
-	err := suite.u.Insert("flippedUpdateUsser", validUserEmail, validUserPassword, 2)
+	user := &User{
+		Name:       "flippedUpdateUser",
+		Email:      validUserEmail,
+		LanguageId: 2,
+	}
+	err := suite.u.Insert(user, validUserPassword)
 	if err != nil {
 		log.Fatal("failed to insert user: TestUserModelFlippedUpdate ", err)
 	}
@@ -343,7 +365,7 @@ func (suite *ModelTestSuite) TestUserModelFlippedUpdate() {
 		log.Fatal("failed to authenticate user: TestUserModelFlippedUpdate ", err)
 	}
 
-	user, err := suite.u.Get(validUserId)
+	user, err = suite.u.Get(validUserId)
 	if err != nil {
 		log.Fatal("failed to get user: TestUserModelFlippedUpdate ", err)
 	}
