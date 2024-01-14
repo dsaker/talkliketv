@@ -66,7 +66,7 @@ func (suite *WebTestSuite) TestPhraseCorrect() {
 			form.Add("movie_id", tt.movieId)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, _ := suite.ts.postForm(t, "/phrase/correct", form)
+			code, _, _ := suite.ts.PostForm(t, "/phrase/correct", form)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -81,7 +81,7 @@ func (suite *WebTestSuite) TestGetPhrase() {
 	t.Run("Get Phrases", func(t *testing.T) {
 		form := url.Values{}
 		form.Add("csrf_token", suite.validCSRFToken)
-		code, _, body := suite.ts.get(t, "/phrase/view")
+		code, _, body := suite.ts.Get(t, "/phrase/view")
 
 		assert.Equal(t, code, http.StatusOK)
 		assert.StringContains(t, body, "<td><button id=\"startButton\">Start</button></td>")

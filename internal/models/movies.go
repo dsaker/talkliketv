@@ -24,12 +24,16 @@ type MovieModel struct {
 
 func (m *MovieModel) ChooseMovie(userId int, movieId int) error {
 	args := []interface{}{movieId, userId}
+	_, err := m.Get(movieId)
+	if err != nil {
+		return err
+	}
 	query := `
 			UPDATE users 
 			SET movie_id = $1
 			WHERE id = $2`
 
-	_, err := m.DB.Exec(query, args...)
+	_, err = m.DB.Exec(query, args...)
 	if err != nil {
 		return err
 	}

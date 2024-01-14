@@ -31,12 +31,10 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 
 // Change the data parameter to have the type envelope instead of interface{}.
 func (app *application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
-	js, err := json.MarshalIndent(data, "", "\t")
+	js, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-
-	js = append(js, '\n')
 
 	for key, value := range headers {
 		w.Header()[key] = value

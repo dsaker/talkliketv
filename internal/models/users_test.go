@@ -4,19 +4,20 @@ import (
 	"github.com/stretchr/testify/suite"
 	"log"
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/test"
 	"testing"
 )
 
 type ModelTestSuite struct {
 	suite.Suite
-	testDb *TestDatabase
+	testDb *test.TestDatabase
 	u      UserModel
 	p      PhraseModel
 	m      MovieModel
 }
 
 func (suite *ModelTestSuite) SetupSuite() {
-	suite.testDb = SetupTestDatabase()
+	suite.testDb = test.SetupTestDatabase()
 	suite.u = UserModel{suite.testDb.DbInstance}
 	suite.p = PhraseModel{DB: suite.testDb.DbInstance}
 	suite.m = MovieModel{DB: suite.testDb.DbInstance}

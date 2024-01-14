@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	"github.com/stretchr/testify/suite"
 	"html"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -17,14 +15,10 @@ import (
 	"talkliketv.net/internal/assert"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
+	"talkliketv.net/internal/test"
 	"testing"
 	"time"
 )
-
-// Define a custom testServer type which embeds a httptest.Server instance.
-type testServer struct {
-	*httptest.Server
-}
 
 var cfg config
 
@@ -34,8 +28,8 @@ func init() {
 
 type WebTestSuite struct {
 	suite.Suite
-	ts             *testServer
-	testDb         *models.TestDatabase
+	ts             *test.TestServer
+	testDb         *test.TestDatabase
 	validCSRFToken string
 	app            *application
 }
@@ -43,8 +37,8 @@ type WebTestSuite struct {
 func (suite *WebTestSuite) SetupSuite() {
 	t := suite.T()
 	suite.app, suite.testDb = newTestApplication(t)
-	suite.ts = newTestServer(t, suite.app.routes())
-	suite.validCSRFToken = suite.ts.setupUser(t)
+	suite.ts = newWebTestServer(t, suite.app.routes())
+	suite.validCSRFToken = setupUser(t, suite.ts)
 }
 
 func (suite *WebTestSuite) TearDownSuite() {
@@ -53,7 +47,7 @@ func (suite *WebTestSuite) TearDownSuite() {
 	suite.T().Run("Valid Logout", func(t *testing.T) {
 		logoutForm := url.Values{}
 		logoutForm.Add("csrf_token", suite.validCSRFToken)
-		code, _, _ := suite.ts.postForm(t, "/user/logout", logoutForm)
+		code, _, _ := suite.ts.PostForm(t, "/user/logout", logoutForm)
 
 		assert.Equal(t, code, http.StatusSeeOther)
 	})
@@ -65,8 +59,8 @@ func TestWebTestSuite(t *testing.T) {
 
 type WebNoLoginTestSuite struct {
 	suite.Suite
-	ts             *testServer
-	testDb         *models.TestDatabase
+	ts             *test.TestServer
+	testDb         *test.TestDatabase
 	validCSRFToken string
 }
 
@@ -74,8 +68,8 @@ func (suite *WebNoLoginTestSuite) SetupSuite() {
 	t := suite.T()
 	app, testDb := newTestApplication(t)
 	suite.testDb = testDb
-	suite.ts = newTestServer(t, app.routes())
-	_, _, body := suite.ts.get(t, "/user/login")
+	suite.ts = newWebTestServer(t, app.routes())
+	_, _, body := suite.ts.Get(t, "/user/login")
 	suite.validCSRFToken = extractCSRFToken(t, body)
 }
 
@@ -88,79 +82,8 @@ func TestWebNoLoginTestSuite(t *testing.T) {
 	suite.Run(t, new(WebNoLoginTestSuite))
 }
 
-func (ts *testServer) setupUser(t *testing.T) string {
-	ts.signup(t)
-	validToken := ts.login(t)
-
-	setupUserForm := url.Values{}
-	setupUserForm.Add("movie_id", "1")
-	setupUserForm.Add("csrf_token", validToken)
-
-	code, _, _ := ts.postForm(t, "/movies/choose", setupUserForm)
-
-	assert.Equal(t, code, http.StatusSeeOther)
-
-	return validToken
-}
-
-func (ts *testServer) login(t *testing.T) string {
-	_, _, body := ts.get(t, "/user/login")
-	validCSRFToken := extractCSRFToken(t, body)
-
-	loginForm := url.Values{}
-	loginForm.Add("email", "user99@email.com")
-	loginForm.Add("password", "password")
-	loginForm.Add("csrf_token", validCSRFToken)
-
-	code, _, _ := ts.postForm(t, "/user/login", loginForm)
-
-	assert.Equal(t, code, http.StatusSeeOther)
-
-	return validCSRFToken
-}
-
-func (ts *testServer) signup(t *testing.T) {
-	_, _, body := ts.get(t, "/user/login")
-	validCSRFToken := extractCSRFToken(t, body)
-
-	signupForm := url.Values{}
-	signupForm.Add("name", "user99")
-	signupForm.Add("email", "user99@email.com")
-	signupForm.Add("password", "password")
-	signupForm.Add("language", "Spanish")
-	signupForm.Add("csrf_token", validCSRFToken)
-
-	code, _, _ := ts.postForm(t, "/user/signup", signupForm)
-
-	assert.Equal(t, code, http.StatusSeeOther)
-}
-
-func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (int, http.Header, string) {
-	rs, err := ts.Client().PostForm(ts.URL+urlPath, form)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Read the response body from the test server.
-	defer func(Body io.ReadCloser) {
-		err = Body.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
-	}(rs.Body)
-
-	body, err := io.ReadAll(rs.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	bytes.TrimSpace(body)
-
-	// Return the response status, headers and body.
-	return rs.StatusCode, rs.Header, string(body)
-}
-
-func newTestApplication(t *testing.T) (*application, *models.TestDatabase) {
-	testDb := models.SetupTestDatabase()
+func newTestApplication(t *testing.T) (*application, *test.TestDatabase) {
+	testDb := test.SetupTestDatabase()
 	templateCache, err := newTemplateCache()
 	if err != nil {
 		t.Fatal(err)
@@ -185,7 +108,7 @@ func newTestApplication(t *testing.T) (*application, *models.TestDatabase) {
 	}, testDb
 }
 
-func newTestServer(t *testing.T, h http.Handler) *testServer {
+func newWebTestServer(t *testing.T, h http.Handler) *test.TestServer {
 	// Initialize the test server as normal.
 	ts := httptest.NewTLSServer(h)
 
@@ -208,32 +131,54 @@ func newTestServer(t *testing.T, h http.Handler) *testServer {
 		return http.ErrUseLastResponse
 	}
 
-	return &testServer{ts}
+	return &test.TestServer{Server: ts}
 }
 
-// Implement a get() method on our custom testServer type. This makes a GET
-// request to a given url path using the test server client, and returns the
-// response status code, headers and body.
-func (ts *testServer) get(t *testing.T, urlPath string) (int, http.Header, string) {
-	rs, err := ts.Client().Get(ts.URL + urlPath)
-	if err != nil {
-		t.Fatal(err)
-	}
+func setupUser(t *testing.T, ts *test.TestServer) string {
+	signup(t, ts)
+	validToken := login(t, ts)
 
-	defer func(Body io.ReadCloser) {
-		err = Body.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
-	}(rs.Body)
+	setupUserForm := url.Values{}
+	setupUserForm.Add("movie_id", "1")
+	setupUserForm.Add("csrf_token", validToken)
 
-	body, err := io.ReadAll(rs.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	bytes.TrimSpace(body)
+	code, _, _ := ts.PostForm(t, "/movies/choose", setupUserForm)
 
-	return rs.StatusCode, rs.Header, string(body)
+	assert.Equal(t, code, http.StatusSeeOther)
+
+	return validToken
+}
+
+func login(t *testing.T, ts *test.TestServer) string {
+	_, _, body := ts.Get(t, "/user/login")
+	validCSRFToken := extractCSRFToken(t, body)
+
+	loginForm := url.Values{}
+	loginForm.Add("email", "user99@email.com")
+	loginForm.Add("password", "password")
+	loginForm.Add("csrf_token", validCSRFToken)
+
+	code, _, _ := ts.PostForm(t, "/user/login", loginForm)
+
+	assert.Equal(t, code, http.StatusSeeOther)
+
+	return validCSRFToken
+}
+
+func signup(t *testing.T, ts *test.TestServer) {
+	_, _, body := ts.Get(t, "/user/login")
+	validCSRFToken := extractCSRFToken(t, body)
+
+	signupForm := url.Values{}
+	signupForm.Add("name", "user99")
+	signupForm.Add("email", "user99@email.com")
+	signupForm.Add("password", "password")
+	signupForm.Add("language", "Spanish")
+	signupForm.Add("csrf_token", validCSRFToken)
+
+	code, _, _ := ts.PostForm(t, "/user/signup", signupForm)
+
+	assert.Equal(t, code, http.StatusSeeOther)
 }
 
 // Define a regular expression which captures the CSRF token value from the

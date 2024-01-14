@@ -32,7 +32,7 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
-	id, err := app.readIDParam(r)
+	id, err := models.ReadIDParam(r)
 	if err != nil {
 		app.clientError(w, r, http.StatusBadRequest, err)
 		return

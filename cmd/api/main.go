@@ -23,9 +23,10 @@ const version = "1.0.0"
 
 // Update the config struct to hold the SMTP server settings.
 type config struct {
-	port int
-	env  string
-	db   struct {
+	port          int
+	env           string
+	expVarEnabled bool
+	db            struct {
 		dsn          string
 		maxOpenConns int
 		maxIdleConns int
@@ -62,6 +63,7 @@ type application struct {
 func main() {
 	var cfg config
 
+	flag.BoolVar(&cfg.expVarEnabled, "expvar-enabled", true, "Enable expvar (disable for testing")
 	flag.IntVar(&cfg.port, "port", 4001, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
@@ -125,24 +127,26 @@ func main() {
 
 	logger.PrintInfo("database connection pool established", nil)
 
-	// Publish a new "version" variable in the expvar handler containing our application
-	// version number (currently the constant "1.0.0").
-	expvar.NewString("version").Set(version)
+	if cfg.expVarEnabled {
+		// Publish a new "version" variable in the expvar handler containing our application
+		// version number (currently the constant "1.0.0").
+		expvar.NewString("version").Set(version)
 
-	// Publish the number of active goroutines.
-	expvar.Publish("goroutines", expvar.Func(func() interface{} {
-		return runtime.NumGoroutine()
-	}))
+		// Publish the number of active goroutines
+		expvar.Publish("goroutines", expvar.Func(func() interface{} {
+			return runtime.NumGoroutine()
+		}))
 
-	// Publish the database connection pool statistics.
-	expvar.Publish("database", expvar.Func(func() interface{} {
-		return db.Stats()
-	}))
+		// Publish the database connection pool statistics.
+		expvar.Publish("database", expvar.Func(func() interface{} {
+			return db.Stats()
+		}))
 
-	// Publish the current Unix timestamp.
-	expvar.Publish("timestamp", expvar.Func(func() interface{} {
-		return time.Now().Unix()
-	}))
+		// Publish the current Unix timestamp.
+		expvar.Publish("timestamp", expvar.Func(func() interface{} {
+			return time.Now().Unix()
+		}))
+	}
 
 	app := &application{
 		config: cfg,
