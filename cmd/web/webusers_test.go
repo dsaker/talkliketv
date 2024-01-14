@@ -137,7 +137,7 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			form.Add("password", tt.userPassword)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, body := suite.ts.postForm(t, "/user/signup", form)
+			code, _, body := suite.ts.PostForm(t, "/user/signup", form)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -197,7 +197,7 @@ func (suite *WebTestSuite) TestAccountLanguageUpdatePost() {
 			form.Add("language", tt.userLanguage)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, body := suite.ts.postForm(t, "/account/language/update", form)
+			code, _, body := suite.ts.PostForm(t, "/account/language/update", form)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -265,7 +265,7 @@ func (suite *WebTestSuite) TestUserLoginPost() {
 			form.Add("password", tt.userPassword)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, body := suite.ts.postForm(t, "/user/login", form)
+			code, _, body := suite.ts.PostForm(t, "/user/login", form)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -366,7 +366,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 			form.Add("newPasswordConfirmation", tt.newPasswordConfirmation)
 			form.Add("csrf_token", tt.csrfToken)
 
-			code, _, body := suite.ts.postForm(t, "/account/password/update", form)
+			code, _, body := suite.ts.PostForm(t, "/account/password/update", form)
 
 			assert.Equal(t, code, tt.wantCode)
 

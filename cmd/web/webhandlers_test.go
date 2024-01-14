@@ -10,7 +10,7 @@ import (
 
 func (suite *WebTestSuite) TestHealthCheck() {
 	t := suite.T()
-	code, _, body := suite.ts.get(t, "/healthcheck")
+	code, _, body := suite.ts.Get(t, "/healthcheck")
 
 	assert.Equal(t, code, http.StatusOK)
 
@@ -34,7 +34,7 @@ func (suite *WebTestSuite) TestHealthCheck() {
 func (suite *WebTestSuite) TestMethodNotAllowed() {
 	t := suite.T()
 	form := url.Values{}
-	code, _, body := suite.ts.postForm(t, "/about", form)
+	code, _, body := suite.ts.PostForm(t, "/about", form)
 
 	assert.Equal(t, code, http.StatusMethodNotAllowed)
 	assert.StringContains(t, body, "Method Not Allowed")
@@ -90,7 +90,7 @@ func (suite *WebTestSuite) TestViewsLoggedIn() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, _, body := suite.ts.get(t, tt.urlPath)
+			code, _, body := suite.ts.Get(t, tt.urlPath)
 
 			assert.Equal(t, code, tt.wantCode)
 
@@ -147,7 +147,7 @@ func (suite *WebNoLoginTestSuite) TestViewsNotLoggedIn() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, _, body := suite.ts.get(t, tt.urlPath)
+			code, _, body := suite.ts.Get(t, tt.urlPath)
 
 			assert.Equal(t, code, tt.wantCode)
 

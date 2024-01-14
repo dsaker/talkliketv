@@ -24,18 +24,16 @@ func (suite *ApiNoLoginTestSuite) TestActivateUserHandler() {
 		t.Fatal(err)
 	}
 
-	code, _, body := suite.ts.post(t, "/v1/users", jsonData)
+	code, _, body := suite.ts.Post(t, "/v1/users", jsonData)
 
 	assert.Equal(t, code, http.StatusAccepted)
 
-	//user := models.User{}
 	var userStruct struct {
 		User models.User `json:"user"`
 	}
-	//userString := "{\n\t\"user\": {\n\t\t\"id\": 1,\n\t\t\"created_at\": \"2024-01-09T17:08:48Z\",\n\t\t\"name\": \"ActivateUserHandler\",\n\t\t\"email\": \"activateuserhandler@email.com\",\n\t\t\"activated\": false,\n\t\t\"movieId\": 0,\n\t\t\"languageId\": 1,\n\t\t\"flipped\": false\n\t}\n}"
-	//userString2 := "{'user': {'id\": 1,\n\t\t\"created_at\": \"2024-01-09T17:08:48Z\",\n\t\t\"name\": \"ActivateUserHandler\",\n\t\t\"email\": \"activateuserhandler@email.com\",\n\t\t\"activated\": false,\n\t\t\"movieId\": 0,\n\t\t\"languageId\": 1,\n\t\t\"flipped\": false\n\t}\n}"
+
 	err = json.Unmarshal([]byte(body), &userStruct)
-	//err = json.Unmarshal([]byte(), &user)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +52,7 @@ func (suite *ApiNoLoginTestSuite) TestActivateUserHandler() {
 		t.Fatal(err)
 	}
 
-	code, _, body = suite.ts.put(t, "/v1/users/activated", jsonToken)
+	code, _, body = suite.ts.Put(t, "/v1/users/activated", jsonToken)
 
 	assert.Equal(t, code, http.StatusOK)
 }
@@ -139,7 +137,7 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			userLanguage: validLanguage,
 			userPassword: validPassword,
 			wantCode:     http.StatusUnprocessableEntity,
-			wantTag:      "{\n\t\"error\": {\n\t\t\"email\": \"a user with this email address already exists\"\n\t}\n}\n",
+			wantTag:      "{\"error\":{\"email\":\"a user with this email address already exists\"}}",
 		},
 		{
 			name:         "Invalid Language",
@@ -148,7 +146,7 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			userLanguage: "Made Up Language",
 			userPassword: validPassword,
 			wantCode:     http.StatusBadRequest,
-			wantTag:      "{\n\t\"error\": \"models: no matching record found\"\n}\n",
+			wantTag:      "{\"error\":\"models: no matching record found\"}",
 		},
 		{
 			name:         "Duplicate Name",
@@ -157,7 +155,7 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			userLanguage: validLanguage,
 			userPassword: validPassword,
 			wantCode:     http.StatusUnprocessableEntity,
-			wantTag:      "{\n\t\"error\": {\n\t\t\"username\": \"a user with this username already exists\"\n\t}\n}\n",
+			wantTag:      "{\"error\":{\"username\":\"a user with this username already exists\"}}",
 		},
 	}
 	for _, tt := range tests {
@@ -174,7 +172,7 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 				fmt.Printf("could not marshal json: %s\n", err)
 				return
 			}
-			code, _, body := suite.ts.post(t, "/v1/users", jsonData)
+			code, _, body := suite.ts.Post(t, "/v1/users", jsonData)
 
 			assert.Equal(t, code, tt.wantCode)
 			if tt.wantTag != "" {

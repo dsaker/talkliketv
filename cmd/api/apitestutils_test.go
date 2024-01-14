@@ -1,43 +1,42 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/stretchr/testify/suite"
-	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"talkliketv.net/internal/assert"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
+	"talkliketv.net/internal/test"
 	"testing"
 )
-
-// Define a custom testServer type which embeds a httptest.Server instance.
-type testServer struct {
-	*httptest.Server
-}
 
 var cfg config
 
 func init() {
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	flag.BoolVar(&cfg.expVarEnabled, "expvar-enabled", false, "Enable expvar (disable for testing")
+
 }
 
 type ApiTestSuite struct {
 	suite.Suite
-	ts     *testServer
-	testDb *models.TestDatabase
-	app    *application
+	ts        *test.TestServer
+	testDb    *test.TestDatabase
+	app       *application
+	authToken string
 }
 
 func (suite *ApiTestSuite) SetupSuite() {
 	suite.app, suite.testDb = newTestApplication()
 	suite.ts = newTestServer(suite.app.routes())
+	t := suite.T()
+	register(t, suite.ts, "setupsuite")
+	suite.authToken = getAuthToken(t, suite.ts, "setupsuite")
 }
 
 func (suite *ApiTestSuite) TearDownSuite() {
@@ -51,8 +50,8 @@ func TestApiTestSuite(t *testing.T) {
 
 type ApiNoLoginTestSuite struct {
 	suite.Suite
-	ts     *testServer
-	testDb *models.TestDatabase
+	ts     *test.TestServer
+	testDb *test.TestDatabase
 	app    *application
 }
 
@@ -66,16 +65,16 @@ func (suite *ApiNoLoginTestSuite) TearDownSuite() {
 	defer suite.ts.Close()
 }
 
-func TestApiNoLoginTestSuite(t *testing.T) {
+func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(ApiNoLoginTestSuite))
 }
 
-func (ts *testServer) register(t *testing.T) {
+func register(t *testing.T, ts *test.TestServer, prefix string) {
 
 	data := map[string]interface{}{
-		"name":     "apiUser99",
-		"password": "password",
-		"email":    "apiUser99@email.com",
+		"name":     prefix + "apiUser",
+		"password": "password12",
+		"email":    prefix + "apiUser@email.com",
 		"language": "Spanish",
 	}
 
@@ -84,55 +83,44 @@ func (ts *testServer) register(t *testing.T) {
 		fmt.Printf("could not marshal json: %s\n", err)
 		return
 	}
-	code, _, _ := ts.post(t, "/v1/user", jsonData)
+	code, _, body := ts.Post(t, "/v1/users", jsonData)
 
 	assert.Equal(t, code, http.StatusAccepted)
+	assert.StringContains(t, body, prefix+"apiUser")
 }
 
-func newResponse(t *testing.T, rs *http.Response) (int, http.Header, string) {
-	// Read the response body from the test server.
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
-	}(rs.Body)
+func getAuthToken(t *testing.T, ts *test.TestServer, prefix string) string {
 
-	body, err := io.ReadAll(rs.Body)
+	data := map[string]interface{}{
+		"password": "password12",
+		"email":    prefix + "apiUser@email.com",
+	}
+
+	jsonData, err := json.Marshal(data)
 	if err != nil {
 		t.Fatal(err)
 	}
-	bytes.TrimSpace(body)
+	code, _, body := ts.Post(t, "/v1/tokens/authentication", jsonData)
 
-	// Return the response status, headers and body.
-	return rs.StatusCode, rs.Header, string(body)
-}
-func (ts *testServer) post(t *testing.T, urlPath string, json []byte) (int, http.Header, string) {
-	rs, err := ts.Client().Post(ts.URL+urlPath, "application/json", bytes.NewReader(json))
+	assert.Equal(t, code, http.StatusCreated)
+	assert.StringContains(t, body, "authentication_token")
+
+	var authToken struct {
+		Token models.Token `json:"authentication_token"`
+	}
+
+	err = json.Unmarshal([]byte(body), &authToken)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return newResponse(t, rs)
+	assert.Equal(t, 26, len(authToken.Token.Plaintext))
+
+	return authToken.Token.Plaintext
 }
 
-func (ts *testServer) put(t *testing.T, urlPath string, json []byte) (int, http.Header, string) {
-	req, err := http.NewRequest(http.MethodPut, ts.URL+urlPath, bytes.NewBuffer(json))
-	req.Header.Set("Content-Type", "application/json")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	resp, err := ts.Client().Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return newResponse(t, resp)
-}
-
-func newTestApplication() (*application, *models.TestDatabase) {
-	testDb := models.SetupTestDatabase()
+func newTestApplication() (*application, *test.TestDatabase) {
+	testDb := test.SetupTestDatabase()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
@@ -145,8 +133,8 @@ func newTestApplication() (*application, *models.TestDatabase) {
 	}, testDb
 }
 
-func newTestServer(h http.Handler) *testServer {
+func newTestServer(h http.Handler) *test.TestServer {
 	// Initialize the test server as normal.
 	ts := httptest.NewTLSServer(h)
-	return &testServer{ts}
+	return &test.TestServer{Server: ts}
 }

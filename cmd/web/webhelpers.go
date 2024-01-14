@@ -6,10 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-playground/form/v4"
-	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -130,15 +128,4 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	}
 
 	return nil
-}
-
-func (app *application) readIDParam(r *http.Request) (int, error) {
-	params := httprouter.ParamsFromContext(r.Context())
-
-	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
-	if err != nil || id < 1 {
-		return 0, errors.New("invalid id parameter")
-	}
-
-	return int(id), nil
 }
