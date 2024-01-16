@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"github.com/stretchr/testify/suite"
 	"net/http"
 	"net/http/httptest"
@@ -34,9 +33,9 @@ type ApiTestSuite struct {
 func (suite *ApiTestSuite) SetupSuite() {
 	suite.app, suite.testDb = newTestApplication()
 	suite.ts = newTestServer(suite.app.routes())
-	t := suite.T()
-	register(t, suite.ts, "setupsuite")
-	suite.authToken = getAuthToken(t, suite.ts, "setupsuite")
+	suite.register("setupsuite")
+	suite.authToken = suite.getAuthToken("setupsuite")
+	suite.chooseMovie()
 }
 
 func (suite *ApiTestSuite) TearDownSuite() {
@@ -69,7 +68,8 @@ func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(ApiNoLoginTestSuite))
 }
 
-func register(t *testing.T, ts *test.TestServer, prefix string) {
+func (suite *ApiTestSuite) register(prefix string) {
+	t := suite.T()
 
 	data := map[string]interface{}{
 		"name":     prefix + "apiUser",
@@ -80,17 +80,32 @@ func register(t *testing.T, ts *test.TestServer, prefix string) {
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		fmt.Printf("could not marshal json: %s\n", err)
+		t.Fatalf("could not marshal json: %s\n", err)
 		return
 	}
-	code, _, body := ts.Post(t, "/v1/users", jsonData)
+	code, _, body := suite.ts.Post(t, "/v1/users", jsonData)
 
 	assert.Equal(t, code, http.StatusAccepted)
 	assert.StringContains(t, body, prefix+"apiUser")
 }
 
-func getAuthToken(t *testing.T, ts *test.TestServer, prefix string) string {
+func (suite *ApiTestSuite) chooseMovie() {
+	t := suite.T()
+	jsonData, err := json.Marshal(map[string]interface{}{
+		"movie_id": 1,
+	})
 
+	if err != nil {
+		t.Fatalf("could not marshal json: %s\n", err)
+		return
+	}
+	code, _, _ := suite.ts.Request(t, jsonData, "/v1/movies/choose", http.MethodPatch, suite.authToken)
+
+	assert.Equal(t, code, http.StatusOK)
+}
+
+func (suite *ApiTestSuite) getAuthToken(prefix string) string {
+	t := suite.T()
 	data := map[string]interface{}{
 		"password": "password12",
 		"email":    prefix + "apiUser@email.com",
@@ -100,7 +115,7 @@ func getAuthToken(t *testing.T, ts *test.TestServer, prefix string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	code, _, body := ts.Post(t, "/v1/tokens/authentication", jsonData)
+	code, _, body := suite.ts.Post(t, "/v1/tokens/authentication", jsonData)
 
 	assert.Equal(t, code, http.StatusCreated)
 	assert.StringContains(t, body, "authentication_token")

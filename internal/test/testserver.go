@@ -101,21 +101,13 @@ func (ts *TestServer) Post(t *testing.T, urlPath string, json []byte) (int, http
 	return readResponse(t, rs)
 }
 
-func (ts *TestServer) Put(t *testing.T, urlPath string, json []byte) (int, http.Header, string) {
-	req, err := http.NewRequest(http.MethodPut, ts.URL+urlPath, bytes.NewBuffer(json))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return ts.do(t, req)
-}
-
-func (ts *TestServer) Patch(t *testing.T, json []byte, urlPath, authToken string) (int, http.Header, string) {
-	req, err := http.NewRequest(http.MethodPatch, ts.URL+urlPath, bytes.NewBuffer(json))
+func (ts *TestServer) Request(t *testing.T, json []byte, urlPath, method, authToken string) (int, http.Header, string) {
+	req, err := http.NewRequest(method, ts.URL+urlPath, bytes.NewBuffer(json))
 	if authToken != "" {
 		req.Header.Set("Authorization", "Bearer "+authToken)
 	}
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	return ts.do(t, req)
 }

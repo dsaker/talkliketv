@@ -6,9 +6,9 @@ import (
 )
 
 type MovieModelInterface interface {
-	Get(id int) (*Movie, error)
-	All(id int) ([]*Movie, error)
-	ChooseMovie(id int, i int) error
+	Get(int) (*Movie, error)
+	All(int) ([]*Movie, error)
+	ChooseMovie(int, i int) error
 }
 
 type Movie struct {

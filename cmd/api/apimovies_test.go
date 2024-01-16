@@ -41,7 +41,7 @@ func (suite *ApiTestSuite) TestApiMoviesChoose() {
 				return
 			}
 
-			code, _, _ := suite.ts.Patch(t, jsonData, "/v1/movies/choose", suite.authToken)
+			code, _, _ := suite.ts.Request(t, jsonData, "/v1/movies/choose", http.MethodPatch, suite.authToken)
 
 			assert.Equal(t, code, tt.wantCode)
 
