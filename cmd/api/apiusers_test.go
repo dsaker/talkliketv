@@ -52,7 +52,7 @@ func (suite *ApiNoLoginTestSuite) TestActivateUserHandler() {
 		t.Fatal(err)
 	}
 
-	code, _, body = suite.ts.Request(t, jsonToken, "/v1/users/activated", http.MethodPut, "")
+	code, _, _ = suite.ts.Request(t, jsonToken, "/v1/users/activated", http.MethodPut, "")
 
 	assert.Equal(t, code, http.StatusOK)
 }
