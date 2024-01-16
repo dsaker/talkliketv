@@ -91,6 +91,7 @@ func (suite *ApiTestSuite) register(prefix string) {
 
 func (suite *ApiTestSuite) chooseMovie() {
 	t := suite.T()
+
 	jsonData, err := json.Marshal(map[string]interface{}{
 		"movie_id": 1,
 	})

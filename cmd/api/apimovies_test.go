@@ -110,39 +110,22 @@ func (suite *ApiTestSuite) TestApiMoviesMp3() {
 func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 	t := suite.T()
 
-	const (
-		validLanguageId = "1"
-	)
-
 	tests := []struct {
 		name       string
-		languageId string
-		csrfToken  string
 		wantCode   int
 		wantString string
 	}{
 		{
 			name:       "Valid submission",
-			languageId: validLanguageId,
 			wantCode:   http.StatusOK,
 			wantString: "MissAdrenalineS01E01",
-		},
-		{
-			name:       "Invalid LanguageId",
-			languageId: "-2",
-			wantCode:   http.StatusBadRequest,
-		},
-		{
-			name:       "Invalid LanguageId String",
-			languageId: "A",
-			wantCode:   http.StatusBadRequest,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			code, _, body := suite.ts.Get(t, "/v1/movies/language/"+tt.languageId)
+			code, _, body := suite.ts.Request(t, nil, "/v1/movies", http.MethodGet, suite.authToken)
 
 			assert.Equal(t, code, tt.wantCode)
 
