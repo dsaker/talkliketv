@@ -65,14 +65,10 @@ func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := models.ReadIDParam(r)
-	if err != nil {
-		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
-		return
-	}
+	user := app.contextGetUser(r)
 
 	// Accept the metadata struct as a return value.
-	movies, err := app.models.Movies.Get(id)
+	movies, err := app.models.Movies.Get(user.LanguageId)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

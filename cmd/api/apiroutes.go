@@ -21,7 +21,7 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/v1/movies/mp3/:id", app.moviesMp3)
 	router.HandlerFunc(http.MethodPatch, "/v1/movies/choose", app.moviesChoose)
-	router.HandlerFunc(http.MethodGet, "/v1/movies/language/:id", app.listMoviesHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/movies", app.listMoviesHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/phrase/correct", app.phraseCorrect)
 
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())

@@ -208,7 +208,7 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 
 	// Set up the SQL query.
 	query := `
-        SELECT users.id, users.created, users.name, users.email, users.hashed_password, users.activated, users.version
+        SELECT users.id, users.created, users.name, users.email, users.hashed_password, users.language_id, users.movie_id, users.flipped, users.activated, users.version
         FROM users
         INNER JOIN tokens
         ON users.id = tokens.user_id
@@ -235,6 +235,9 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 		&user.Name,
 		&user.Email,
 		&user.HashedPassword,
+		&user.LanguageId,
+		&user.MovieId,
+		&user.Flipped,
 		&user.Activated,
 		&user.Version,
 	)

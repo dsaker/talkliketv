@@ -13,6 +13,8 @@ import (
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 var (
