@@ -175,4 +175,4 @@ production/redeploy/api:
 	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/api
 	rsync -rP --delete ./bin/linux_amd64/api talkliketv@${production_host_ip}:~
 	ssh -t talkliketv@${production_host_ip} '\
-		sudo systemctl restart web'
+		sudo systemctl restart api'

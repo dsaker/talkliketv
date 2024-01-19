@@ -10,6 +10,10 @@ talkliketv is a simple web application to learn a language by using subtitle fro
 
 `make run/api`
 
+# HealthCheck
+
+`curl -i localhost:4001/v1/healthcheck`
+
 # Register User
 
 `BODY='{"name": "newuser", "password": "password12", "email": "newuser@email.com", "language": "Spanish"}'
