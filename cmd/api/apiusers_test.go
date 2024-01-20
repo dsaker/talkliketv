@@ -137,7 +137,7 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			userLanguage: validLanguage,
 			userPassword: validPassword,
 			wantCode:     http.StatusUnprocessableEntity,
-			wantTag:      "{\"error\":{\"email\":\"a user with this email address already exists\"}}",
+			wantTag:      "a user with this email address already exists",
 		},
 		{
 			name:         "Invalid Language",
@@ -146,7 +146,7 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			userLanguage: "Made Up Language",
 			userPassword: validPassword,
 			wantCode:     http.StatusBadRequest,
-			wantTag:      "{\"error\":\"models: no matching record found\"}",
+			wantTag:      "models: no matching record found",
 		},
 		{
 			name:         "Duplicate Name",
@@ -155,7 +155,7 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			userLanguage: validLanguage,
 			userPassword: validPassword,
 			wantCode:     http.StatusUnprocessableEntity,
-			wantTag:      "{\"error\":{\"username\":\"a user with this username already exists\"}}",
+			wantTag:      "a user with this username already exists",
 		},
 	}
 	for _, tt := range tests {

@@ -17,8 +17,7 @@ func (app *application) about(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	env := envelope{
-		"application": "web",
-		"status":      "available",
+		"status": "available",
 		"system_info": map[string]string{
 			"environment": app.config.env,
 			"version":     version,

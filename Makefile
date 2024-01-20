@@ -176,3 +176,7 @@ production/redeploy/api:
 	rsync -rP --delete ./bin/linux_amd64/api talkliketv@${production_host_ip}:~
 	ssh -t talkliketv@${production_host_ip} '\
 		sudo systemctl restart api'
+
+#export TALKTV_DB_DSN=postgres://talktv:pa55word@localhost/talktv?sslmode=disable
+#export DOCKER_DB_DSN=postgres://talktv:pa55word@host.docker.internal/talktv?sslmode=disable
+#export TEST_DB_DSN=postgres://testdb:pa55word@localhost/testdb?sslmode=disable
