@@ -4,12 +4,6 @@ import (
 	"database/sql"
 )
 
-type PhraseModelInterface interface {
-	NextTen(int, int, bool) ([]*FrontendPhrase, error)
-	PhraseCorrect(int, int, int, bool) error
-	PercentageDone(int, int, bool) (int, int, error)
-}
-
 type Phrase struct {
 	ID             int
 	Phrase         string

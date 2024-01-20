@@ -24,16 +24,25 @@ curl -i -d "$BODY" localhost:4001/v1/users`
 `BODY='{"email": "localuser@email.com", "password": "password12"}' 
 curl -i -d "$BODY" localhost:4001/v1/tokens/authentication`
 
+# Store Token In TOKEN
+
+`BODY='{"email": "localuser@email.com", "password": "password12"}'
+TOKEN=$(curl -d "$BODY" localhost:4001/v1/tokens/authentication | jq -r '.authentication_token.token')
+`
+
 # ChooseMovie
 
 `BODY='{"movie_id": 1}'
-curl --request PATCH -i -H "Authorization: Bearer EQIO77KQ2GJGOB6WSTQVU3FH2M" -d "$BODY" localhost:4001/v1/movies/choose`
+curl --request PATCH -i -H "Authorization: Bearer $TOKEN" -d "$BODY" localhost:4001/v1/movies/choose`
 
 # GetMovies
 
-`curl -i -H "Authorization: Bearer EQIO77KQ2GJGOB6WSTQVU3FH2M" localhost:4001/v1/movies`
+`curl -i -H "Authorization: Bearer $TOKEN" localhost:4001/v1/movies`
 
-# PhraseUpdate
+# PhraseCorrect
 
 `BODY='{"movie_id": 1, "phrase_id": 2}'
-curl --request POST -i -H "Authorization: Bearer EQIO77KQ2GJGOB6WSTQVU3FH2M" -d "$BODY" localhost:4001/v1/phrase/correct`
+curl --request POST -i -H "Authorization: Bearer $TOKEN" -d "$BODY" localhost:4001/v1/phrase/correct`
+
+BODY='{"movie": 1, "phrase": 2}'
+curl --request POST -i -H "Authorization: Bearer $TOKEN" -d "$BODY" localhost:4001/v1/phrase/correct

@@ -5,12 +5,6 @@ import (
 	"errors"
 )
 
-type MovieModelInterface interface {
-	Get(int) (*Movie, error)
-	All(int) ([]*Movie, error)
-	ChooseMovie(int, i int) error
-}
-
 type Movie struct {
 	ID      int
 	Title   string

@@ -20,10 +20,25 @@ To list available make commands
 
 To run locally
 
-`make run`
+`
+docker pull postgres
+docker run -d -P -p 127.0.0.1:5433:5432 -e POSTGRES_PASSWORD="password" --name talkliketvpg postgres
+echo "export TALKTV_DB_DSN=postgresql://postgres:password@localhost:5433/postgres" >> .envrc
+make db/migrations/up
+make run/web
+make run/api`
 
 # Build
 
 To build the web application
 
 `make build/web`
+
+# Extract srt file from mkv files
+
+download mkvextract tool -> https://mkvtoolnix.download/downloads.html
+
+find srt track of language you would like to extract 
+`mkvinfo mkvfile.mkv`
+and extract
+`mkvextract mkvfile.mkv tracks 5:[Choose Title].[Choose Language].srt`
