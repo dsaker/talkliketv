@@ -18,9 +18,9 @@ type ModelTestSuite struct {
 
 func (suite *ModelTestSuite) SetupSuite() {
 	suite.testDb = test.SetupTestDatabase()
-	suite.u = UserModel{suite.testDb.DbInstance}
-	suite.p = PhraseModel{DB: suite.testDb.DbInstance}
-	suite.m = MovieModel{DB: suite.testDb.DbInstance}
+	suite.u = UserModel{DB: suite.testDb.DbInstance, CtxTimeout: 3}
+	suite.p = PhraseModel{DB: suite.testDb.DbInstance, CtxTimeout: 3}
+	suite.m = MovieModel{DB: suite.testDb.DbInstance, CtxTimeout: 3}
 }
 
 func (suite *ModelTestSuite) TearDownSuite() {

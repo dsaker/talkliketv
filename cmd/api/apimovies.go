@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 	"talkliketv.net/internal/models"
+	"talkliketv.net/internal/validator"
 	"talkliketv.net/ui"
 )
 
@@ -67,15 +68,35 @@ func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 
+	var input struct {
+		Title string
+		models.Filters
+	}
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Title = models.ReadString(qs, "title", "")
+
+	input.Filters.Page = models.ReadInt(qs, "page", 1, v)
+	input.Filters.PageSize = models.ReadInt(qs, "page_size", 20, v)
+
+	input.Filters.Sort = models.ReadString(qs, "sort", "id")
+	input.Filters.SortSafeList = []string{"id", "title", "year", "num_subs", "-id", "-title", "-year", "-num_subs"}
+
+	if models.ValidateFilters(v, input.Filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.FieldErrors)
+		return
+	}
 	// Accept the metadata struct as a return value.
-	movies, err := app.models.Movies.Get(user.LanguageId)
+	movies, metadata, err := app.models.Movies.All(user.LanguageId, input.Title, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	// Include the metadata in the response envelope.
-	err = app.writeJSON(w, http.StatusOK, envelope{"movies": movies}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"movies": movies, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

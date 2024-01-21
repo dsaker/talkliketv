@@ -43,3 +43,7 @@ find srt track of language you would like to extract
 `mkvinfo mkvfile.mkv`
 and extract
 `mkvextract mkvfile.mkv tracks 5:[Choose Title].[Choose Language].srt`
+
+# To Do
+
+GetAllMovies when not signed in

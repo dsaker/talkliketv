@@ -61,5 +61,7 @@ curl -L https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt | sudo tee -
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 apt update
 apt --yes install caddy
+apt --yes install postgresql-contrib
+sudo -i -u postgres psql -d talkliketv -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
 echo "Script complete! Rebooting..."
 reboot

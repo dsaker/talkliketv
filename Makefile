@@ -139,7 +139,7 @@ production/connect:
 ## production/deploy/api: deploy the api to production
 production/deploy/web:
 	rsync -rP --delete ./bin/linux_amd64/web ./migrations talkliketv@${production_host_ip}:~
-	ssh -t talkliketv@${production_host_ip} 'migrate -path ~/migrations -database $$TALKLIKETV_DB_DSN up'
+	ssh -t talkliketv@${production_host_ip} 'migrate -path ~/migrations -database $TALKLIKETV_DB_DSN up'
 
 ## production/configure/web.service: configure the production systemd web.service file
 production/configure/web.service:

@@ -117,8 +117,13 @@ func (suite *ModelTestSuite) TestMovieModelAll() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			movies, err := suite.m.All(tt.languageId)
+			filters := Filters{
+				Page:         1,
+				PageSize:     20,
+				Sort:         "id",
+				SortSafeList: []string{"id"},
+			}
+			movies, _, err := suite.m.All(tt.languageId, "", filters)
 			if tt.wantErr != nil {
 				assert.Equal(t, err, tt.wantErr)
 			} else {
