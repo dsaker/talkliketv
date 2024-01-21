@@ -24,7 +24,8 @@ type FrontendPhrase struct {
 }
 
 type PhraseModel struct {
-	DB *sql.DB
+	DB         *sql.DB
+	CtxTimeout time.Duration
 }
 
 func (m *PhraseModel) PhraseCorrect(userId int, phraseId int, movieId int, flipped bool) error {
@@ -44,7 +45,7 @@ func (m *PhraseModel) PhraseCorrect(userId int, phraseId int, movieId int, flipp
 			WHERE user_id = $1 and phrase_id = $2 and movie_id = $3`
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	result, err := m.DB.ExecContext(ctx, query, args...)
@@ -85,7 +86,7 @@ func (m *PhraseModel) NextTen(userId int, movieId int, flipped bool) ([]*Fronten
 			LIMIT 10`
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	rows, err := m.DB.QueryContext(ctx, query, userId, movieId)
@@ -144,7 +145,7 @@ func (m *PhraseModel) PercentageDone(userId int, movieId int, flipped bool) (int
 	}
 
 	var sum int
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 	if err := m.DB.QueryRowContext(ctx, query, userId, movieId).Scan(&sum); err != nil {
 		return -1, -1, err

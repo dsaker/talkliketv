@@ -8,14 +8,15 @@ import (
 )
 
 type Movie struct {
-	ID      int64  `json:"id"`
+	ID      int    `json:"id"`
 	Title   string `json:"title"`
 	NumSubs string `json:"num_subs"`
 	Mp3     bool   `json:"mp3"`
 }
 
 type MovieModel struct {
-	DB *sql.DB
+	DB         *sql.DB
+	CtxTimeout time.Duration
 }
 
 func (m *MovieModel) ChooseMovie(userId int, movieId int) error {
@@ -29,7 +30,7 @@ func (m *MovieModel) ChooseMovie(userId int, movieId int) error {
 			SET movie_id = $1
 			WHERE id = $2`
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	_, err = m.DB.ExecContext(ctx, query, args...)
@@ -75,7 +76,7 @@ func (m *MovieModel) ChooseMovie(userId int, movieId int) error {
 func (m *MovieModel) Get(id int) (*Movie, error) {
 	v := &Movie{}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, "SELECT id, title, num_subs FROM movies WHERE  id = $1", id).Scan(&v.ID, &v.Title, &v.NumSubs)
@@ -95,7 +96,7 @@ func (m *MovieModel) All(languageId int) ([]*Movie, error) {
 	// Write the SQL statement we want to execute.
 	stmt := `SELECT id, title, num_subs, mp3 FROM movies where language_id = $1 ORDER BY id DESC LIMIT 10`
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	rows, err := m.DB.QueryContext(ctx, stmt, languageId)

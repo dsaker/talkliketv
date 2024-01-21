@@ -55,7 +55,7 @@ func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := app.contextGetUser(r)
-	err = app.models.Movies.ChooseMovie(int(user.ID), input.MovieId)
+	err = app.models.Movies.ChooseMovie(user.ID, input.MovieId)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return

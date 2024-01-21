@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"time"
 )
 
 var (
@@ -25,12 +26,12 @@ type Models struct {
 	Tokens    TokenModel
 }
 
-func NewModels(db *sql.DB) Models {
+func NewModels(db *sql.DB, ctxTimeout time.Duration) Models {
 	return Models{
-		Movies:    MovieModel{DB: db},
-		Phrases:   PhraseModel{DB: db},
-		Languages: LanguageModel{DB: db},
-		Users:     UserModel{DB: db},
-		Tokens:    TokenModel{DB: db},
+		Movies:    MovieModel{DB: db, CtxTimeout: ctxTimeout},
+		Phrases:   PhraseModel{DB: db, CtxTimeout: ctxTimeout},
+		Languages: LanguageModel{DB: db, CtxTimeout: ctxTimeout},
+		Users:     UserModel{DB: db, CtxTimeout: ctxTimeout},
+		Tokens:    TokenModel{DB: db, CtxTimeout: ctxTimeout},
 	}
 }

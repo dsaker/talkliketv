@@ -19,7 +19,7 @@ func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.models.Phrases.PhraseCorrect(int(user.ID), input.PhraseId, input.MovieId, user.Flipped)
+	err = app.models.Phrases.PhraseCorrect(user.ID, input.PhraseId, input.MovieId, user.Flipped)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFoundResponse(w, r)

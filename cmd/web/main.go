@@ -37,6 +37,7 @@ func main() {
 
 	flag.IntVar(&cfg.Port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
+	flag.IntVar(&cfg.CtxTimeout, "ctx-timeout", 3, "Context timeout for db queries")
 
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	debug := flag.Bool("debug", false, "Enable debug mode")
@@ -92,7 +93,7 @@ func main() {
 		config:         cfg,
 		debug:          *debug,
 		logger:         logger,
-		models:         models.NewModels(db),
+		models:         models.NewModels(db, time.Duration(cfg.CtxTimeout)),
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,

@@ -38,6 +38,7 @@ func main() {
 	flag.BoolVar(&cfg.ExpVarEnabled, "expvar-enabled", true, "Enable expvar (disable for testing")
 	flag.IntVar(&cfg.Port, "port", 4001, "API server port")
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
+	flag.IntVar(&cfg.CtxTimeout, "ctx-timeout", 3, "Context timeout for db queries")
 
 	// Use the empty string "" as the default value for the db-dsn command-line flag,
 	// rather than os.Getenv("GREENLIGHT_DB_DSN") like we were previously.
@@ -123,7 +124,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
-		models: models.NewModels(db),
+		models: models.NewModels(db, time.Duration(cfg.CtxTimeout)),
 	}
 
 	err = app.serve()

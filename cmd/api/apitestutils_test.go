@@ -145,7 +145,7 @@ func newTestApplication() (*application, *test.TestDatabase) {
 	return &application{
 		config: cfg,
 		logger: logger,
-		models: models.NewModels(testDb.DbInstance),
+		models: models.NewModels(testDb.DbInstance, 3),
 	}, testDb
 }
 

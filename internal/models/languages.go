@@ -8,12 +8,13 @@ import (
 )
 
 type Language struct {
-	ID       int64  `json:"id"`
+	ID       int    `json:"id"`
 	Language string `json:"language"`
 }
 
 type LanguageModel struct {
-	DB *sql.DB
+	DB         *sql.DB
+	CtxTimeout time.Duration
 }
 
 func (m *LanguageModel) GetId(language string) (int, error) {
@@ -24,7 +25,7 @@ func (m *LanguageModel) GetId(language string) (int, error) {
 
 	var id int
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, language).Scan(&id)
@@ -42,7 +43,7 @@ func (m *LanguageModel) All() ([]*Language, error) {
 	// Write the SQL statement we want to execute.
 	stmt := `SELECT id, language FROM languages where id > 0`
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	rows, err := m.DB.QueryContext(ctx, stmt)

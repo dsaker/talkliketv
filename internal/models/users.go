@@ -14,7 +14,7 @@ import (
 var AnonymousUser = &User{}
 
 type User struct {
-	ID             int64     `json:"id"`
+	ID             int       `json:"id"`
 	Created        time.Time `json:"created_at"`
 	Name           string    `json:"name"`
 	Email          string    `json:"email"`
@@ -28,7 +28,8 @@ type User struct {
 
 // UserModel Define a new UserModel type which wraps a database connection pool.
 type UserModel struct {
-	DB *sql.DB
+	DB         *sql.DB
+	CtxTimeout time.Duration
 }
 
 type UserSignupForm struct {
@@ -66,7 +67,7 @@ func (m UserModel) Insert(user *User, password string) error {
 
 	args := []interface{}{user.Name, user.Email, hashedPassword, user.LanguageId}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	err = m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.Created, &user.Version, &user.Activated)
@@ -92,7 +93,7 @@ func (m UserModel) Authenticate(email, password string) (int, error) {
 
 	query := "SELECT id, hashed_password FROM users WHERE email = $1"
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, email).Scan(&id, &hashedPassword)
@@ -125,7 +126,10 @@ func (m UserModel) Exists(id int) (bool, error) {
 
 	stmt := "SELECT EXISTS(SELECT true FROM users WHERE id = $1)"
 
-	err := m.DB.QueryRow(stmt, id).Scan(&exists)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, stmt, id).Scan(&exists)
 
 	return exists, err
 }
@@ -135,7 +139,10 @@ func (m UserModel) Get(id int) (*User, error) {
 
 	stmt := `SELECT id, movie_id, name, email, language_id, created, flipped FROM users WHERE id = $1`
 
-	err := m.DB.QueryRow(stmt, id).Scan(
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, stmt, id).Scan(
 		&user.ID,
 		&user.MovieId,
 		&user.Name,
@@ -159,7 +166,10 @@ func (m UserModel) PasswordUpdate(id int, currentPassword, newPassword string) e
 
 	stmt := "SELECT hashed_password FROM users WHERE id = $1"
 
-	err := m.DB.QueryRow(stmt, id).Scan(&currentHashedPassword)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, stmt, id).Scan(&currentHashedPassword)
 	if err != nil {
 		return err
 	}
@@ -180,7 +190,7 @@ func (m UserModel) PasswordUpdate(id int, currentPassword, newPassword string) e
 
 	stmt = "UPDATE users SET hashed_password = $1 WHERE id = $2"
 
-	_, err = m.DB.Exec(stmt, string(newHashedPassword), id)
+	_, err = m.DB.ExecContext(ctx, stmt, string(newHashedPassword), id)
 	return err
 }
 
@@ -188,7 +198,10 @@ func (m UserModel) LanguageUpdate(userId int, languageId int) error {
 
 	query := "UPDATE users SET language_id = $1 WHERE id = $2"
 
-	_, err := m.DB.Exec(query, languageId, userId)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, query, languageId, userId)
 	return err
 }
 
@@ -196,7 +209,10 @@ func (m UserModel) FlippedUpdate(id int) error {
 
 	stmt := "UPDATE users SET flipped = NOT flipped WHERE id = $1"
 
-	_, err := m.DB.Exec(stmt, id)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, stmt, id)
 
 	return err
 }
@@ -224,7 +240,7 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 
 	var user User
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	// Execute the query, scanning the return values into a User struct. If no matching
@@ -271,7 +287,7 @@ func (m UserModel) Update(user *User) error {
 		user.Version,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.Version)
@@ -297,7 +313,7 @@ func (m UserModel) GetByEmail(email string) (*User, error) {
 
 	var user User
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, email).Scan(

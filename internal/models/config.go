@@ -5,6 +5,7 @@ type Config struct {
 	Port          int
 	Env           string
 	ExpVarEnabled bool
+	CtxTimeout    int
 	Db            struct {
 		Dsn          string
 		MaxOpenConns int
