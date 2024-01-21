@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
-	"database/sql"
 	"flag"
 	"fmt"
 	"github.com/alexedwards/scs/v2"
@@ -23,19 +21,8 @@ var (
 	version   string
 )
 
-type config struct {
-	port int
-	env  string
-	db   struct {
-		dsn          string
-		maxOpenConns int
-		maxIdleConns int
-		maxIdleTime  string
-	}
-}
-
 type application struct {
-	config         config
+	config         models.Config
 	logger         *jsonlog.Logger
 	models         models.Models
 	templateCache  map[string]*template.Template
@@ -46,21 +33,21 @@ type application struct {
 
 func main() {
 
-	var cfg config
+	var cfg models.Config
 
-	flag.IntVar(&cfg.port, "port", 4000, "API server port")
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	flag.IntVar(&cfg.Port, "port", 4000, "API server port")
+	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
 
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	debug := flag.Bool("debug", false, "Enable debug mode")
 
 	// Use the empty string "" as the default value for the db-dsn command-line flag,
 	// rather than os.Getenv("TALKTV_DB_DSN") like we were previously.
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
+	flag.StringVar(&cfg.Db.Dsn, "db-dsn", "", "PostgreSQL DSN")
 
-	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
-	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
-	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
+	flag.IntVar(&cfg.Db.MaxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
+	flag.IntVar(&cfg.Db.MaxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
+	flag.StringVar(&cfg.Db.MaxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
 
 	// Create a new version boolean flag with the default value of false.
 	displayVersion := flag.Bool("version", false, "Display version and exit")
@@ -76,7 +63,7 @@ func main() {
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
-	db, err := openDB(cfg)
+	db, err := models.OpenDB(cfg)
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}
@@ -130,39 +117,4 @@ func main() {
 
 	err = srv.ListenAndServe()
 	logger.PrintFatal(err, nil)
-}
-
-func openDB(cfg config) (*sql.DB, error) {
-
-	db, err := sql.Open("postgres", cfg.db.dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set the maximum number of open (in-use + idle) connections in the pool. Note that
-	// passing a value less than or equal to 0 will mean there is no limit.
-	db.SetMaxOpenConns(cfg.db.maxOpenConns)
-
-	// Set the maximum number of idle connections in the pool. Again, passing a value
-	// less than or equal to 0 will mean there is no limit.
-	db.SetMaxIdleConns(cfg.db.maxIdleConns)
-
-	// Use the time.ParseDuration() function to convert the idle timeout duration string
-	// to a time.Duration type.
-	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set the maximum idle timeout.
-	db.SetConnMaxIdleTime(duration)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	err = db.PingContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
 }

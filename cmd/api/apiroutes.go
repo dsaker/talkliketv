@@ -26,7 +26,7 @@ func (app *application) routes() http.Handler {
 
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 
-	if app.config.expVarEnabled {
+	if app.config.ExpVarEnabled {
 		return app.metrics(app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router)))))
 	}
 	return app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router))))

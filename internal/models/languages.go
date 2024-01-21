@@ -1,14 +1,11 @@
 package models
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"time"
 )
-
-type LanguageModelInterface interface {
-	All() ([]*Language, error)
-	GetId(language string) (int, error)
-}
 
 type Language struct {
 	ID       int
@@ -27,7 +24,10 @@ func (m *LanguageModel) GetId(language string) (int, error) {
 
 	var id int
 
-	err := m.DB.QueryRow(query, language).Scan(&id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, language).Scan(&id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, ErrNoRecord
@@ -36,22 +36,16 @@ func (m *LanguageModel) GetId(language string) (int, error) {
 		}
 	}
 	return id, nil
-
-	//stmt := "SELECT EXISTS(SELECT true FROM languages WHERE language = $1)"
-	//
-	//var exists bool
-	//err := m.DB.QueryRow(stmt, language).Scan(&exists)
-	//
-	//if !exists {
-	//	return -1, ErrNoRecord
-	//}
 }
 
 func (m *LanguageModel) All() ([]*Language, error) {
 	// Write the SQL statement we want to execute.
 	stmt := `SELECT id, language FROM languages where id > 0`
 
-	rows, err := m.DB.Query(stmt)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, stmt)
 	if err != nil {
 		return nil, err
 	}

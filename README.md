@@ -16,14 +16,13 @@ To list available make commands
 
 `make help`
 
-# Build
+# Startup Locally
 
 To run locally
 
-`
-docker pull postgres
+`docker pull postgres
 docker run -d -P -p 127.0.0.1:5433:5432 -e POSTGRES_PASSWORD="password" --name talkliketvpg postgres
-echo "export TALKTV_DB_DSN=postgresql://postgres:password@localhost:5433/postgres" >> .envrc
+echo "export TALKTV_DB_DSN=postgresql://postgres:password@localhost:5433/postgres?sslmode=disable" >> .envrc
 make db/migrations/up
 make run/web
 make run/api`
@@ -31,8 +30,10 @@ make run/api`
 # Build
 
 To build the web application
-
 `make build/web`
+
+To build the api
+`make build/api`
 
 # Extract srt file from mkv files
 

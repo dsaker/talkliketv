@@ -1,7 +1,9 @@
 package models
 
 import (
+	"context"
 	"database/sql"
+	"time"
 )
 
 type Phrase struct {
@@ -42,7 +44,10 @@ func (m *PhraseModel) PhraseCorrect(userId int, phraseId int, movieId int, flipp
 			WHERE user_id = $1 and phrase_id = $2 and movie_id = $3`
 	}
 
-	result, err := m.DB.Exec(query, args...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := m.DB.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
@@ -80,7 +85,10 @@ func (m *PhraseModel) NextTen(userId int, movieId int, flipped bool) ([]*Fronten
 			LIMIT 10`
 	}
 
-	rows, err := m.DB.Query(query, userId, movieId)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, userId, movieId)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +144,9 @@ func (m *PhraseModel) PercentageDone(userId int, movieId int, flipped bool) (int
 	}
 
 	var sum int
-	if err := m.DB.QueryRow(query, userId, movieId).Scan(&sum); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if err := m.DB.QueryRowContext(ctx, query, userId, movieId).Scan(&sum); err != nil {
 		return -1, -1, err
 	}
 
@@ -146,7 +156,7 @@ func (m *PhraseModel) PercentageDone(userId int, movieId int, flipped bool) (int
 			WHERE id=$1`
 
 	var total int
-	if err := m.DB.QueryRow(query, movieId).Scan(&total); err != nil {
+	if err := m.DB.QueryRowContext(ctx, query, movieId).Scan(&total); err != nil {
 		return -1, -1, err
 	}
 

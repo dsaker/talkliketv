@@ -14,11 +14,11 @@ import (
 	"testing"
 )
 
-var cfg config
+var cfg models.Config
 
 func init() {
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.BoolVar(&cfg.expVarEnabled, "expvar-enabled", false, "Enable expvar (disable for testing")
+	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
+	flag.BoolVar(&cfg.ExpVarEnabled, "expvar-enabled", false, "Enable expvar (disable for testing")
 
 }
 

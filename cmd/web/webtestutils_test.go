@@ -20,10 +20,10 @@ import (
 	"time"
 )
 
-var cfg config
+var cfg models.Config
 
 func init() {
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
 }
 
 type WebTestSuite struct {

@@ -80,7 +80,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 	}()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app.config.limiter.enabled {
+		if app.config.Limiter.Enabled {
 			// Use the realip.FromRequest() function to get the client's real IP address.
 			ip := realip.FromRequest(r)
 
@@ -88,7 +88,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 
 			if _, found := clients[ip]; !found {
 				clients[ip] = &client{
-					limiter: rate.NewLimiter(rate.Limit(app.config.limiter.rps), app.config.limiter.burst),
+					limiter: rate.NewLimiter(rate.Limit(app.config.Limiter.Rps), app.config.Limiter.Burst),
 				}
 			}
 
@@ -186,9 +186,9 @@ func (app *application) enableCORS(next http.Handler) http.Handler {
 
 		origin := r.Header.Get("Origin")
 
-		if origin != "" && len(app.config.cors.trustedOrigins) != 0 {
-			for i := range app.config.cors.trustedOrigins {
-				if origin == app.config.cors.trustedOrigins[i] {
+		if origin != "" && len(app.config.Cors.TrustedOrigins) != 0 {
+			for i := range app.config.Cors.TrustedOrigins {
+				if origin == app.config.Cors.TrustedOrigins[i] {
 					w.Header().Set("Access-Control-Allow-Origin", origin)
 
 					// Check if the request has the HTTP method OPTIONS and contains the
