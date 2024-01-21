@@ -8,10 +8,10 @@ import (
 )
 
 type Movie struct {
-	ID      int
-	Title   string
-	NumSubs string
-	Mp3     bool
+	ID      int64  `json:"id"`
+	Title   string `json:"title"`
+	NumSubs string `json:"num_subs"`
+	Mp3     bool   `json:"mp3"`
 }
 
 type MovieModel struct {

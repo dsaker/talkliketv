@@ -7,20 +7,20 @@ import (
 )
 
 type Phrase struct {
-	ID             int
-	Phrase         string
-	Translates     string
-	PhraseHint     string
-	TranslatesHint string
-	MovieId        int
+	ID             int    `json:"id"`
+	Phrase         string `json:"phrase"`
+	Translates     string `json:"translates"`
+	PhraseHint     string `json:"phrase_hint"`
+	TranslatesHint string `json:"translates_hint"`
+	MovieId        int    `json:"movie_id"`
 }
 
 type FrontendPhrase struct {
-	ID         int
-	Phrase     string
-	Translates string
-	Hint       string
-	MovieId    int
+	ID         int    `json:"id"`
+	Phrase     string `json:"phrase"`
+	Translates string `json:"translates"`
+	Hint       string `json:"hint"`
+	MovieId    int    `json:"movie_id"`
 }
 
 type PhraseModel struct {

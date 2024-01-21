@@ -8,8 +8,8 @@ import (
 )
 
 type Language struct {
-	ID       int
-	Language string
+	ID       int64  `json:"id"`
+	Language string `json:"language"`
 }
 
 type LanguageModel struct {
