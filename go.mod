@@ -7,6 +7,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4
 	github.com/go-playground/form/v4 v4.2.1
 	github.com/golang-migrate/migrate/v4 v4.16.2
+	github.com/habx/pg-commands v0.6.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/justinas/alice v1.2.0
 	github.com/justinas/nosurf v1.1.1
@@ -36,7 +37,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.3.1 // indirect
-	github.com/habx/pg-commands v0.6.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect

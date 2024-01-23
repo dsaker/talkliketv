@@ -10,12 +10,10 @@ import (
 
 type ModelTestSuite struct {
 	suite.Suite
-	testDb      *test.TestDatabase
-	u           UserModel
-	p           PhraseModel
-	m           MovieModel
-	validId     int
-	validUserId int
+	testDb *test.TestDatabase
+	u      UserModel
+	p      PhraseModel
+	m      MovieModel
 }
 
 const (
