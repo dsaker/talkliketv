@@ -7,6 +7,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4
 	github.com/go-playground/form/v4 v4.2.1
 	github.com/golang-migrate/migrate/v4 v4.16.2
+	github.com/habx/pg-commands v0.6.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/justinas/alice v1.2.0
 	github.com/justinas/nosurf v1.1.1

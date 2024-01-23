@@ -6,23 +6,31 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	pg "github.com/habx/pg-commands"
+	_ "github.com/lib/pq"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"log"
-	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
+	"strings"
 	"time"
-
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/lib/pq"
 )
 
 const (
-	DbName = "test_db"
-	DbUser = "test_user"
-	DbPass = "test_password"
+	DbName = "talkliketv"
+	DbUser = "talkliketv"
+	DbPass = "pa55word"
+)
+
+const (
+	ValidPhraseId    = "2285"
+	ValidPhraseIdInt = 2285
+	ValidMovieId     = "6"
+	ValidMovieIdInt  = 6
 )
 
 type TestDatabase struct {
@@ -55,14 +63,38 @@ func SetupTestDatabase() *TestDatabase {
 		log.Fatal(err)
 	}
 
-	script, err := os.ReadFile(dir + "/testdata/setup.sql")
+	//script, err := os.ReadFile(dir + "/testdata/setup.sql")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
+	splitAddr := strings.Split(dbAddr, ":")
+	port, err := strconv.Atoi(splitAddr[1])
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = db.Exec(string(script))
-	if err != nil {
-		log.Fatal(err)
+	restore, _ := pg.NewRestore(&pg.Postgres{
+		Host:     splitAddr[0],
+		Port:     port,
+		DB:       DbName,
+		Username: DbUser,
+		Password: DbPass,
+	})
+
+	restoreExec := restore.Exec(dir+"testdata/talkliketv_1705949676.sql.tar.gz", pg.ExecOptions{StreamPrint: false})
+	if restoreExec.Error != nil {
+		fmt.Println(restoreExec.Error.Err)
+		fmt.Println(restoreExec.Output)
+		log.Fatal("Restore failure")
+	} else {
+		fmt.Println("Restore success")
+		fmt.Println(restoreExec.Output)
+
 	}
+	//_, err = db.Exec(string(script))
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	if err != nil {
 		log.Fatal("failed to perform db migration", err)

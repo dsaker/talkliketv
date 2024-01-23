@@ -139,7 +139,7 @@ func setupUser(t *testing.T, ts *test.TestServer) string {
 	validToken := login(t, ts)
 
 	setupUserForm := url.Values{}
-	setupUserForm.Add("movie_id", "1")
+	setupUserForm.Add("movie_id", "6")
 	setupUserForm.Add("csrf_token", validToken)
 
 	code, _, _ := ts.PostForm(t, "/movies/choose", setupUserForm)

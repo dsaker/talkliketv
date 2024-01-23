@@ -24,9 +24,8 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 	// Validate the email and password provided by the client.
 	v := validator.New()
 
-	v.Matches(input.Email, validator.EmailRX)
-	v.NotBlank(input.Password)
-	v.MinChars(input.Password, 8)
+	models.ValidateEmail(v, input.Email)
+	models.ValidatePassword(v, input.Password)
 
 	if !v.Valid() {
 		app.failedValidationResponse(w, r, v.FieldErrors)

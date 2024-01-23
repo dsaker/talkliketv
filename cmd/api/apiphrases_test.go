@@ -4,16 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/test"
 	"testing"
 )
 
 func (suite *ApiTestSuite) TestApiPhraseCorrect() {
 	t := suite.T()
-
-	const (
-		validPhraseId = 2
-		validMovieId  = 1
-	)
 
 	tests := []struct {
 		name     string
@@ -23,19 +19,19 @@ func (suite *ApiTestSuite) TestApiPhraseCorrect() {
 	}{
 		{
 			name:     "Valid submission",
-			phraseId: validPhraseId,
-			movieId:  validMovieId,
+			phraseId: test.ValidPhraseIdInt,
+			movieId:  test.ValidMovieIdInt,
 			wantCode: http.StatusOK,
 		},
 		{
 			name:     "Not Found PhraseId",
 			phraseId: -2,
-			movieId:  validMovieId,
+			movieId:  test.ValidPhraseIdInt,
 			wantCode: http.StatusNotFound,
 		},
 		{
 			name:     "Not Found MovieId",
-			phraseId: validPhraseId,
+			phraseId: test.ValidPhraseIdInt,
 			movieId:  -2,
 			wantCode: http.StatusNotFound,
 		},

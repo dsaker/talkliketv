@@ -4,15 +4,12 @@ import (
 	"net/http"
 	"net/url"
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/test"
 	"testing"
 )
 
 func (suite *WebTestSuite) TestMoviesChoose() {
 	t := suite.T()
-
-	const (
-		validMovieId = "1"
-	)
 
 	tests := []struct {
 		name      string
@@ -22,13 +19,13 @@ func (suite *WebTestSuite) TestMoviesChoose() {
 	}{
 		{
 			name:      "Valid submission",
-			movieId:   validMovieId,
+			movieId:   test.ValidMovieId,
 			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusSeeOther,
 		},
 		{
 			name:      "Invalid CSRF Token",
-			movieId:   validMovieId,
+			movieId:   test.ValidMovieId,
 			csrfToken: "wrongToken",
 			wantCode:  http.StatusBadRequest,
 		},
@@ -63,10 +60,6 @@ func (suite *WebTestSuite) TestMoviesChoose() {
 func (suite *WebTestSuite) TestMoviesMp3() {
 	t := suite.T()
 
-	const (
-		validMovieId = "1"
-	)
-
 	tests := []struct {
 		name      string
 		movieId   string
@@ -75,7 +68,7 @@ func (suite *WebTestSuite) TestMoviesMp3() {
 	}{
 		{
 			name:     "Valid submission",
-			movieId:  validMovieId,
+			movieId:  test.ValidMovieId,
 			wantCode: http.StatusOK,
 		},
 		{

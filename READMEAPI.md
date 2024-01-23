@@ -44,5 +44,10 @@ curl --request PATCH -i -H "Authorization: Bearer $TOKEN" -d "$BODY" localhost:4
 `BODY='{"movie_id": 1, "phrase_id": 2}'
 curl --request POST -i -H "Authorization: Bearer $TOKEN" -d "$BODY" localhost:4001/v1/phrase/correct`
 
-BODY='{"movie": 1, "phrase": 2}'
-curl --request POST -i -H "Authorization: Bearer $TOKEN" -d "$BODY" localhost:4001/v1/phrase/correct
+# ListAllMoviesTextSearch
+
+`curl -i -H "Authorization: Bearer $TOKEN" "localhost:4001/v1/movies?title=nothing&page_size=10"`
+
+# ListAllMoviesNoText
+
+`curl -i -H "Authorization: Bearer $TOKEN" "localhost:4001/v1/movies?page_size=5&sort=-num_subs"`

@@ -19,6 +19,7 @@ var cfg models.Config
 func init() {
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
 	flag.BoolVar(&cfg.ExpVarEnabled, "expvar-enabled", false, "Enable expvar (disable for testing")
+	flag.IntVar(&cfg.CtxTimeout, "ctx-timeout", 3, "Context timeout for db queries")
 
 }
 
@@ -26,14 +27,14 @@ type ApiTestSuite struct {
 	suite.Suite
 	ts        *test.TestServer
 	testDb    *test.TestDatabase
-	app       *application
 	authToken string
 }
 
 func (suite *ApiTestSuite) SetupSuite() {
-	suite.app, suite.testDb = newTestApplication()
-	suite.ts = newTestServer(suite.app.routes())
-	suite.register("setupsuite")
+	var app *application
+	app, suite.testDb = newTestApplication()
+	suite.ts = newTestServer(app.routes())
+	register("setupsuite", suite.T(), suite.ts)
 	suite.authToken = suite.getAuthToken("setupsuite")
 	suite.chooseMovie()
 }
@@ -68,13 +69,12 @@ func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(ApiNoLoginTestSuite))
 }
 
-func (suite *ApiTestSuite) register(prefix string) {
-	t := suite.T()
+func register(prefix string, t *testing.T, ts *test.TestServer) {
 
 	data := map[string]interface{}{
 		"name":     prefix + "apiUser",
 		"password": "password12",
-		"email":    prefix + "apiUser@email.com",
+		"email":    prefix + "test@email.com",
 		"language": "Spanish",
 	}
 
@@ -83,17 +83,17 @@ func (suite *ApiTestSuite) register(prefix string) {
 		t.Fatalf("could not marshal json: %s\n", err)
 		return
 	}
-	code, _, body := suite.ts.Post(t, "/v1/users", jsonData)
+	code, _, body := ts.Post(t, "/v1/users", jsonData)
 
 	assert.Equal(t, code, http.StatusAccepted)
-	assert.StringContains(t, body, prefix+"apiUser")
+	assert.StringContains(t, body, prefix+"test")
 }
 
 func (suite *ApiTestSuite) chooseMovie() {
 	t := suite.T()
 
 	jsonData, err := json.Marshal(map[string]interface{}{
-		"movie_id": 1,
+		"movie_id": test.ValidMovieIdInt,
 	})
 
 	if err != nil {
@@ -109,7 +109,7 @@ func (suite *ApiTestSuite) getAuthToken(prefix string) string {
 	t := suite.T()
 	data := map[string]interface{}{
 		"password": "password12",
-		"email":    prefix + "apiUser@email.com",
+		"email":    prefix + "test@email.com",
 	}
 
 	jsonData, err := json.Marshal(data)

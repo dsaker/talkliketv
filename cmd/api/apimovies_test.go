@@ -4,15 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/models"
+	"talkliketv.net/internal/test"
 	"testing"
 )
 
 func (suite *ApiTestSuite) TestApiMoviesChoose() {
 	t := suite.T()
-
-	const (
-		validMovieId = 1
-	)
 
 	tests := []struct {
 		name     string
@@ -21,7 +19,7 @@ func (suite *ApiTestSuite) TestApiMoviesChoose() {
 	}{
 		{
 			name:     "Valid submission",
-			movieId:  validMovieId,
+			movieId:  test.ValidMovieIdInt,
 			wantCode: http.StatusOK,
 		},
 		{
@@ -52,10 +50,6 @@ func (suite *ApiTestSuite) TestApiMoviesChoose() {
 func (suite *ApiTestSuite) TestApiMoviesMp3() {
 	t := suite.T()
 
-	const (
-		validMovieId = "1"
-	)
-
 	tests := []struct {
 		name       string
 		movieId    string
@@ -65,7 +59,7 @@ func (suite *ApiTestSuite) TestApiMoviesMp3() {
 	}{
 		{
 			name:     "Valid submission",
-			movieId:  validMovieId,
+			movieId:  test.ValidMovieId,
 			wantCode: http.StatusOK,
 		},
 		{
@@ -112,26 +106,96 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 
 	tests := []struct {
 		name       string
+		url        string
 		wantCode   int
 		wantString string
+		wantSize   int
 	}{
 		{
 			name:       "Valid submission",
+			url:        "/v1/movies",
 			wantCode:   http.StatusOK,
 			wantString: "MissAdrenalineS01E01",
+			wantSize:   5,
+		},
+		{
+			name:       "Title Nothing",
+			url:        "/v1/movies?title=nothing&page_size=10",
+			wantCode:   http.StatusOK,
+			wantString: "NothingToSeeHereS01E01",
+			wantSize:   5,
+		},
+		{
+			name:       "Mp3 False",
+			url:        "/v1/movies?mp3=false",
+			wantCode:   http.StatusOK,
+			wantString: "GreysAnatomyS05E14",
+			wantSize:   2,
+		},
+		{
+			name:       "Mp3 True",
+			url:        "/v1/movies?mp3=true",
+			wantCode:   http.StatusOK,
+			wantString: "NothingToSeeHereS01E01",
+			wantSize:   3,
+		},
+		{
+			name:       "Page Size 1",
+			url:        "/v1/movies?page_size=1",
+			wantCode:   http.StatusOK,
+			wantString: "NothingToSeeHereS01E02",
+			wantSize:   1,
+		},
+		{
+			name:       "Sort Num Subs Dec",
+			url:        "/v1/movies?page_size=1&sort=num_subs",
+			wantCode:   http.StatusOK,
+			wantString: "NothingToSeeHereS01E02",
+			wantSize:   1,
+		},
+		{
+			name:       "Sort Num Subs Asc",
+			url:        "/v1/movies?page_size=1&sort=-num_subs",
+			wantCode:   http.StatusOK,
+			wantString: "MissAdrenalineS01E01",
+			wantSize:   1,
+		},
+		{
+			name:       "Sort Title Dec",
+			url:        "/v1/movies?page_size=1&sort=title",
+			wantCode:   http.StatusOK,
+			wantString: "GreysAnatomyS05E14",
+			wantSize:   1,
+		},
+		{
+			name:       "Sort Title Asc",
+			url:        "/v1/movies?page_size=1&sort=-title",
+			wantCode:   http.StatusOK,
+			wantString: "TheMannyS01E01",
+			wantSize:   1,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			code, _, body := suite.ts.Request(t, nil, "/v1/movies", http.MethodGet, suite.authToken)
+			code, _, body := suite.ts.Request(t, nil, tt.url, http.MethodGet, suite.authToken)
 
 			assert.Equal(t, code, tt.wantCode)
 
 			if tt.wantString != "" {
 				assert.StringContains(t, body, tt.wantString)
 			}
+
+			var moviesStruct struct {
+				Movies []*models.Movie `json:"movies"`
+			}
+			err := json.Unmarshal([]byte(body), &moviesStruct)
+			if err != nil {
+				t.Errorf("could not marshal json: %s\n", err)
+				return
+			}
+			assert.Equal(t, len(moviesStruct.Movies), tt.wantSize)
 
 		})
 	}

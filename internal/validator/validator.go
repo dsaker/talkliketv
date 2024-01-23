@@ -1,12 +1,11 @@
 package validator
 
 import (
+	"net/mail"
 	"regexp"
 	"strings"
 	"unicode/utf8"
 )
-
-var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 // Validator Add a new NonFieldErrors []string field to the struct, which we will use to
 // hold any validation errors which are not related to a specific form field.
@@ -26,6 +25,16 @@ func (v *Validator) Valid() bool {
 	return len(v.FieldErrors) == 0 && len(v.NonFieldErrors) == 0
 }
 
+// In returns true if a specific value is in a list of strings.
+func In(value string, list ...string) bool {
+	for i := range list {
+		if value == list[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // CheckField adds an error message to the FieldErrors map only if a
 // validation check is not 'ok'.
 func (v *Validator) CheckField(ok bool, key, message string) {
@@ -34,20 +43,15 @@ func (v *Validator) CheckField(ok bool, key, message string) {
 	}
 }
 
-// NotBlank returns true if a value is not an empty string.
-func NotBlank(value string) bool {
-	return strings.TrimSpace(value) != ""
-}
-
 // Matches returns true if a value matches a provided compiled regular
 // expression pattern.
 func Matches(value string, rx *regexp.Regexp) bool {
 	return rx.MatchString(value)
 }
 
-// MinChars returns true if a value contains at least n characters.
-func MinChars(value string, n int) bool {
-	return utf8.RuneCountInString(value) >= n
+func (v *Validator) IsEmail(email string) bool {
+	emailAddress, err := mail.ParseAddress(email)
+	return err == nil && emailAddress.Address == email
 }
 
 // AddNonFieldError Create an AddNonFieldError() helper for adding error messages to the new

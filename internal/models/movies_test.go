@@ -12,11 +12,6 @@ func (suite *ModelTestSuite) TestMovieModelChooseMovie() {
 		t.Skip("models: skipping integration test")
 	}
 
-	const (
-		validMovieId = 1
-		validUserId  = 9999
-	)
-
 	// Set up a suite of table-driven tests and expected results.
 	tests := []struct {
 		name    string
@@ -30,7 +25,7 @@ func (suite *ModelTestSuite) TestMovieModelChooseMovie() {
 		},
 		{
 			name:    "Change Movie",
-			movieId: 2,
+			movieId: 8,
 			userId:  validUserId,
 		},
 	}
@@ -50,10 +45,6 @@ func (suite *ModelTestSuite) TestMovieModelGet() {
 	if testing.Short() {
 		t.Skip("models: skipping integration test")
 	}
-
-	const (
-		validMovieId = 1
-	)
 
 	tests := []struct {
 		name    string
@@ -106,7 +97,7 @@ func (suite *ModelTestSuite) TestMovieModelAll() {
 		{
 			name:       "Valid Id",
 			languageId: validLanguageId,
-			numMovies:  2,
+			numMovies:  5,
 		},
 		{
 			name:       "Invalid Language Id",
@@ -117,8 +108,13 @@ func (suite *ModelTestSuite) TestMovieModelAll() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			movies, err := suite.m.All(tt.languageId)
+			filters := Filters{
+				Page:         1,
+				PageSize:     20,
+				Sort:         "id",
+				SortSafeList: []string{"id"},
+			}
+			movies, _, err := suite.m.All(tt.languageId, "", filters, -1)
 			if tt.wantErr != nil {
 				assert.Equal(t, err, tt.wantErr)
 			} else {
