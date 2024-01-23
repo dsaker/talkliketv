@@ -22,6 +22,7 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
 		Title string
+		Mp3   int
 		models.Filters
 	}
 	v := validator.New()
@@ -29,6 +30,7 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
 
 	input.Title = models.ReadString(qs, "title", "")
+	input.Mp3 = models.ReadBool(qs, "mp3", -1, v)
 
 	input.Filters.Page = models.ReadInt(qs, "page", 1, v)
 	input.Filters.PageSize = models.ReadInt(qs, "page_size", 20, v)
@@ -36,7 +38,7 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 	input.Filters.Sort = models.ReadString(qs, "sort", "id")
 	input.Filters.SortSafeList = []string{"id", "title", "year", "num_subs", "-id", "-title", "-year", "-num_subs"}
 
-	movies, _, err := app.models.Movies.All(user.LanguageId, input.Title, input.Filters)
+	movies, _, err := app.models.Movies.All(user.LanguageId, input.Title, input.Filters, input.Mp3)
 	if err != nil {
 		app.serverError(w, r, err)
 		return

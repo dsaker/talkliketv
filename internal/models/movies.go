@@ -94,21 +94,21 @@ func (m *MovieModel) Get(id int) (*Movie, error) {
 	return v, nil
 }
 
-func (m *MovieModel) All(languageId int, title string, filters Filters) ([]*Movie, Metadata, error) {
-	var stmt string
+func (m *MovieModel) All(languageId int, title string, filters Filters, mp3 int) ([]*Movie, Metadata, error) {
+	stmt := `SELECT count(*) OVER(), id, title, similarity(title, $1) AS similarity, year, num_subs, mp3
+		   FROM movies
+		   WHERE language_id = $2`
+
+	if mp3 != -1 {
+		stmt += "AND mp3 = $5"
+	}
 
 	if title != "" {
-		stmt = `
-		   SELECT count(*) OVER(), id, title, similarity(title, $1) AS similarity, year, num_subs, mp3
-		   FROM movies
-		   WHERE language_id = $2
+		stmt += `
 		   ORDER BY similarity DESC, id
 		   LIMIT $3 OFFSET $4`
 	} else {
-		stmt = fmt.Sprintf(`
-			SELECT count(*) OVER(), id, title, year, num_subs, mp3
-			FROM movies
-			WHERE language_id = $2
+		stmt += fmt.Sprintf(`
 			ORDER BY %s %s, id, $1
 			LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
 	}
@@ -117,6 +117,10 @@ func (m *MovieModel) All(languageId int, title string, filters Filters) ([]*Movi
 	defer cancel()
 
 	args := []interface{}{title, languageId, filters.limit(), filters.offset()}
+
+	if mp3 != -1 {
+		args = append(args, mp3)
+	}
 
 	rows, err := m.DB.QueryContext(ctx, stmt, args...)
 	if err != nil {
@@ -131,11 +135,8 @@ func (m *MovieModel) All(languageId int, title string, filters Filters) ([]*Movi
 
 	for rows.Next() {
 		v := &Movie{}
-		if title != "" {
-			err = rows.Scan(&totalRecords, &v.ID, &v.Title, &similarity, &v.Year, &v.NumSubs, &v.Mp3)
-		} else {
-			err = rows.Scan(&totalRecords, &v.ID, &v.Title, &v.Year, &v.NumSubs, &v.Mp3)
-		}
+		err = rows.Scan(&totalRecords, &v.ID, &v.Title, &similarity, &v.Year, &v.NumSubs, &v.Mp3)
+
 		if err != nil {
 			return nil, Metadata{}, err
 		}

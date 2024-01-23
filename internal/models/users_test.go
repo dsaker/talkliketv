@@ -10,17 +10,24 @@ import (
 
 type ModelTestSuite struct {
 	suite.Suite
-	testDb *test.TestDatabase
-	u      UserModel
-	p      PhraseModel
-	m      MovieModel
+	testDb      *test.TestDatabase
+	u           UserModel
+	p           PhraseModel
+	m           MovieModel
+	validId     int
+	validUserId int
 }
+
+const (
+	validMovieId = 6
+	validUserId  = 3
+)
 
 func (suite *ModelTestSuite) SetupSuite() {
 	suite.testDb = test.SetupTestDatabase()
-	suite.u = UserModel{DB: suite.testDb.DbInstance, CtxTimeout: 3}
-	suite.p = PhraseModel{DB: suite.testDb.DbInstance, CtxTimeout: 3}
-	suite.m = MovieModel{DB: suite.testDb.DbInstance, CtxTimeout: 3}
+	suite.u = UserModel{DB: suite.testDb.DbInstance, CtxTimeout: 60}
+	suite.p = PhraseModel{DB: suite.testDb.DbInstance, CtxTimeout: 60}
+	suite.m = MovieModel{DB: suite.testDb.DbInstance, CtxTimeout: 60}
 }
 
 func (suite *ModelTestSuite) TearDownSuite() {
@@ -38,9 +45,6 @@ func (suite *ModelTestSuite) TestUserModelExists() {
 		t.Skip("models: skipping integration test")
 	}
 
-	const (
-		validUserId = 9999
-	)
 	// Set up a suite of table-driven tests and expected results.
 	tests := []struct {
 		name   string
@@ -208,10 +212,6 @@ func (suite *ModelTestSuite) TestUserModelAuthenticate() {
 
 func (suite *ModelTestSuite) TestUserModelGet() {
 	t := suite.T()
-
-	const (
-		validUserId = 9999
-	)
 
 	// Set up a suite of table-driven tests and expected results.
 	tests := []struct {

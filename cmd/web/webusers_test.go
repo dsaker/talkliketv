@@ -16,7 +16,6 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 		validPassword = "validPa$$word"
 		validEmail    = "bob@example.com"
 		validLanguage = "Spanish"
-		formTag       = "<form action='/user/signup' method='POST' novalidate>"
 	)
 
 	tests := []struct {

@@ -4,16 +4,12 @@ import (
 	"net/http"
 	"net/url"
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/test"
 	"testing"
 )
 
 func (suite *WebTestSuite) TestPhraseCorrect() {
 	t := suite.T()
-
-	const (
-		validPhraseId = "2"
-		validMovieId  = "1"
-	)
 
 	tests := []struct {
 		name      string
@@ -24,35 +20,35 @@ func (suite *WebTestSuite) TestPhraseCorrect() {
 	}{
 		{
 			name:      "Valid submission",
-			phraseId:  validPhraseId,
-			movieId:   validMovieId,
+			phraseId:  test.ValidPhraseId,
+			movieId:   test.ValidMovieId,
 			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusOK,
 		},
 		{
 			name:      "Invalid CSRF Token",
-			phraseId:  validPhraseId,
-			movieId:   validMovieId,
+			phraseId:  test.ValidPhraseId,
+			movieId:   test.ValidMovieId,
 			csrfToken: "wrongToken",
 			wantCode:  http.StatusBadRequest,
 		},
 		{
 			name:      "Not Found PhraseId",
 			phraseId:  "-2",
-			movieId:   validMovieId,
+			movieId:   test.ValidMovieId,
 			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusNotFound,
 		},
 		{
 			name:      "Invalid PhraseId String",
 			phraseId:  "A",
-			movieId:   validMovieId,
+			movieId:   test.ValidMovieId,
 			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusBadRequest,
 		},
 		{
 			name:      "Not Found MovieId",
-			phraseId:  validPhraseId,
+			phraseId:  test.ValidPhraseId,
 			movieId:   "-2",
 			csrfToken: suite.validCSRFToken,
 			wantCode:  http.StatusNotFound,

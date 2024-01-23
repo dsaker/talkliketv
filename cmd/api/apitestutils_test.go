@@ -94,7 +94,7 @@ func (suite *ApiTestSuite) chooseMovie() {
 	t := suite.T()
 
 	jsonData, err := json.Marshal(map[string]interface{}{
-		"movie_id": 1,
+		"movie_id": test.ValidMovieIdInt,
 	})
 
 	if err != nil {
