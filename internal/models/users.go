@@ -46,11 +46,21 @@ func (u *User) IsAnonymous() bool {
 }
 
 func ValidateUser(form *UserSignupForm) {
-	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
-	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
-	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
-	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
-	form.CheckField(validator.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
+	form.CheckField(form.NotBlank(form.Name), "name", "This field cannot be blank")
+	form.CheckField(form.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(form.IsEmail(form.Email), "email", "This field must be a valid email address")
+	form.CheckField(form.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(form.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
+}
+
+func ValidatePassword(v *validator.Validator, password string) {
+	v.CheckField(v.NotBlank(password), "password", "This field cannot be blank")
+	v.CheckField(v.MinChars(password, 8), "password", "This field must be at least 8 characters long")
+}
+
+func ValidateEmail(v *validator.Validator, email string) {
+	v.CheckField(v.NotBlank(email), "email", "This field cannot be blank")
+	v.CheckField(v.IsEmail(email), "email", "This field must be a valid email address")
 }
 
 func (m UserModel) Insert(user *User, password string) error {

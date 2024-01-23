@@ -12,7 +12,7 @@ import (
 func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
 	id, err := models.ReadIDParam(r)
 	if err != nil {
-		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+		app.badRequestResponse(w, r, err)
 		return
 	}
 

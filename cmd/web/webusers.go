@@ -144,7 +144,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	form.CheckField(form.NotBlank(form.Email), "email", "This field cannot be blank")
-	form.CheckField(form.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.CheckField(form.IsEmail(form.Email), "email", "This field must be a valid email address")
 	form.CheckField(form.NotBlank(form.Password), "password", "This field cannot be blank")
 
 	if !form.Valid() {
