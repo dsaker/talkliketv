@@ -8,14 +8,13 @@ import (
 	"net/http/httptest"
 	"os"
 	"talkliketv.net/internal/assert"
-	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/test"
 	"testing"
 )
 
-var cfg config.Config
+var cfg models.Config
 
 func init() {
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
@@ -32,7 +31,7 @@ type ApiTestSuite struct {
 }
 
 func (suite *ApiTestSuite) SetupSuite() {
-	var app *application
+	var app *apiApp
 	app, suite.testDb = newTestApplication()
 	suite.ts = newTestServer(app.routes())
 	register("setupsuite", suite.T(), suite.ts)
@@ -53,7 +52,7 @@ type ApiNoLoginTestSuite struct {
 	suite.Suite
 	ts     *test.TestServer
 	testDb *test.TestDatabase
-	app    *application
+	app    *apiApp
 }
 
 func (suite *ApiNoLoginTestSuite) SetupSuite() {
@@ -136,17 +135,19 @@ func (suite *ApiTestSuite) getAuthToken(prefix string) string {
 	return authToken.Token.Plaintext
 }
 
-func newTestApplication() (*application, *test.TestDatabase) {
+func newTestApplication() (*apiApp, *test.TestDatabase) {
 	testDb := test.SetupTestDatabase()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	flag.Parse()
 
-	return &application{
-		config: cfg,
-		logger: logger,
-		models: models.NewModels(testDb.DbInstance, 3),
+	return &apiApp{
+		models.Application{
+			Config: cfg,
+			Logger: logger,
+			Models: models.NewModels(testDb.DbInstance, 3),
+		},
 	}, testDb
 }
 

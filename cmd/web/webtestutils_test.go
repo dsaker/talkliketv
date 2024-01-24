@@ -13,7 +13,6 @@ import (
 	"os"
 	"regexp"
 	"talkliketv.net/internal/assert"
-	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/test"
@@ -21,7 +20,7 @@ import (
 	"time"
 )
 
-var cfg config.Config
+var cfg models.Config
 
 func init() {
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
@@ -32,7 +31,7 @@ type WebTestSuite struct {
 	ts             *test.TestServer
 	testDb         *test.TestDatabase
 	validCSRFToken string
-	app            *application
+	app            *webApplication
 }
 
 func (suite *WebTestSuite) SetupSuite() {
@@ -83,7 +82,7 @@ func TestWebNoLoginTestSuite(t *testing.T) {
 	suite.Run(t, new(WebNoLoginTestSuite))
 }
 
-func newTestApplication(t *testing.T) (*application, *test.TestDatabase) {
+func newTestApplication(t *testing.T) (*webApplication, *test.TestDatabase) {
 	testDb := test.SetupTestDatabase()
 	templateCache, err := newTemplateCache()
 	if err != nil {
@@ -99,14 +98,18 @@ func newTestApplication(t *testing.T) (*application, *test.TestDatabase) {
 
 	flag.Parse()
 
-	return &application{
-		config:         cfg,
-		logger:         logger,
-		models:         models.NewModels(testDb.DbInstance, 3),
-		templateCache:  templateCache,
-		formDecoder:    formDecoder,
-		sessionManager: sessionManager,
+	return &webApplication{
+		templateCache,
+		formDecoder,
+		sessionManager,
+		false,
+		models.Application{
+			Config: cfg,
+			Logger: logger,
+			Models: models.NewModels(testDb.DbInstance, 3),
+		},
 	}, testDb
+
 }
 
 func newWebTestServer(t *testing.T, h http.Handler) *test.TestServer {

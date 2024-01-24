@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"sync"
-	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
 	"time"
@@ -22,24 +20,21 @@ var (
 
 const version = "1.0.0"
 
-// Include a sync.WaitGroup in the application struct. The zero-value for a
+// Include a sync.WaitGroup in the apiApp struct. The zero-value for a
 // sync.WaitGroup type is a valid, usable, sync.WaitGroup with a 'counter' value of 0,
 // so we don't need to do anything else to initialize it before we can use it.
-type application struct {
-	config config.Config
-	logger *jsonlog.Logger
-	models models.Models
-	wg     sync.WaitGroup
+type apiApp struct {
+	models.Application
 }
 
 func main() {
-	var cfg config.Config
+	var cfg models.Config
 
 	cfg.SetConfigs()
 
 	// Create a new version boolean flag with the default value of false.
 	displayVersion := flag.Bool("version", false, "Display version and exit")
-
+	flag.IntVar(&cfg.Port, "port", 4001, "API server port")
 	flag.Parse()
 
 	if *displayVersion {
@@ -85,13 +80,15 @@ func main() {
 		}))
 	}
 
-	app := &application{
-		config: cfg,
-		logger: logger,
-		models: models.NewModels(db, time.Duration(cfg.CtxTimeout)),
+	app := &apiApp{
+		models.Application{
+			Config: cfg,
+			Logger: logger,
+			Models: models.NewModels(db, time.Duration(cfg.CtxTimeout)),
+		},
 	}
 
-	err = app.serve()
+	err = app.Serve(app.routes())
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}

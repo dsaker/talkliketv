@@ -21,15 +21,15 @@ func secureHeaders(next http.Handler) http.Handler {
 	})
 }
 
-func (app *application) logRequest(next http.Handler) http.Handler {
+func (webApp *webApplication) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		app.logger.PrintInfo(fmt.Sprintf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI()), nil)
+		webApp.Logger.PrintInfo(fmt.Sprintf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI()), nil)
 
 		next.ServeHTTP(w, r)
 	})
 }
 
-func (app *application) recoverPanic(next http.Handler) http.Handler {
+func (webApp *webApplication) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Create a deferred function (which will always be run in the event
 		// of a panic as Go unwinds the stack).
@@ -39,9 +39,9 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				// Set a "Connection: close" header on the response.
 				w.Header().Set("Connection", "close")
-				// Call the app.serverError helper method to return a 500
+				// Call the webApp.serverError helper method to return a 500
 				// Internal Server response.
-				app.serverError(w, r, fmt.Errorf("%s", err))
+				webApp.serverError(w, r, fmt.Errorf("%s", err))
 			}
 		}()
 
@@ -49,12 +49,12 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 	})
 }
 
-func (app *application) requireAuthentication(next http.Handler) http.Handler {
+func (webApp *webApplication) requireAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !app.isAuthenticated(r) {
+		if !webApp.isAuthenticated(r) {
 			// Add the path that the user is trying to access to their session
 			// data.
-			app.sessionManager.Put(r.Context(), "redirectPathAfterLogin", r.URL.Path)
+			webApp.sessionManager.Put(r.Context(), "redirectPathAfterLogin", r.URL.Path)
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 			return
 		}
@@ -78,13 +78,13 @@ func noSurf(next http.Handler) http.Handler {
 	return csrfHandler
 }
 
-func (app *application) authenticate(next http.Handler) http.Handler {
+func (webApp *webApplication) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Retrieve the authenticatedUserID value from the session using the
 		// GetInt() method. This will return the zero value for an int (0) if no
 		// "authenticatedUserID" value is in the session -- in which case we
 		// call the next handler in the chain as normal and return.
-		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		id := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 		if id == 0 {
 			next.ServeHTTP(w, r)
 			return
@@ -92,10 +92,10 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		// Otherwise, we check to see if a user with that ID exists in our
 		// database.
-		exists, err := app.models.Users.Exists(id)
+		exists, err := webApp.Models.Users.Exists(id)
 		if err != nil {
-			app.sessionManager.Put(r.Context(), "flash", "Invalid Credentials")
-			app.invalidCredentialsResponse(w, r)
+			webApp.sessionManager.Put(r.Context(), "flash", "Invalid Credentials")
+			webApp.invalidCredentialsResponse(w, r)
 			return
 		}
 

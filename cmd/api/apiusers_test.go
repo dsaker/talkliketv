@@ -38,7 +38,7 @@ func (suite *ApiNoLoginTestSuite) TestActivateUserHandler() {
 		t.Fatal(err)
 	}
 
-	token, err := suite.app.models.Tokens.New(userStruct.User.ID, 24*time.Hour, models.ScopeActivation)
+	token, err := suite.app.Models.Tokens.New(userStruct.User.ID, 24*time.Hour, models.ScopeActivation)
 	if err != nil {
 		t.Fatal(err)
 	}
