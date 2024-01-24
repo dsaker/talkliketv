@@ -174,6 +174,13 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			wantString: "TheMannyS01E01",
 			wantSize:   1,
 		},
+		{
+			name:       "Movie Page",
+			url:        "/v1/movies?page=2&page_size=1&sort=-title",
+			wantCode:   http.StatusOK,
+			wantString: "NothingToSeeHereS01E02",
+			wantSize:   1,
+		},
 	}
 
 	for _, tt := range tests {

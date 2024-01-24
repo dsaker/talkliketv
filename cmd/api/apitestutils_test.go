@@ -8,13 +8,14 @@ import (
 	"net/http/httptest"
 	"os"
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/test"
 	"testing"
 )
 
-var cfg models.Config
+var cfg config.Config
 
 func init() {
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")

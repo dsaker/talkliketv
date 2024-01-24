@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/validator"
 	"time"
 )
@@ -23,7 +24,7 @@ func ReadIDParam(r *http.Request) (int, error) {
 	return int(id), nil
 }
 
-func OpenDB(cfg Config) (*sql.DB, error) {
+func OpenDB(cfg config.Config) (*sql.DB, error) {
 	db, err := sql.Open("postgres", cfg.Db.Dsn)
 	if err != nil {
 		return nil, err
