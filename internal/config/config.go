@@ -156,10 +156,13 @@ func rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
 	js, err := json.MarshalIndent(env, "", "\t")
 	if err != nil {
 		fmt.Printf("error in rateLimitExceededResponse: %s, %s, %s", err, r.Method, r.URL.String())
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusTooManyRequests)
 	_, err = w.Write(js)
+	if err != nil {
+		fmt.Printf("error in rateLimitExceededResponse Write: %s, %s, %s", err, r.Method, r.URL.String())
+	}
 }
