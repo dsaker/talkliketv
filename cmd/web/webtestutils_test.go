@@ -13,6 +13,7 @@ import (
 	"os"
 	"regexp"
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/test"
@@ -20,7 +21,7 @@ import (
 	"time"
 )
 
-var cfg models.Config
+var cfg config.Config
 
 func init() {
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
@@ -103,7 +104,7 @@ func newTestApplication(t *testing.T) (*webApplication, *test.TestDatabase) {
 		formDecoder,
 		sessionManager,
 		false,
-		models.Application{
+		config.Application{
 			Config: cfg,
 			Logger: logger,
 			Models: models.NewModels(testDb.DbInstance, 3),

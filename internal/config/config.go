@@ -1,7 +1,8 @@
-package models
+package config
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -15,13 +16,14 @@ import (
 	"sync"
 	"syscall"
 	"talkliketv.net/internal/jsonlog"
+	"talkliketv.net/internal/models"
 	"time"
 )
 
 type Application struct {
 	Config Config
 	Logger *jsonlog.Logger
-	Models Models
+	Models models.Models
 	Wg     sync.WaitGroup
 }
 
@@ -242,4 +244,38 @@ func (app *Application) Serve(routes http.Handler) error {
 	})
 
 	return nil
+}
+
+func (cfg *Config) OpenDB() (*sql.DB, error) {
+	db, err := sql.Open("postgres", cfg.Db.Dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the maximum number of open (in-use + idle) connections in the pool. Note that
+	// passing a value less than or equal to 0 will mean there is no limit.
+	db.SetMaxOpenConns(cfg.Db.MaxOpenConns)
+
+	// Set the maximum number of idle connections in the pool. Again, passing a value
+	// less than or equal to 0 will mean there is no limit.
+	db.SetMaxIdleConns(cfg.Db.MaxIdleConns)
+
+	// Use the time.ParseDuration() function to convert the idle timeout duration string
+	// to a time.Duration type.
+	duration, err := time.ParseDuration(cfg.Db.MaxIdleTime)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the maximum idle timeout.
+	db.SetConnMaxIdleTime(duration)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err = db.PingContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
