@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
 	"time"
@@ -22,7 +23,7 @@ var (
 )
 
 type application struct {
-	config         models.Config
+	config         config.Config
 	logger         *jsonlog.Logger
 	models         models.Models
 	templateCache  map[string]*template.Template
@@ -33,22 +34,12 @@ type application struct {
 
 func main() {
 
-	var cfg models.Config
+	var cfg config.Config
 
-	flag.IntVar(&cfg.Port, "port", 4000, "API server port")
-	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
-	flag.IntVar(&cfg.CtxTimeout, "ctx-timeout", 3, "Context timeout for db queries")
+	cfg.SetConfigs()
 
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	debug := flag.Bool("debug", false, "Enable debug mode")
-
-	// Use the empty string "" as the default value for the db-dsn command-line flag,
-	// rather than os.Getenv("TALKTV_DB_DSN") like we were previously.
-	flag.StringVar(&cfg.Db.Dsn, "db-dsn", "", "PostgreSQL DSN")
-
-	flag.IntVar(&cfg.Db.MaxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
-	flag.IntVar(&cfg.Db.MaxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
-	flag.StringVar(&cfg.Db.MaxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
 
 	// Create a new version boolean flag with the default value of false.
 	displayVersion := flag.Bool("version", false, "Display version and exit")
