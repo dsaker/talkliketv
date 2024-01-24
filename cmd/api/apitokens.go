@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApp) createAuthenticationTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the email and password from the request body.
 	var input struct {
 		Email    string `json:"email"`
@@ -35,7 +35,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 	// Lookup the user record based on the email address. If no matching user was
 	// found, then we call the app.invalidCredentialsResponse() helper to send a 401
 	// Unauthorized response to the client.
-	user, err := app.models.Users.GetByEmail(input.Email)
+	user, err := app.Models.Users.GetByEmail(input.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrNoRecord):
@@ -47,7 +47,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 	}
 
 	// Check if the provided password matches the actual password for the user.
-	match, err := app.models.Users.Matches(input.Password, user.HashedPassword)
+	match, err := app.Models.Users.Matches(input.Password, user.HashedPassword)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -62,7 +62,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 
 	// Otherwise, if the password is correct, we generate a new token with a 24-hour
 	// expiry time and the scope 'authentication'.
-	token, err := app.models.Tokens.New(user.ID, 24*time.Hour, models.ScopeAuthentication)
+	token, err := app.Models.Tokens.New(user.ID, 24*time.Hour, models.ScopeAuthentication)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

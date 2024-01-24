@@ -4,28 +4,28 @@ import (
 	"net/http"
 )
 
-func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	data := app.newTemplateData(r)
+func (webApp *webApplication) home(w http.ResponseWriter, r *http.Request) {
+	data := webApp.newTemplateData(r)
 
-	app.render(w, r, http.StatusOK, "home.gohtml", data)
+	webApp.render(w, r, http.StatusOK, "home.gohtml", data)
 }
 
-func (app *application) about(w http.ResponseWriter, r *http.Request) {
-	data := app.newTemplateData(r)
-	app.render(w, r, http.StatusOK, "about.gohtml", data)
+func (webApp *webApplication) about(w http.ResponseWriter, r *http.Request) {
+	data := webApp.newTemplateData(r)
+	webApp.render(w, r, http.StatusOK, "about.gohtml", data)
 }
 
-func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
+func (webApp *webApplication) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	env := envelope{
 		"status": "available",
 		"system_info": map[string]string{
-			"environment": app.config.Env,
+			"environment": webApp.Config.Env,
 			"version":     version,
 		},
 	}
 
-	err := app.writeJSON(w, http.StatusOK, env, nil)
+	err := webApp.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
-		app.serverError(w, r, err)
+		webApp.serverError(w, r, err)
 	}
 }

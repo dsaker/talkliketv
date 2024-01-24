@@ -9,14 +9,14 @@ import (
 	"talkliketv.net/ui"
 )
 
-func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
+func (app *apiApp) moviesMp3(w http.ResponseWriter, r *http.Request) {
 	id, err := models.ReadIDParam(r)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
-	movie, err := app.models.Movies.Get(id)
+	movie, err := app.Models.Movies.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFoundResponse(w, r)
@@ -26,7 +26,7 @@ func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.logger.PrintInfo("movie.Title = "+movie.Title, nil)
+	app.Logger.PrintInfo("movie.Title = "+movie.Title, nil)
 	mp3, err := fs.ReadFile(ui.Files, "mp3/"+movie.Title+".mp3")
 	if err != nil {
 		app.notFoundResponse(w, r)
@@ -43,7 +43,7 @@ func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
+func (app *apiApp) moviesChoose(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
 		MovieId int `json:"movie_id"`
@@ -56,7 +56,7 @@ func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := app.contextGetUser(r)
-	err = app.models.Movies.ChooseMovie(user.ID, input.MovieId)
+	err = app.Models.Movies.ChooseMovie(user.ID, input.MovieId)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
@@ -65,7 +65,7 @@ func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApp) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 
 	var input struct {
@@ -91,7 +91,7 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 	// Accept the metadata struct as a return value.
-	movies, metadata, err := app.models.Movies.All(user.LanguageId, input.Title, input.Filters, input.Mp3)
+	movies, metadata, err := app.Models.Movies.All(user.LanguageId, input.Title, input.Filters, input.Mp3)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

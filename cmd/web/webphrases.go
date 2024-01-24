@@ -7,68 +7,68 @@ import (
 	"talkliketv.net/internal/models"
 )
 
-func (app *application) phraseView(w http.ResponseWriter, r *http.Request) {
+func (webApp *webApplication) phraseView(w http.ResponseWriter, r *http.Request) {
 
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.models.Users.Get(userId)
+	user, err := webApp.Models.Users.Get(userId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 		} else {
-			app.serverError(w, r, err)
+			webApp.serverError(w, r, err)
 		}
 		return
 	}
 
 	if user.MovieId == -1 {
-		app.sessionManager.Put(r.Context(), "flash", "Please choose a movie")
-		data := app.newTemplateData(r)
-		app.render(w, r, http.StatusOK, "phrases.gohtml", data)
+		webApp.sessionManager.Put(r.Context(), "flash", "Please choose a movie")
+		data := webApp.newTemplateData(r)
+		webApp.render(w, r, http.StatusOK, "phrases.gohtml", data)
 		return
 	}
 
-	phrases, err := app.models.Phrases.NextTen(userId, user.MovieId, user.Flipped)
+	phrases, err := webApp.Models.Phrases.NextTen(userId, user.MovieId, user.Flipped)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFound(w, r, err)
+			webApp.notFound(w, r, err)
 		} else {
-			app.serverError(w, r, err)
+			webApp.serverError(w, r, err)
 		}
 		return
 	}
 
-	sum, total, err := app.models.Phrases.PercentageDone(userId, user.MovieId, user.Flipped)
+	sum, total, err := webApp.Models.Phrases.PercentageDone(userId, user.MovieId, user.Flipped)
 	if err != nil {
-		app.serverError(w, r, err)
+		webApp.serverError(w, r, err)
 		return
 	}
 
-	movie, err := app.models.Movies.Get(user.MovieId)
+	movie, err := webApp.Models.Movies.Get(user.MovieId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFound(w, r, err)
+			webApp.notFound(w, r, err)
 		} else {
-			app.serverError(w, r, err)
+			webApp.serverError(w, r, err)
 		}
 		return
 	}
 
-	data := app.newTemplateData(r)
+	data := webApp.newTemplateData(r)
 	data.Phrases = phrases
 	data.Sum = sum
 	data.Total = total
 	data.Movie = movie
 
-	app.render(w, r, http.StatusOK, "phrases.gohtml", data)
+	webApp.render(w, r, http.StatusOK, "phrases.gohtml", data)
 }
 
-func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+func (webApp *webApplication) phraseCorrect(w http.ResponseWriter, r *http.Request) {
+	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.models.Users.Get(userId)
+	user, err := webApp.Models.Users.Get(userId)
 	if err != nil {
-		app.serverError(w, r, err)
+		webApp.serverError(w, r, err)
 		return
 	}
 
@@ -77,30 +77,30 @@ func (app *application) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 		MovieId  string `form:"movie_id"`
 	}
 
-	err = app.decodePostForm(r, &input)
+	err = webApp.decodePostForm(r, &input)
 	if err != nil {
-		app.clientError(w, r, http.StatusBadRequest, err)
+		webApp.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	phraseId, err := strconv.Atoi(input.PhraseId)
 	if err != nil {
-		app.clientError(w, r, http.StatusBadRequest, err)
+		webApp.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	movieId, err := strconv.Atoi(input.MovieId)
 	if err != nil {
-		app.clientError(w, r, http.StatusBadRequest, err)
+		webApp.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	err = app.models.Phrases.PhraseCorrect(userId, phraseId, movieId, user.Flipped)
+	err = webApp.Models.Phrases.PhraseCorrect(userId, phraseId, movieId, user.Flipped)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFound(w, r, err)
+			webApp.notFound(w, r, err)
 		} else {
-			app.serverError(w, r, err)
+			webApp.serverError(w, r, err)
 		}
 		return
 	}

@@ -12,7 +12,7 @@ import (
 	"talkliketv.net/internal/validator"
 )
 
-func (app *application) recoverPanic(next http.Handler) http.Handler {
+func (app *apiApp) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Create a deferred function (which will always be run in the event of a panic
 		// as Go unwinds the stack).
@@ -38,72 +38,7 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 	})
 }
 
-//func (app *application) rateLimit(next http.Handler) http.Handler {
-//	// Define a client struct to hold the rate limiter and last seen time for each
-//	// client.
-//	type client struct {
-//		limiter  *rate.Limiter
-//		lastSeen time.Time
-//	}
-//
-//	var (
-//		mu sync.Mutex
-//		// Update the map so the values are pointers to a client struct.
-//		clients = make(map[string]*client)
-//	)
-//
-//	// Launch a background goroutine which removes old entries from the clients map once
-//	// every minute.
-//	go func() {
-//		for {
-//			time.Sleep(time.Minute)
-//
-//			// Lock the mutex to prevent any rate limiter checks from happening while
-//			// the cleanup is taking place.
-//			mu.Lock()
-//
-//			// Loop through all clients. If they haven't been seen within the last three
-//			// minutes, delete the corresponding entry from the map.
-//			for ip, client := range clients {
-//				if time.Since(client.lastSeen) > 3*time.Minute {
-//					delete(clients, ip)
-//				}
-//			}
-//
-//			// Importantly, unlock the mutex when the cleanup is complete.
-//			mu.Unlock()
-//		}
-//	}()
-//
-//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		if app.config.Limiter.Enabled {
-//			// Use the realip.FromRequest() function to get the client's real IP address.
-//			ip := realip.FromRequest(r)
-//
-//			mu.Lock()
-//
-//			if _, found := clients[ip]; !found {
-//				clients[ip] = &client{
-//					limiter: rate.NewLimiter(rate.Limit(app.config.Limiter.Rps), app.config.Limiter.Burst),
-//				}
-//			}
-//
-//			clients[ip].lastSeen = time.Now()
-//
-//			if !clients[ip].limiter.Allow() {
-//				mu.Unlock()
-//				app.rateLimitExceededResponse(w, r)
-//				return
-//			}
-//
-//			mu.Unlock()
-//		}
-//
-//		next.ServeHTTP(w, r)
-//	})
-//}
-
-func (app *application) authenticate(next http.Handler) http.Handler {
+func (app *apiApp) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Add the "Vary: Authorization" header to the response. This indicates to any
 		// caches that the response may vary based on the value of the Authorization
@@ -153,7 +88,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		// again calling the invalidAuthenticationTokenResponse() helper if no
 		// matching record was found. IMPORTANT: Notice that we are using
 		// ScopeAuthentication as the first parameter here.
-		user, err := app.models.Users.GetForToken(models.ScopeAuthentication, token)
+		user, err := app.Models.Users.GetForToken(models.ScopeAuthentication, token)
 		if err != nil {
 			switch {
 			case errors.Is(err, models.ErrNoRecord):
@@ -173,7 +108,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 	})
 }
 
-func (app *application) enableCORS(next http.Handler) http.Handler {
+func (app *apiApp) enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Origin")
 
@@ -182,9 +117,9 @@ func (app *application) enableCORS(next http.Handler) http.Handler {
 
 		origin := r.Header.Get("Origin")
 
-		if origin != "" && len(app.config.Cors.TrustedOrigins) != 0 {
-			for i := range app.config.Cors.TrustedOrigins {
-				if origin == app.config.Cors.TrustedOrigins[i] {
+		if origin != "" && len(app.Config.Cors.TrustedOrigins) != 0 {
+			for i := range app.Config.Cors.TrustedOrigins {
+				if origin == app.Config.Cors.TrustedOrigins[i] {
 					w.Header().Set("Access-Control-Allow-Origin", origin)
 
 					// Check if the request has the HTTP method OPTIONS and contains the
@@ -208,7 +143,7 @@ func (app *application) enableCORS(next http.Handler) http.Handler {
 	})
 }
 
-func (app *application) metrics(next http.Handler) http.Handler {
+func (app *apiApp) metrics(next http.Handler) http.Handler {
 	totalRequestsReceived := expvar.NewInt("total_requests_received")
 	totalResponsesSent := expvar.NewInt("total_responses_sent")
 	totalProcessingTimeMicroseconds := expvar.NewInt("total_processing_time_μs")

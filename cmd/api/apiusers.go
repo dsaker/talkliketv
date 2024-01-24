@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApp) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	var form models.UserSignupForm
 
@@ -18,7 +18,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	languageId, err := app.models.Languages.GetId(form.Language)
+	languageId, err := app.Models.Languages.GetId(form.Language)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -38,7 +38,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		Activated:  false,
 	}
 
-	err = app.models.Users.Insert(user, form.Password)
+	err = app.Models.Users.Insert(user, form.Password)
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrDuplicateEmail):
@@ -53,7 +53,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	_, err = app.models.Tokens.New(user.ID, 24*time.Hour, models.ScopeActivation)
+	_, err = app.Models.Tokens.New(user.ID, 24*time.Hour, models.ScopeActivation)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -65,7 +65,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApp) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the plaintext activation token from the request body.
 	var input struct {
 		TokenPlaintext string `json:"token"`
@@ -88,7 +88,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	// Retrieve the details of the user associated with the token using the
 	// GetForToken() method (which we will create in a minute). If no matching record
 	// is found, then we let the client know that the token they provided is not valid.
-	user, err := app.models.Users.GetForToken(models.ScopeActivation, input.TokenPlaintext)
+	user, err := app.Models.Users.GetForToken(models.ScopeActivation, input.TokenPlaintext)
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrNoRecord):
@@ -104,7 +104,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	user.Activated = true
 	// Save the updated user record in our database, checking for any edit conflicts in
 	// the same way that we did for our movie records.
-	err = app.models.Users.Update(user)
+	err = app.Models.Users.Update(user)
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrEditConflict):
@@ -117,7 +117,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 
 	// If everything went successfully, then we delete all activation tokens for the
 	// user.
-	err = app.models.Tokens.DeleteAllForUser(models.ScopeActivation, user.ID)
+	err = app.Models.Tokens.DeleteAllForUser(models.ScopeActivation, user.ID)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

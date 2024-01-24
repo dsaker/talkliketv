@@ -10,13 +10,13 @@ import (
 	"talkliketv.net/ui"
 )
 
-func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
+func (webApp *webApplication) moviesView(w http.ResponseWriter, r *http.Request) {
 
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := app.models.Users.Get(userId)
+	user, err := webApp.Models.Users.Get(userId)
 	if err != nil {
-		app.serverError(w, r, err)
+		webApp.serverError(w, r, err)
 		return
 	}
 
@@ -38,39 +38,39 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 	input.Filters.Sort = models.ReadString(qs, "sort", "id")
 	input.Filters.SortSafeList = []string{"id", "title", "year", "num_subs", "-id", "-title", "-year", "-num_subs"}
 
-	movies, _, err := app.models.Movies.All(user.LanguageId, input.Title, input.Filters, input.Mp3)
+	movies, _, err := webApp.Models.Movies.All(user.LanguageId, input.Title, input.Filters, input.Mp3)
 	if err != nil {
-		app.serverError(w, r, err)
+		webApp.serverError(w, r, err)
 		return
 	}
 
-	data := app.newTemplateData(r)
+	data := webApp.newTemplateData(r)
 	data.Movies = movies
 
-	app.render(w, r, http.StatusOK, "movies.gohtml", data)
+	webApp.render(w, r, http.StatusOK, "movies.gohtml", data)
 }
 
-func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
+func (webApp *webApplication) moviesMp3(w http.ResponseWriter, r *http.Request) {
 	id, err := models.ReadIDParam(r)
 	if err != nil {
-		app.clientError(w, r, http.StatusBadRequest, err)
+		webApp.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	movie, err := app.models.Movies.Get(id)
+	movie, err := webApp.Models.Movies.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFound(w, r, err)
+			webApp.notFound(w, r, err)
 		} else {
-			app.serverError(w, r, err)
+			webApp.serverError(w, r, err)
 		}
 		return
 	}
 
-	app.logger.PrintInfo("movie.Title = "+movie.Title, nil)
+	webApp.Logger.PrintInfo("movie.Title = "+movie.Title, nil)
 	mp3, err := fs.ReadFile(ui.Files, "mp3/"+movie.Title+".mp3")
 	if err != nil {
-		app.notFound(w, r, err)
+		webApp.notFound(w, r, err)
 		return
 	}
 
@@ -78,35 +78,35 @@ func (app *application) moviesMp3(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 	_, err = w.Write(mp3)
 	if err != nil {
-		app.serverError(w, r, err)
+		webApp.serverError(w, r, err)
 		return
 	}
 
 }
 
-func (app *application) moviesChoose(w http.ResponseWriter, r *http.Request) {
+func (webApp *webApplication) moviesChoose(w http.ResponseWriter, r *http.Request) {
 
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
 	var input struct {
 		MoviesId string `form:"movie_id"`
 	}
 
-	err := app.decodePostForm(r, &input)
+	err := webApp.decodePostForm(r, &input)
 	if err != nil {
-		app.clientError(w, r, http.StatusBadRequest, err)
+		webApp.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	i, err := strconv.Atoi(input.MoviesId)
 	if err != nil {
-		app.clientError(w, r, http.StatusBadRequest, err)
+		webApp.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	err = app.models.Movies.ChooseMovie(userId, i)
+	err = webApp.Models.Movies.ChooseMovie(userId, i)
 	if err != nil {
-		app.notFound(w, r, err)
+		webApp.notFound(w, r, err)
 		return
 	}
 
