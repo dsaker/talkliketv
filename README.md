@@ -51,3 +51,5 @@ and extract
 ### To Do
 
 GetAllMovies when not signed in
+Browserstack e2e testing of production
+delete account

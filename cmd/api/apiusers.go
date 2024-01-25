@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/validator"
-	"time"
 )
 
 func (app *apiApp) registerUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,11 +52,23 @@ func (app *apiApp) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = app.Models.Tokens.New(user.ID, 24*time.Hour, models.ScopeActivation)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
+	//token, err := app.Models.Tokens.New(user.ID, 24*time.Hour, models.ScopeActivation)
+	//if err != nil {
+	//	app.serverErrorResponse(w, r, err)
+	//	return
+	//}
+	//
+	//app.Background(func() {
+	//	data := map[string]interface{}{
+	//		"activationToken": token.Plaintext,
+	//		"userID":          user.ID,
+	//	}
+	//
+	//	err = app.Mailer.Send(user.Email, "user_welcome.tmpl", data)
+	//	if err != nil {
+	//		app.Logger.PrintError(err, nil)
+	//	}
+	//})
 
 	err = app.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
 	if err != nil {

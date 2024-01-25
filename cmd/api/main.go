@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"talkliketv.net/internal/application"
 	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
@@ -25,7 +26,7 @@ const version = "1.0.0"
 // sync.WaitGroup type is a valid, usable, sync.WaitGroup with a 'counter' value of 0,
 // so we don't need to do anything else to initialize it before we can use it.
 type apiApp struct {
-	config.Application
+	application.Application
 }
 
 func main() {
@@ -82,7 +83,7 @@ func main() {
 	}
 
 	app := &apiApp{
-		config.Application{
+		application.Application{
 			Config: cfg,
 			Logger: logger,
 			Models: models.NewModels(db, time.Duration(cfg.CtxTimeout)),

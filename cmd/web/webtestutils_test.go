@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"talkliketv.net/internal/application"
 	"talkliketv.net/internal/assert"
 	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
@@ -104,7 +105,7 @@ func newTestApplication(t *testing.T) (*webApplication, *test.TestDatabase) {
 		formDecoder,
 		sessionManager,
 		false,
-		config.Application{
+		application.Application{
 			Config: cfg,
 			Logger: logger,
 			Models: models.NewModels(testDb.DbInstance, 3),

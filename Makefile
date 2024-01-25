@@ -26,11 +26,11 @@ copy-hooks:
 
 ## run/web: run the cmd/web application
 run/web:
-	go run ./cmd/web -db-dsn=${TALKTV_DB_DSN}
+	go run ./cmd/web -db-dsn=${TALKTV_DB_DSN} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD}
 
 ## run/api: run the cmd/api application
 run/api:
-	go run ./cmd/api -db-dsn=${TALKTV_DB_DSN}
+	go run ./cmd/api -db-dsn=${TALKTV_DB_DSN} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD}
 
 ## run: run the docker container
 run/docker:
@@ -148,6 +148,14 @@ production/configure/web.service:
 		sudo mv ~/web.service /etc/systemd/system/ \
 		&& sudo systemctl enable web \
 		&& sudo systemctl restart web \'
+
+## production/configure/api.service: configure the production systemd api.service file
+production/configure/api.service:
+	rsync -P ./remote/production/api.service talkliketv@${production_host_ip}:~
+	ssh -t talkliketv@${production_host_ip} '\
+		sudo mv ~/api.service /etc/systemd/system/ \
+		&& sudo systemctl enable api \
+		&& sudo systemctl restart api \'
 
 ## production/deploy/uploadcsv: deploy the scripts to production
 production/uploadcsv:

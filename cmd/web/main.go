@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/form/v4"
 	"html/template"
 	"os"
+	"talkliketv.net/internal/application"
 	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
 	"talkliketv.net/internal/models"
@@ -25,7 +26,7 @@ type webApplication struct {
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
 	debug          bool
-	config.Application
+	application.Application
 }
 
 func main() {
@@ -79,7 +80,7 @@ func main() {
 		formDecoder,
 		sessionManager,
 		*debug,
-		config.Application{
+		application.Application{
 			Config: cfg,
 			Logger: logger,
 			Models: models.NewModels(db, time.Duration(cfg.CtxTimeout)),

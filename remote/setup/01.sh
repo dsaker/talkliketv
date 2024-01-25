@@ -11,6 +11,8 @@ TIMEZONE=America/New_York
 USERNAME=talkliketv
 # Prompt to enter a password for the PostgreSQL talkliketv user (rather than hard-coding # a password in this script).
 read -p "Enter password for talkliketv DB user: " DB_PASSWORD
+read -p "Enter password for smtp-username: " SMTP_USERNAME
+read -p "Enter password for smtp-password: " SMTP_PASSWORD
 # Force all output to be presented in en_US for the duration of this script. This avoids # any "setting locale failed" errors while this script is running, before we have
 # installed support for all locales. Do not change this setting!
 export LC_ALL=en_US.UTF-8
@@ -54,6 +56,8 @@ sudo -i -u postgres psql -d talkliketv -c "CREATE ROLE talkliketv WITH LOGIN PAS
 # Add a DSN for connecting to the talkliketv database to the system-wide environment
 # variables in the /etc/environment file.
 echo "TALKLIKETV_DB_DSN='postgres://talkliketv:${DB_PASSWORD}@localhost/talkliketv'" >> /etc/environment
+echo "SMTP_PASSWORD=${SMTP_PASSWORD}" >> /etc/environment
+echo "SMTP_USERNAME=${SMTP_USERNAME}" >> /etc/environment
 # Install Caddy (see https://caddyserver.com/docs/install#debian-ubuntu-raspbian).
 apt --yes install -y debian-keyring debian-archive-keyring apt-transport-https
 curl -L https://dl.cloudsmith.io/public/caddy/stable/gpg.key | sudo apt-key add -

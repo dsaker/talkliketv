@@ -4,28 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/tomasen/realip"
 	"golang.org/x/time/rate"
 	"net/http"
-	"os"
-	"os/signal"
 	"strings"
 	"sync"
-	"syscall"
-	"talkliketv.net/internal/jsonlog"
-	"talkliketv.net/internal/models"
 	"time"
 )
-
-type Application struct {
-	Config Config
-	Logger *jsonlog.Logger
-	Models models.Models
-	Wg     sync.WaitGroup
-}
 
 // Config Update the config struct to hold the SMTP server settings.
 type Config struct {
@@ -80,9 +67,9 @@ func (cfg *Config) SetConfigs() {
 	// with your own Mailtrap credentials.
 	flag.StringVar(&cfg.Smtp.Host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
 	flag.IntVar(&cfg.Smtp.Port, "smtp-port", 25, "SMTP port")
-	flag.StringVar(&cfg.Smtp.Username, "smtp-username", "0a20d74a5f27e0", "SMTP username")
-	flag.StringVar(&cfg.Smtp.Password, "smtp-password", "4285fac8b700cc", "SMTP password")
-	flag.StringVar(&cfg.Smtp.Sender, "smtp-sender", "Greenlight <no-reply@greenlight.alexedwards.net>", "SMTP sender")
+	flag.StringVar(&cfg.Smtp.Username, "smtp-username", "", "SMTP username")
+	flag.StringVar(&cfg.Smtp.Password, "smtp-password", "", "SMTP password")
+	flag.StringVar(&cfg.Smtp.Sender, "smtp-sender", "TalkLikeTV <no-reply@talkliketv.click>", "SMTP sender")
 
 	// Use the flag.Func() function to process the -cors-trusted-origins command line
 	// flag. In this we use the strings.Fields() function to split the flag value into a
@@ -179,71 +166,6 @@ func rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Printf("error in rateLimitExceededResponse Write: %s, %s, %s", err, r.Method, r.URL.String())
 	}
-}
-
-func (app *Application) Serve(routes http.Handler) error {
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", app.Config.Port),
-		Handler:      routes,
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-	}
-
-	shutdownError := make(chan error)
-
-	go func() {
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-		s := <-quit
-
-		app.Logger.PrintInfo("caught signal", map[string]string{
-			"signal": s.String(),
-		})
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		// Call Shutdown() on the server like before, but now we only send on the
-		// shutdownError channel if it returns an error.
-		err := srv.Shutdown(ctx)
-		if err != nil {
-			shutdownError <- err
-		}
-
-		// Log a message to say that we're waiting for any background goroutines to
-		// complete their tasks.
-		app.Logger.PrintInfo("completing background tasks", map[string]string{
-			"addr": srv.Addr,
-		})
-
-		// Call Wait() to block until our WaitGroup counter is zero --- essentially
-		// blocking until the background goroutines have finished. Then we return nil on
-		// the shutdownError channel, to indicate that the shutdown completed without
-		// any issues.
-		app.Wg.Wait()
-		shutdownError <- nil
-	}()
-
-	app.Logger.PrintInfo("starting server", map[string]string{
-		"addr": srv.Addr,
-		"env":  app.Config.Env,
-	})
-
-	err := srv.ListenAndServe()
-	if !errors.Is(err, http.ErrServerClosed) {
-		return err
-	}
-
-	err = <-shutdownError
-	if err != nil {
-		return err
-	}
-
-	app.Logger.PrintInfo("stopped server", map[string]string{
-		"addr": srv.Addr,
-	})
-
-	return nil
 }
 
 func (cfg *Config) OpenDB() (*sql.DB, error) {
