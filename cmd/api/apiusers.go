@@ -52,23 +52,11 @@ func (app *apiApp) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//token, err := app.Models.Tokens.New(user.ID, 24*time.Hour, models.ScopeActivation)
-	//if err != nil {
-	//	app.serverErrorResponse(w, r, err)
-	//	return
-	//}
-	//
-	//app.Background(func() {
-	//	data := map[string]interface{}{
-	//		"activationToken": token.Plaintext,
-	//		"userID":          user.ID,
-	//	}
-	//
-	//	err = app.Mailer.Send(user.Email, "user_welcome.tmpl", data)
-	//	if err != nil {
-	//		app.Logger.PrintError(err, nil)
-	//	}
-	//})
+	err = app.SendActivationEmail(user)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
 
 	err = app.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
 	if err != nil {
@@ -136,6 +124,75 @@ func (app *apiApp) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send the updated user details to the client in a JSON response.
 	err = app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+// Verify the password reset token and set a new password for the user.
+func (app *apiApp) updateUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse and validate the user's new password and password reset token.
+	var input struct {
+		Password       string `json:"password"`
+		TokenPlaintext string `json:"token"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+
+	models.ValidatePassword(v, input.Password)
+	models.ValidateTokenPlaintext(v, input.TokenPlaintext)
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.FieldErrors)
+		return
+	}
+
+	// Retrieve the details of the user associated with the password reset token,
+	// returning an error message if no matching record was found.
+	user, err := app.Models.Users.GetForToken(models.ScopePasswordReset, input.TokenPlaintext)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrNoRecord):
+			v.AddFieldError("token", "invalid or expired password reset token")
+			app.failedValidationResponse(w, r, v.FieldErrors)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	// make sure authenticated user matches get for token user
+	contextUser := app.contextGetUser(r)
+	if contextUser.ID != user.ID {
+		v.AddFieldError("token", "invalid or expired activation token")
+		app.failedValidationResponse(w, r, v.FieldErrors)
+		return
+	}
+
+	// Set the new password for the user.
+	err = app.Models.Users.ApiPasswordUpdate(user.ID, input.Password)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// If everything was successful, then delete all password reset tokens for the user.
+	err = app.Models.Tokens.DeleteAllForUser(models.ScopePasswordReset, user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Send the user a confirmation message.
+	env := envelope{"message": "your password was successfully reset"}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

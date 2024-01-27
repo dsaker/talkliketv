@@ -12,7 +12,8 @@ import (
 
 const (
 	ScopeActivation     = "activation"
-	ScopeAuthentication = "authentication" // Include a new authentication scope.
+	ScopeAuthentication = "authentication"
+	ScopePasswordReset  = "password-reset"
 )
 
 // TokenModel Define the TokenModel type.

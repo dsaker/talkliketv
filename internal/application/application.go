@@ -107,3 +107,26 @@ func (app *Application) Serve(routes http.Handler) error {
 
 	return nil
 }
+
+func (app *Application) SendActivationEmail(user *models.User) error {
+	token, err := app.Models.Tokens.New(user.ID, 24*time.Hour, models.ScopeActivation)
+	if err != nil {
+		return err
+	}
+
+	app.Background(func() {
+		data := map[string]interface{}{
+			"activationToken": token.Plaintext,
+			"userID":          user.ID,
+		}
+
+		err = app.Mailer.Send(user.Email, "user_welcome.gohtml", data)
+		if err != nil {
+			app.Logger.PrintError(err, nil)
+		}
+		// log that email was sent
+		app.Logger.PrintInfo(fmt.Sprintf("email sent to: %s", user.Email), nil)
+	})
+
+	return nil
+}

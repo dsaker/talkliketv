@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"talkliketv.net/internal/assert"
 	"talkliketv.net/internal/models"
+	"talkliketv.net/internal/test"
 	"testing"
 	"time"
 )
@@ -14,9 +15,9 @@ func (suite *ApiNoLoginTestSuite) TestActivateUserHandler() {
 	t := suite.T()
 	data := map[string]interface{}{
 		"name":     "ActivateUserHandler",
-		"password": "password12",
+		"password": test.ValidPassword,
 		"email":    "activateuserhandler@email.com",
-		"language": "Spanish",
+		"language": test.ValidLanguage,
 	}
 
 	jsonData, err := json.Marshal(data)
@@ -62,10 +63,8 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 	t := suite.T()
 
 	const (
-		validName     = "user12"
-		validPassword = "validPa$$word"
-		validEmail    = "bob@example.com"
-		validLanguage = "Spanish"
+		validName  = "user12"
+		validEmail = "bob@example.com"
 	)
 
 	tests := []struct {
@@ -81,16 +80,16 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			name:         "Valid Submission",
 			userName:     validName,
 			userEmail:    validEmail,
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			wantCode:     http.StatusAccepted,
 		},
 		{
 			name:         "Empty Name",
 			userName:     "",
 			userEmail:    "emptyname@email.com",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantTag:      "This field cannot be blank",
 		},
@@ -98,8 +97,8 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			name:         "Empty Email",
 			userName:     "emptyemail",
 			userEmail:    "",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantTag:      "This field cannot be blank",
 		},
@@ -107,7 +106,7 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			name:         "Empty Password",
 			userName:     "emptypassword",
 			userEmail:    "emptypassword@email.com",
-			userLanguage: validLanguage,
+			userLanguage: test.ValidLanguage,
 			userPassword: "",
 			wantCode:     http.StatusUnprocessableEntity,
 			wantTag:      "This field cannot be blank",
@@ -116,8 +115,8 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			name:         "Invalid Email",
 			userName:     "invalidemail",
 			userEmail:    "bob@example.",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantTag:      "This field must be a valid email address",
 		},
@@ -125,7 +124,7 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			name:         "Short Password",
 			userName:     "shorpassword",
 			userEmail:    "shorpassword@email.com",
-			userLanguage: validLanguage,
+			userLanguage: test.ValidLanguage,
 			userPassword: "pa$$",
 			wantCode:     http.StatusUnprocessableEntity,
 			wantTag:      "This field must be at least 8 characters long",
@@ -134,8 +133,8 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			name:         "Duplicate Email",
 			userName:     "duplicateemail",
 			userEmail:    "user2@email.com",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantTag:      "a user with this email address already exists",
 		},
@@ -144,7 +143,7 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			userName:     "validName1",
 			userEmail:    "validName1@email.com",
 			userLanguage: "Made Up Language",
-			userPassword: validPassword,
+			userPassword: test.ValidPassword,
 			wantCode:     http.StatusBadRequest,
 			wantTag:      "models: no matching record found",
 		},
@@ -152,8 +151,8 @@ func (suite *ApiNoLoginTestSuite) TestRegisterUserHandler() {
 			name:         "Duplicate Name",
 			userName:     "user2",
 			userEmail:    "validName1@email.com",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantTag:      "a user with this username already exists",
 		},

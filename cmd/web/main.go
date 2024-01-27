@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"github.com/alexedwards/scs/v2"
@@ -10,6 +11,7 @@ import (
 	"talkliketv.net/internal/application"
 	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
+	"talkliketv.net/internal/mailer"
 	"talkliketv.net/internal/models"
 	"time"
 
@@ -56,7 +58,12 @@ func main() {
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}
-	defer db.Close()
+	defer func(db *sql.DB) {
+		err = db.Close()
+		if err != nil {
+			logger.PrintFatal(err, nil)
+		}
+	}(db)
 
 	logger.PrintInfo("database connection pool established", nil)
 
@@ -75,7 +82,7 @@ func main() {
 	//// unsecure HTTP connection).
 	sessionManager.Cookie.Secure = true
 
-	webApp := &webApplication{
+	app := &webApplication{
 		templateCache,
 		formDecoder,
 		sessionManager,
@@ -83,11 +90,12 @@ func main() {
 		application.Application{
 			Config: cfg,
 			Logger: logger,
-			Models: models.NewModels(db, time.Duration(cfg.CtxTimeout)),
+			Models: models.NewModels(db, cfg.CtxTimeout),
+			Mailer: mailer.New(cfg.Smtp.Host, cfg.Smtp.Port, cfg.Smtp.Username, cfg.Smtp.Password, cfg.Smtp.Sender),
 		},
 	}
 
-	err = webApp.Serve(webApp.routes())
+	err = app.Serve(app.routes())
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}

@@ -11,6 +11,7 @@ import (
 	"talkliketv.net/internal/assert"
 	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
+	"talkliketv.net/internal/mailer"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/test"
 	"testing"
@@ -19,10 +20,14 @@ import (
 var cfg config.Config
 
 func init() {
-	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
 	flag.BoolVar(&cfg.ExpVarEnabled, "expvar-enabled", false, "Enable expvar (disable for testing")
-	flag.IntVar(&cfg.CtxTimeout, "ctx-timeout", 3, "Context timeout for db queries")
-
+	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
+	flag.StringVar(&cfg.Smtp.Host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
+	flag.IntVar(&cfg.Smtp.Port, "smtp-port", 25, "SMTP port")
+	cfg.Smtp.Username = os.Getenv("smtp-username")
+	cfg.Smtp.Password = os.Getenv("smtp-password")
+	flag.StringVar(&cfg.Smtp.Sender, "smtp-sender", "TalkLikeTV <no-reply@talkliketv.click>", "SMTP sender")
+	flag.DurationVar(&cfg.CtxTimeout, "ctx-timeout", test.DbCtxTimeout, "Context timeout for db queries")
 }
 
 type ApiTestSuite struct {
@@ -30,13 +35,14 @@ type ApiTestSuite struct {
 	ts        *test.TestServer
 	testDb    *test.TestDatabase
 	authToken string
+	app       *apiApp
 }
 
 func (suite *ApiTestSuite) SetupSuite() {
-	var app *apiApp
-	app, suite.testDb = newTestApplication()
-	suite.ts = newTestServer(app.routes())
-	register("setupsuite", suite.T(), suite.ts)
+	suite.app, suite.testDb = newTestApplication()
+	suite.ts = newTestServer(suite.app.routes())
+	apiUser := register("setupsuite", suite.T(), suite.ts)
+	suite.activate(apiUser)
 	suite.authToken = suite.getAuthToken("setupsuite")
 	suite.chooseMovie()
 }
@@ -71,24 +77,51 @@ func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(ApiNoLoginTestSuite))
 }
 
-func register(prefix string, t *testing.T, ts *test.TestServer) {
+func register(prefix string, t *testing.T, ts *test.TestServer) *models.User {
 
+	email := prefix + test.TestEmail
 	data := map[string]interface{}{
 		"name":     prefix + "apiUser",
-		"password": "password12",
-		"email":    prefix + "test@email.com",
-		"language": "Spanish",
+		"password": test.ValidPassword,
+		"email":    email,
+		"language": test.ValidLanguage,
 	}
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		t.Fatalf("could not marshal json: %s\n", err)
-		return
 	}
 	code, _, body := ts.Post(t, "/v1/users", jsonData)
 
 	assert.Equal(t, code, http.StatusAccepted)
-	assert.StringContains(t, body, prefix+"test")
+	assert.StringContains(t, body, email)
+
+	var input struct {
+		User models.User `json:"user"`
+	}
+
+	err = json.Unmarshal([]byte(body), &input)
+	if err != nil {
+		t.Fatalf("could not read json: %s\n", err)
+		return nil
+	}
+
+	assert.Equal(t, input.User.Email, email)
+	return &input.User
+}
+
+func (suite *ApiTestSuite) activate(userIn *models.User) {
+
+	user, err := suite.app.Models.Users.Get(userIn.ID)
+	// Update the user's activation status.
+	user.Activated = true
+	// Save the updated user record in our database, checking for any edit conflicts in
+	// the same way that we did for our movie records.
+	err = suite.app.Models.Users.Update(user)
+	if err != nil {
+		suite.T().Fatalf("could not acitvate user: %s\n", err)
+		return
+	}
 }
 
 func (suite *ApiTestSuite) chooseMovie() {
@@ -110,8 +143,8 @@ func (suite *ApiTestSuite) chooseMovie() {
 func (suite *ApiTestSuite) getAuthToken(prefix string) string {
 	t := suite.T()
 	data := map[string]interface{}{
-		"password": "password12",
-		"email":    prefix + "test@email.com",
+		"password": test.ValidPassword,
+		"email":    prefix + test.TestEmail,
 	}
 
 	jsonData, err := json.Marshal(data)
@@ -148,7 +181,8 @@ func newTestApplication() (*apiApp, *test.TestDatabase) {
 		application.Application{
 			Config: cfg,
 			Logger: logger,
-			Models: models.NewModels(testDb.DbInstance, 3),
+			Models: models.NewModels(testDb.DbInstance, cfg.CtxTimeout),
+			Mailer: mailer.New(cfg.Smtp.Host, cfg.Smtp.Port, cfg.Smtp.Username, cfg.Smtp.Password, cfg.Smtp.Sender),
 		},
 	}, testDb
 }

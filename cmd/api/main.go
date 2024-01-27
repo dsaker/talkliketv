@@ -10,6 +10,7 @@ import (
 	"talkliketv.net/internal/application"
 	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
+	"talkliketv.net/internal/mailer"
 	"talkliketv.net/internal/models"
 	"time"
 
@@ -86,7 +87,8 @@ func main() {
 		application.Application{
 			Config: cfg,
 			Logger: logger,
-			Models: models.NewModels(db, time.Duration(cfg.CtxTimeout)),
+			Models: models.NewModels(db, cfg.CtxTimeout),
+			Mailer: mailer.New(cfg.Smtp.Host, cfg.Smtp.Port, cfg.Smtp.Username, cfg.Smtp.Password, cfg.Smtp.Sender),
 		},
 	}
 

@@ -27,10 +27,16 @@ const (
 )
 
 const (
+	ValidUserId      = 3
 	ValidPhraseId    = "2285"
 	ValidPhraseIdInt = 2285
 	ValidMovieId     = "6"
 	ValidMovieIdInt  = 6
+	ValidLanguage    = "Spanish"
+	ValidLanguageId  = 2
+	ValidPassword    = "validPassword"
+	TestEmail        = "test@email.com"
+	DbCtxTimeout     = 60 * time.Second
 )
 
 type TestDatabase struct {
@@ -42,7 +48,7 @@ type TestDatabase struct {
 func SetupTestDatabase() *TestDatabase {
 
 	// setup db container
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	ctx, cancel := context.WithTimeout(context.Background(), DbCtxTimeout)
 	container, db, dbAddr, err := createContainer(ctx)
 	if err != nil {
 		log.Fatal("failed to setup test", err)

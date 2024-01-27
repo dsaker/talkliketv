@@ -16,8 +16,9 @@ talkliketv is a simple web application to learn a language by using subtitle fro
 
 # Register User
 
-`BODY='{"name": "newuser", "password": "password12", "email": "newuser@email.com", "language": "Spanish"}'
+`BODY='{"name": "newuser6", "password": "password12", "email": "newuser6@email.com", "language": "Spanish"}'
 curl -i -d "$BODY" localhost:4001/v1/users`
+
 
 # Get Token
 
@@ -51,3 +52,7 @@ curl --request POST -i -H "Authorization: Bearer $TOKEN" -d "$BODY" localhost:40
 # ListAllMoviesNoText
 
 `curl -i -H "Authorization: Bearer $TOKEN" "localhost:4001/v1/movies?page_size=5&sort=-num_subs"`
+
+# Activate User
+`BODY='{"token": "PQR7I6SB6OGKDSWK4ZMQZKWWFQ"}'
+curl --request PUT -i -H "Authorization: Bearer $TOKEN" -d "$BODY" localhost:4001/v1/users/activated`

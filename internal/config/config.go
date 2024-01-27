@@ -19,7 +19,7 @@ type Config struct {
 	Port          int
 	Env           string
 	ExpVarEnabled bool
-	CtxTimeout    int
+	CtxTimeout    time.Duration
 	Db            struct {
 		Dsn          string
 		MaxOpenConns int
@@ -47,7 +47,7 @@ type Config struct {
 func (cfg *Config) SetConfigs() {
 	flag.BoolVar(&cfg.ExpVarEnabled, "expvar-enabled", true, "Enable expvar (disable for testing")
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
-	flag.IntVar(&cfg.CtxTimeout, "ctx-timeout", 3, "Context timeout for db queries")
+	flag.DurationVar(&cfg.CtxTimeout, "ctx-timeout", 3*time.Second, "Context timeout for db queries in seconds")
 
 	// Use the empty string "" as the default value for the db-dsn command-line flag,
 	// rather than os.Getenv("GREENLIGHT_DB_DSN") like we were previously.
@@ -192,7 +192,7 @@ func (cfg *Config) OpenDB() (*sql.DB, error) {
 	// Set the maximum idle timeout.
 	db.SetConnMaxIdleTime(duration)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.CtxTimeout)
 	defer cancel()
 	err = db.PingContext(ctx)
 	if err != nil {

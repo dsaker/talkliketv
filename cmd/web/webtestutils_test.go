@@ -16,6 +16,7 @@ import (
 	"talkliketv.net/internal/assert"
 	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
+	"talkliketv.net/internal/mailer"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/test"
 	"testing"
@@ -26,6 +27,11 @@ var cfg config.Config
 
 func init() {
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
+	flag.StringVar(&cfg.Smtp.Host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
+	flag.IntVar(&cfg.Smtp.Port, "smtp-port", 25, "SMTP port")
+	cfg.Smtp.Username = os.Getenv("smtp-username")
+	cfg.Smtp.Password = os.Getenv("smtp-password")
+	flag.StringVar(&cfg.Smtp.Sender, "smtp-sender", "TalkLikeTV <no-reply@talkliketv.click>", "SMTP sender")
 }
 
 type WebTestSuite struct {
@@ -108,7 +114,8 @@ func newTestApplication(t *testing.T) (*webApplication, *test.TestDatabase) {
 		application.Application{
 			Config: cfg,
 			Logger: logger,
-			Models: models.NewModels(testDb.DbInstance, 3),
+			Models: models.NewModels(testDb.DbInstance, test.DbCtxTimeout),
+			Mailer: mailer.New(cfg.Smtp.Host, cfg.Smtp.Port, cfg.Smtp.Username, cfg.Smtp.Password, cfg.Smtp.Sender),
 		},
 	}, testDb
 
@@ -161,7 +168,7 @@ func login(t *testing.T, ts *test.TestServer) string {
 
 	loginForm := url.Values{}
 	loginForm.Add("email", "user99@email.com")
-	loginForm.Add("password", "password")
+	loginForm.Add("password", test.ValidPassword)
 	loginForm.Add("csrf_token", validCSRFToken)
 
 	code, _, _ := ts.PostForm(t, "/user/login", loginForm)
@@ -178,8 +185,8 @@ func signup(t *testing.T, ts *test.TestServer) {
 	signupForm := url.Values{}
 	signupForm.Add("name", "user99")
 	signupForm.Add("email", "user99@email.com")
-	signupForm.Add("password", "password")
-	signupForm.Add("language", "Spanish")
+	signupForm.Add("password", test.ValidPassword)
+	signupForm.Add("language", test.ValidLanguage)
 	signupForm.Add("csrf_token", validCSRFToken)
 
 	code, _, _ := ts.PostForm(t, "/user/signup", signupForm)

@@ -2,6 +2,7 @@ package models
 
 import (
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/test"
 	"testing"
 )
 
@@ -20,13 +21,13 @@ func (suite *ModelTestSuite) TestMovieModelChooseMovie() {
 	}{
 		{
 			name:    "Valid ID",
-			movieId: validMovieId,
-			userId:  validUserId,
+			movieId: test.ValidMovieIdInt,
+			userId:  test.ValidUserId,
 		},
 		{
 			name:    "Change Movie",
 			movieId: 8,
-			userId:  validUserId,
+			userId:  test.ValidUserId,
 		},
 	}
 
@@ -54,7 +55,7 @@ func (suite *ModelTestSuite) TestMovieModelGet() {
 	}{
 		{
 			name:    "Valid Id",
-			movieId: validMovieId,
+			movieId: test.ValidMovieIdInt,
 		},
 		{
 			name:    "Invalid Movie Id",

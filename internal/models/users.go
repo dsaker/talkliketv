@@ -73,14 +73,21 @@ func (m UserModel) Insert(user *User, password string) error {
 	query := `
         INSERT INTO users (name, email, hashed_password, movie_id, language_id) 
         VALUES ($1, $2, $3, -1, $4)
-        RETURNING id, created, version, activated`
+        RETURNING id, created, activated, movie_id, language_id, flipped`
 
 	args := []interface{}{user.Name, user.Email, hashedPassword, user.LanguageId}
 
 	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
-	err = m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.Created, &user.Version, &user.Activated)
+	err = m.DB.QueryRowContext(ctx, query, args...).Scan(
+		&user.ID,
+		&user.Created,
+		&user.Activated,
+		&user.MovieId,
+		&user.LanguageId,
+		&user.Flipped)
+
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
@@ -147,19 +154,21 @@ func (m UserModel) Exists(id int) (bool, error) {
 func (m UserModel) Get(id int) (*User, error) {
 	var user User
 
-	stmt := `SELECT id, movie_id, name, email, language_id, created, flipped FROM users WHERE id = $1`
+	stmt := `SELECT id, hashed_password, movie_id, name, email, language_id, created, flipped, version FROM users WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, stmt, id).Scan(
 		&user.ID,
+		&user.HashedPassword,
 		&user.MovieId,
 		&user.Name,
 		&user.Email,
 		&user.LanguageId,
 		&user.Created,
-		&user.Flipped)
+		&user.Flipped,
+		&user.Version)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord
@@ -171,7 +180,7 @@ func (m UserModel) Get(id int) (*User, error) {
 	return &user, nil
 }
 
-func (m UserModel) PasswordUpdate(id int, currentPassword, newPassword string) error {
+func (m UserModel) WebPasswordUpdate(id int, currentPassword, newPassword string) error {
 	var currentHashedPassword []byte
 
 	stmt := "SELECT hashed_password FROM users WHERE id = $1"
@@ -199,6 +208,22 @@ func (m UserModel) PasswordUpdate(id int, currentPassword, newPassword string) e
 	}
 
 	stmt = "UPDATE users SET hashed_password = $1 WHERE id = $2"
+
+	_, err = m.DB.ExecContext(ctx, stmt, string(newHashedPassword), id)
+	return err
+}
+
+func (m UserModel) ApiPasswordUpdate(id int, newPassword string) error {
+
+	newHashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
+	if err != nil {
+		return err
+	}
+
+	stmt := "UPDATE users SET hashed_password = $1 WHERE id = $2"
+
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
 
 	_, err = m.DB.ExecContext(ctx, stmt, string(newHashedPassword), id)
 	return err
@@ -284,15 +309,16 @@ func (m UserModel) Update(user *User) error {
 
 	query := `
         UPDATE users 
-        SET name = $1, email = $2, hashed_password = $3, activated = $4, version = version + 1
-        WHERE id = $5 AND version = $6
+        SET hashed_password = $1, activated = $2, movie_id = $3, language_id = $4, flipped = $5, version = version + 1
+        WHERE id = $6 AND version = $7
         RETURNING version`
 
 	args := []interface{}{
-		user.Name,
-		user.Email,
 		user.HashedPassword,
 		user.Activated,
+		user.MovieId,
+		user.LanguageId,
+		user.Flipped,
 		user.ID,
 		user.Version,
 	}

@@ -112,6 +112,12 @@ func (webApp *webApplication) userSignupPost(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	err = webApp.SendActivationEmail(user)
+	if err != nil {
+		webApp.serverError(w, r, err)
+		return
+	}
+
 	// Otherwise add a confirmation flash message to the session confirming that
 	// their signup worked.
 	webApp.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please log in.")
@@ -249,7 +255,7 @@ func (webApp *webApplication) accountPasswordUpdatePost(w http.ResponseWriter, r
 	}
 	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	err = webApp.Models.Users.PasswordUpdate(userId, form.CurrentPassword, form.NewPassword)
+	err = webApp.Models.Users.WebPasswordUpdate(userId, form.CurrentPassword, form.NewPassword)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			form.AddFieldError("currentPassword", "Current password is incorrect")
@@ -273,7 +279,9 @@ func (webApp *webApplication) userLanguageSwitch(w http.ResponseWriter, r *http.
 
 	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	err := webApp.Models.Users.FlippedUpdate(userId)
+	user, err := webApp.Models.Users.Get(userId)
+	user.Flipped = !user.Flipped
+	err = webApp.Models.Users.Update(user)
 	if err != nil {
 		webApp.serverError(w, r, err)
 	}

@@ -8,6 +8,10 @@ import (
 	"testing"
 )
 
+const (
+	falseFlipped = false
+)
+
 type ModelTestSuite struct {
 	suite.Suite
 	testDb *test.TestDatabase
@@ -16,16 +20,11 @@ type ModelTestSuite struct {
 	m      MovieModel
 }
 
-const (
-	validMovieId = 6
-	validUserId  = 3
-)
-
 func (suite *ModelTestSuite) SetupSuite() {
 	suite.testDb = test.SetupTestDatabase()
-	suite.u = UserModel{DB: suite.testDb.DbInstance, CtxTimeout: 60}
-	suite.p = PhraseModel{DB: suite.testDb.DbInstance, CtxTimeout: 60}
-	suite.m = MovieModel{DB: suite.testDb.DbInstance, CtxTimeout: 60}
+	suite.u = UserModel{DB: suite.testDb.DbInstance, CtxTimeout: test.DbCtxTimeout}
+	suite.p = PhraseModel{DB: suite.testDb.DbInstance, CtxTimeout: test.DbCtxTimeout}
+	suite.m = MovieModel{DB: suite.testDb.DbInstance, CtxTimeout: test.DbCtxTimeout}
 }
 
 func (suite *ModelTestSuite) TearDownSuite() {
@@ -51,7 +50,7 @@ func (suite *ModelTestSuite) TestUserModelExists() {
 	}{
 		{
 			name:   "Valid ID",
-			userId: validUserId,
+			userId: test.ValidUserId,
 			want:   true,
 		},
 		{
@@ -145,8 +144,7 @@ func (suite *ModelTestSuite) TestUserModelAuthenticate() {
 	}
 
 	const (
-		validUserEmail    = "authenticateuser@email.com"
-		validUserPassword = "password"
+		validUserEmail = "authenticateuser@email.com"
 	)
 
 	user := &User{
@@ -155,7 +153,7 @@ func (suite *ModelTestSuite) TestUserModelAuthenticate() {
 		LanguageId: 2,
 	}
 
-	insertErr := suite.u.Insert(user, validUserPassword)
+	insertErr := suite.u.Insert(user, test.ValidPassword)
 	if insertErr != nil {
 		log.Fatal("failed to setup test", insertErr)
 	}
@@ -171,7 +169,7 @@ func (suite *ModelTestSuite) TestUserModelAuthenticate() {
 		{
 			name:         "Valid Authenticate",
 			userEmail:    validUserEmail,
-			userPassword: validUserPassword,
+			userPassword: test.ValidPassword,
 			wantUserId:   true,
 		},
 		{
@@ -183,7 +181,7 @@ func (suite *ModelTestSuite) TestUserModelAuthenticate() {
 		{
 			name:         "Wrong Email",
 			userEmail:    "wrongEmail@email.com",
-			userPassword: validUserPassword,
+			userPassword: test.ValidPassword,
 			wantErr:      ErrInvalidCredentials,
 		},
 	}
@@ -219,7 +217,7 @@ func (suite *ModelTestSuite) TestUserModelGet() {
 	}{
 		{
 			name:   "Valid Authenticate",
-			userId: validUserId,
+			userId: test.ValidUserId,
 		},
 		{
 			name:    "Wrong Password",
@@ -246,22 +244,21 @@ func (suite *ModelTestSuite) TestUserModelPasswordUpdate() {
 	t := suite.T()
 
 	const (
-		validUserEmail    = "passwordupdateuser@email.com"
-		validUserPassword = "password"
+		validUserEmail = "passwordupdateuser@email.com"
 	)
 
 	user := &User{
 		Name:       "passwordUpdateUser",
 		Email:      validUserEmail,
-		LanguageId: 2,
+		LanguageId: test.ValidLanguageId,
 	}
 
-	err := suite.u.Insert(user, validUserPassword)
+	err := suite.u.Insert(user, test.ValidPassword)
 	if err != nil {
 		log.Fatal("failed to insert user: TestUserModelPasswordUpdate ", err)
 	}
 
-	validUserId, err := suite.u.Authenticate(validUserEmail, validUserPassword)
+	validUserPasswordId, err := suite.u.Authenticate(validUserEmail, test.ValidPassword)
 	if err != nil {
 		log.Fatal("failed to authenticate user: TestUserModelPasswordUpdate ", err)
 	}
@@ -275,13 +272,13 @@ func (suite *ModelTestSuite) TestUserModelPasswordUpdate() {
 	}{
 		{
 			name:                "Valid Authenticate",
-			userId:              validUserId,
+			userId:              validUserPasswordId,
 			userNewPassword:     "newPassword",
-			userCurrentPassword: validUserPassword,
+			userCurrentPassword: test.ValidPassword,
 		},
 		{
 			name:                "Valid Authenticate",
-			userId:              validUserId,
+			userId:              test.ValidUserId,
 			userNewPassword:     "newPassword",
 			userCurrentPassword: "wrongPassword",
 			wantErr:             ErrInvalidCredentials,
@@ -291,7 +288,7 @@ func (suite *ModelTestSuite) TestUserModelPasswordUpdate() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := suite.u.PasswordUpdate(tt.userId, tt.userCurrentPassword, tt.userNewPassword)
+			err := suite.u.WebPasswordUpdate(tt.userId, tt.userCurrentPassword, tt.userNewPassword)
 
 			if err != nil {
 				assert.Equal(t, err, tt.wantErr)

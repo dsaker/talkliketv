@@ -27,6 +27,13 @@ make run/web
 make run/api
 ```
 
+### Testing
+
+Before running tests locally run 
+```
+make expvar
+```
+
 ### Build
 
 To build the web application
