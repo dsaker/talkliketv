@@ -76,7 +76,7 @@ audit/pipeline:
 ## audit/local: tidy dependencies and format, vet and test all code (race off)
 audit/local:
 	make audit
-	go test -vet=off ./... -coverprofile=coverage.out -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD}
+	go test -vet=off ./... -coverprofile=coverage.out
 
 ## staticcheck:  detect bugs, suggest code simplifications, and point out dead code
 staticcheck:

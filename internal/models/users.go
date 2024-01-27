@@ -154,17 +154,14 @@ func (m UserModel) Exists(id int) (bool, error) {
 func (m UserModel) Get(id int) (*User, error) {
 	var user User
 
-	stmt := `SELECT id, hashed_password, movie_id, name, email, language_id, created, flipped, version FROM users WHERE id = $1`
+	stmt := `SELECT id, movie_id, language_id, created, flipped, version FROM users WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, stmt, id).Scan(
 		&user.ID,
-		&user.HashedPassword,
 		&user.MovieId,
-		&user.Name,
-		&user.Email,
 		&user.LanguageId,
 		&user.Created,
 		&user.Flipped,
@@ -259,10 +256,10 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 
 	// Set up the SQL query.
 	query := `
-        SELECT users.id, users.created, users.name, users.email, users.hashed_password, users.language_id, users.movie_id, users.flipped, users.activated, users.version
-        FROM users
+        SELECT u.id, u.activated, u.movie_id, u.language_id, u.flipped, u.version
+        FROM users u
         INNER JOIN tokens
-        ON users.id = tokens.user_id
+        ON u.id = tokens.user_id
         WHERE tokens.hash = $1
         AND tokens.scope = $2 
         AND tokens.expiry > $3`
@@ -282,14 +279,10 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 	// record is found we return an ErrRecordNotFound error.
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
 		&user.ID,
-		&user.Created,
-		&user.Name,
-		&user.Email,
-		&user.HashedPassword,
-		&user.LanguageId,
-		&user.MovieId,
-		&user.Flipped,
 		&user.Activated,
+		&user.MovieId,
+		&user.LanguageId,
+		&user.Flipped,
 		&user.Version,
 	)
 	if err != nil {
@@ -309,12 +302,11 @@ func (m UserModel) Update(user *User) error {
 
 	query := `
         UPDATE users 
-        SET hashed_password = $1, activated = $2, movie_id = $3, language_id = $4, flipped = $5, version = version + 1
-        WHERE id = $6 AND version = $7
+        SET activated = $1, movie_id = $2, language_id = $3, flipped = $4, version = version + 1
+        WHERE id = $5 AND version = $6
         RETURNING version`
 
 	args := []interface{}{
-		user.HashedPassword,
 		user.Activated,
 		user.MovieId,
 		user.LanguageId,

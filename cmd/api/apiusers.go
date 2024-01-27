@@ -167,14 +167,6 @@ func (app *apiApp) updateUserPasswordHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// make sure authenticated user matches get for token user
-	contextUser := app.contextGetUser(r)
-	if contextUser.ID != user.ID {
-		v.AddFieldError("token", "invalid or expired activation token")
-		app.failedValidationResponse(w, r, v.FieldErrors)
-		return
-	}
-
 	// Set the new password for the user.
 	err = app.Models.Users.ApiPasswordUpdate(user.ID, input.Password)
 	if err != nil {

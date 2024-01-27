@@ -113,6 +113,10 @@ func register(prefix string, t *testing.T, ts *test.TestServer) *models.User {
 func (suite *ApiTestSuite) activate(userIn *models.User) {
 
 	user, err := suite.app.Models.Users.Get(userIn.ID)
+	if err != nil {
+		suite.T().Fatalf("could not get user: %s\n", err)
+		return
+	}
 	// Update the user's activation status.
 	user.Activated = true
 	// Save the updated user record in our database, checking for any edit conflicts in

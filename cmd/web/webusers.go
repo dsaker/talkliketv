@@ -280,6 +280,14 @@ func (webApp *webApplication) userLanguageSwitch(w http.ResponseWriter, r *http.
 	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
 	user, err := webApp.Models.Users.Get(userId)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		} else {
+			webApp.serverError(w, r, err)
+		}
+		return
+	}
 	user.Flipped = !user.Flipped
 	err = webApp.Models.Users.Update(user)
 	if err != nil {

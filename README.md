@@ -60,3 +60,4 @@ and extract
 GetAllMovies when not signed in
 Browserstack e2e testing of production
 delete account
+password reset web
