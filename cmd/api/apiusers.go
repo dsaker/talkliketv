@@ -189,3 +189,21 @@ func (app *apiApp) updateUserPasswordHandler(w http.ResponseWriter, r *http.Requ
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *apiApp) updateUserFlippedHandler(w http.ResponseWriter, r *http.Request) {
+
+	user := app.contextGetUser(r)
+	user.Flipped = !user.Flipped
+	err := app.Models.Users.Update(user)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+	// Send the user a confirmation message.
+	env := envelope{"message": "your language was switched successfully"}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}

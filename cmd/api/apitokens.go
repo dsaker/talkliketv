@@ -210,7 +210,3 @@ func (app *apiApp) createPasswordResetTokenHandler(w http.ResponseWriter, r *htt
 		app.serverErrorResponse(w, r, err)
 	}
 }
-
-func getByEmail(email string) {
-
-}
