@@ -7,7 +7,7 @@ import (
 	"talkliketv.net/internal/validator"
 )
 
-func (app *apiApp) registerUserHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	var form models.UserSignupForm
 
@@ -64,7 +64,7 @@ func (app *apiApp) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *apiApp) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the plaintext activation token from the request body.
 	var input struct {
 		TokenPlaintext string `json:"token"`
@@ -130,7 +130,7 @@ func (app *apiApp) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Verify the password reset token and set a new password for the user.
-func (app *apiApp) updateUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) updateUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse and validate the user's new password and password reset token.
 	var input struct {
 		Password       string `json:"password"`
@@ -190,7 +190,7 @@ func (app *apiApp) updateUserPasswordHandler(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func (app *apiApp) updateUserFlippedHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) updateUserFlippedHandler(w http.ResponseWriter, r *http.Request) {
 
 	user := app.contextGetUser(r)
 	user.Flipped = !user.Flipped

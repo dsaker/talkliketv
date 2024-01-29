@@ -288,7 +288,7 @@ func (suite *ModelTestSuite) TestUserModelPasswordUpdate() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := suite.u.WebPasswordUpdate(tt.userId, tt.userCurrentPassword, tt.userNewPassword)
+			err = suite.u.WebPasswordUpdate(tt.userId, tt.userCurrentPassword, tt.userNewPassword)
 
 			if err != nil {
 				assert.Equal(t, err, tt.wantErr)
@@ -306,74 +306,35 @@ func (suite *ModelTestSuite) TestUserModelLanguageUpdate() {
 		t.Skip("models: skipping integration test")
 	}
 
-	const (
-		validUserId     = 9999
-		validLanguageId = 2
-	)
+	user, _ := suite.u.Get(test.ValidUserId)
+
 	// Set up a suite of table-driven tests and expected results.
 	tests := []struct {
-		name       string
-		userId     int
-		languageId int
+		name          string
+		languageId    int
+		wantErrString string
 	}{
 		{
-			name:       "Valid ID",
-			userId:     validUserId,
-			languageId: validLanguageId,
+			name:       "Valid Id",
+			languageId: test.ValidLanguageId,
 		},
 		{
-			name:       "Zero User ID",
-			userId:     0,
-			languageId: validLanguageId,
+			name:          "Invalid Language Id",
+			languageId:    -99,
+			wantErrString: "users_language_id_fkey",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			user.LanguageId = tt.languageId
+			err := suite.u.Update(user)
 
-			err := suite.u.LanguageUpdate(tt.userId, tt.languageId)
-
-			assert.NilError(t, err)
+			if err != nil {
+				assert.StringContains(t, err.Error(), tt.wantErrString)
+			} else {
+				assert.NilError(t, err)
+			}
 		})
 	}
-}
-
-func (suite *ModelTestSuite) TestUserModelFlippedUpdate() {
-	t := suite.T()
-
-	const (
-		validUserEmail    = "flippedupdateuser@email.com"
-		validUserPassword = "password"
-	)
-
-	user := &User{
-		Name:       "flippedUpdateUser",
-		Email:      validUserEmail,
-		LanguageId: 2,
-	}
-	err := suite.u.Insert(user, validUserPassword)
-	if err != nil {
-		log.Fatal("failed to insert user: TestUserModelFlippedUpdate ", err)
-	}
-
-	validUserId, err := suite.u.Authenticate(validUserEmail, validUserPassword)
-	if err != nil {
-		log.Fatal("failed to authenticate user: TestUserModelFlippedUpdate ", err)
-	}
-
-	user, err = suite.u.Get(validUserId)
-	if err != nil {
-		log.Fatal("failed to get user: TestUserModelFlippedUpdate ", err)
-	}
-
-	flippedBefore := user.Flipped
-
-	t.Run("Flipped After", func(t *testing.T) {
-
-		err = suite.u.FlippedUpdate(validUserId)
-		assert.NilError(t, err)
-
-		user, err = suite.u.Get(validUserId)
-		assert.NotEqual(t, flippedBefore, user.Flipped)
-	})
 }

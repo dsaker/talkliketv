@@ -86,8 +86,8 @@ func (suite *ApiNoLoginTestSuite) TestCreateAuthenticationTokenHandler() {
 func (suite *ApiTestSuite) TestCreatePasswordResetTokenHandler() {
 	t := suite.T()
 	prefix := "password-token-handler"
-	user := register(prefix, t, suite.ts)
-	suite.activate(user)
+	register(prefix, t, suite.ts)
+	activate(prefix+test.TestEmail, suite.app.Models)
 	tests := []struct {
 		name      string
 		userEmail string

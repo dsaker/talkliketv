@@ -7,7 +7,7 @@ import (
 )
 
 // Update the routes() method to return a http.Handler instead of a *httprouter.Router.
-func (app *apiApp) routes() http.Handler {
+func (app *apiApplication) routes() http.Handler {
 	router := httprouter.New()
 
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
@@ -32,7 +32,7 @@ func (app *apiApp) routes() http.Handler {
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 
 	if app.Config.ExpVarEnabled {
-		return app.metrics(app.recoverPanic(app.enableCORS(app.Config.RateLimit(app.authenticate(router)))))
+		return app.metrics(app.logRequest(app.recoverPanic(app.enableCORS(app.Config.RateLimit(app.authenticate(router))))))
 	}
-	return app.recoverPanic(app.enableCORS(app.Config.RateLimit(app.authenticate(router))))
+	return app.logRequest(app.recoverPanic(app.enableCORS(app.Config.RateLimit(app.authenticate(router)))))
 }

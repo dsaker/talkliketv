@@ -61,3 +61,4 @@ GetAllMovies when not signed in
 Browserstack e2e testing of production
 delete account
 password reset web
+Spanish (LA) and Spanish (Spain)

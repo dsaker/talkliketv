@@ -226,29 +226,6 @@ func (m UserModel) ApiPasswordUpdate(id int, newPassword string) error {
 	return err
 }
 
-func (m UserModel) LanguageUpdate(userId int, languageId int) error {
-
-	query := "UPDATE users SET language_id = $1 WHERE id = $2"
-
-	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
-	defer cancel()
-
-	_, err := m.DB.ExecContext(ctx, query, languageId, userId)
-	return err
-}
-
-func (m UserModel) FlippedUpdate(id int) error {
-
-	stmt := "UPDATE users SET flipped = NOT flipped WHERE id = $1"
-
-	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
-	defer cancel()
-
-	_, err := m.DB.ExecContext(ctx, stmt, id)
-
-	return err
-}
-
 func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error) {
 	// Calculate the SHA-256 hash of the plaintext token provided by the client.
 	// Remember that this returns a byte *array* with length 32, not a slice.
@@ -335,7 +312,7 @@ func (m UserModel) Update(user *User) error {
 
 func (m UserModel) GetByEmail(email string) (*User, error) {
 	query := `
-        SELECT id, created, name, email, hashed_password, activated, version
+        SELECT id, created, name, email, hashed_password, activated, version, movie_id, language_id, flipped
         FROM users
         WHERE email = $1`
 
@@ -352,6 +329,9 @@ func (m UserModel) GetByEmail(email string) (*User, error) {
 		&user.HashedPassword,
 		&user.Activated,
 		&user.Version,
+		&user.MovieId,
+		&user.LanguageId,
+		&user.Flipped,
 	)
 
 	if err != nil {

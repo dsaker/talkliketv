@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/form/v4"
 	"github.com/stretchr/testify/suite"
 	"html"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -24,6 +25,10 @@ import (
 )
 
 var cfg config.Config
+
+const (
+	testuser = "testUser"
+)
 
 func init() {
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
@@ -46,7 +51,9 @@ func (suite *WebTestSuite) SetupSuite() {
 	t := suite.T()
 	suite.app, suite.testDb = newTestApplication(t)
 	suite.ts = newWebTestServer(t, suite.app.routes())
-	suite.validCSRFToken = setupUser(t, suite.ts)
+	signup(t, suite.ts, testuser)
+	suite.validCSRFToken = login(t, suite.ts, testuser)
+	chooseMovie(t, suite.ts, suite.validCSRFToken)
 }
 
 func (suite *WebTestSuite) TearDownSuite() {
@@ -70,13 +77,13 @@ type WebNoLoginTestSuite struct {
 	ts             *test.TestServer
 	testDb         *test.TestDatabase
 	validCSRFToken string
+	app            *webApplication
 }
 
 func (suite *WebNoLoginTestSuite) SetupSuite() {
 	t := suite.T()
-	app, testDb := newTestApplication(t)
-	suite.testDb = testDb
-	suite.ts = newWebTestServer(t, app.routes())
+	suite.app, suite.testDb = newTestApplication(t)
+	suite.ts = newWebTestServer(t, suite.app.routes())
 	_, _, body := suite.ts.Get(t, "/user/login")
 	suite.validCSRFToken = extractCSRFToken(t, body)
 }
@@ -147,10 +154,7 @@ func newWebTestServer(t *testing.T, h http.Handler) *test.TestServer {
 	return &test.TestServer{Server: ts}
 }
 
-func setupUser(t *testing.T, ts *test.TestServer) string {
-	signup(t, ts)
-	validToken := login(t, ts)
-
+func chooseMovie(t *testing.T, ts *test.TestServer, validToken string) {
 	setupUserForm := url.Values{}
 	setupUserForm.Add("movie_id", "6")
 	setupUserForm.Add("csrf_token", validToken)
@@ -158,16 +162,14 @@ func setupUser(t *testing.T, ts *test.TestServer) string {
 	code, _, _ := ts.PostForm(t, "/movies/choose", setupUserForm)
 
 	assert.Equal(t, code, http.StatusSeeOther)
-
-	return validToken
 }
 
-func login(t *testing.T, ts *test.TestServer) string {
+func login(t *testing.T, ts *test.TestServer, username string) string {
 	_, _, body := ts.Get(t, "/user/login")
 	validCSRFToken := extractCSRFToken(t, body)
 
 	loginForm := url.Values{}
-	loginForm.Add("email", "user99@email.com")
+	loginForm.Add("email", username+test.TestEmail)
 	loginForm.Add("password", test.ValidPassword)
 	loginForm.Add("csrf_token", validCSRFToken)
 
@@ -178,13 +180,13 @@ func login(t *testing.T, ts *test.TestServer) string {
 	return validCSRFToken
 }
 
-func signup(t *testing.T, ts *test.TestServer) {
+func signup(t *testing.T, ts *test.TestServer, username string) {
 	_, _, body := ts.Get(t, "/user/login")
 	validCSRFToken := extractCSRFToken(t, body)
 
 	signupForm := url.Values{}
-	signupForm.Add("name", "user99")
-	signupForm.Add("email", "user99@email.com")
+	signupForm.Add("name", username)
+	signupForm.Add("email", username+test.TestEmail)
 	signupForm.Add("password", test.ValidPassword)
 	signupForm.Add("language", test.ValidLanguage)
 	signupForm.Add("csrf_token", validCSRFToken)
@@ -209,4 +211,22 @@ func extractCSRFToken(t *testing.T, body string) string {
 	}
 
 	return html.UnescapeString(matches[1])
+}
+
+func activate(email string, models models.Models) {
+
+	user, err := models.Users.GetByEmail(email)
+	if err != nil {
+		log.Fatalf("could not acitvate user: %s\n", err)
+		return
+	}
+	// Update the user's activation status.
+	user.Activated = true
+	// Save the updated user record in our database, checking for any edit conflicts in
+	// the same way that we did for our movie records.
+	err = models.Users.Update(user)
+	if err != nil {
+		log.Fatalf("could not acitvate user: %s\n", err)
+		return
+	}
 }

@@ -9,7 +9,7 @@ import (
 	"talkliketv.net/ui"
 )
 
-func (app *apiApp) moviesMp3(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) moviesMp3(w http.ResponseWriter, r *http.Request) {
 	id, err := models.ReadIDParam(r)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
@@ -43,7 +43,7 @@ func (app *apiApp) moviesMp3(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *apiApp) moviesChoose(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) moviesChoose(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
 		MovieId int `json:"movie_id"`
@@ -65,7 +65,7 @@ func (app *apiApp) moviesChoose(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *apiApp) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 
 	var input struct {

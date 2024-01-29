@@ -35,7 +35,7 @@ const (
 	ValidLanguage    = "Spanish"
 	ValidLanguageId  = 2
 	ValidPassword    = "validPassword"
-	TestEmail        = "test@email.com"
+	TestEmail        = "Test@email.com"
 	DbCtxTimeout     = 60 * time.Second
 )
 

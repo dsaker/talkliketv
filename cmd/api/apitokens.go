@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (app *apiApp) createAuthenticationTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) createAuthenticationTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the email and password from the request body.
 	var input struct {
 		Email    string `json:"email"`
@@ -76,7 +76,7 @@ func (app *apiApp) createAuthenticationTokenHandler(w http.ResponseWriter, r *ht
 	}
 }
 
-func (app *apiApp) createActivationTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) createActivationTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse and validate the user's email address.
 	var input struct {
 		Email string `json:"email"`
@@ -147,7 +147,7 @@ func (app *apiApp) createActivationTokenHandler(w http.ResponseWriter, r *http.R
 	}
 }
 
-func (app *apiApp) createPasswordResetTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) createPasswordResetTokenHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse and validate the user's email address.
 	var input struct {
@@ -197,7 +197,7 @@ func (app *apiApp) createPasswordResetTokenHandler(w http.ResponseWriter, r *htt
 	app.Background(func() {
 		data := map[string]interface{}{
 			"passwordResetToken": token.Plaintext}
-		err = app.Mailer.Send(user.Email, "token_password_reset.tmpl", data)
+		err = app.Mailer.Send(user.Email, "token_password_reset.gohtml", data)
 		if err != nil {
 			app.Logger.PrintError(err, nil)
 		}

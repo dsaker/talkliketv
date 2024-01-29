@@ -23,10 +23,10 @@ var (
 
 const version = "1.0.0"
 
-// Include a sync.WaitGroup in the apiApp struct. The zero-value for a
+// Include a sync.WaitGroup in the apiApplication struct. The zero-value for a
 // sync.WaitGroup type is a valid, usable, sync.WaitGroup with a 'counter' value of 0,
 // so we don't need to do anything else to initialize it before we can use it.
-type apiApp struct {
+type apiApplication struct {
 	application.Application
 }
 
@@ -83,7 +83,7 @@ func main() {
 		}))
 	}
 
-	app := &apiApp{
+	app := &apiApplication{
 		application.Application{
 			Config: cfg,
 			Logger: logger,

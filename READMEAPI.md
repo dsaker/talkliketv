@@ -55,4 +55,12 @@ curl --request POST -i -H "Authorization: Bearer $TOKEN" -d "$BODY" localhost:40
 
 # Activate User
 `BODY='{"token": "PQR7I6SB6OGKDSWK4ZMQZKWWFQ"}'
-curl --request PUT -i -H "Authorization: Bearer $TOKEN" -d "$BODY" localhost:4001/v1/users/activated`
+curl --request PUT -i -d "$BODY" localhost:4001/v1/users/activated`
+
+# Password-Reset Request
+`BODY='{"email": "newuser6@email.com"}'
+curl --request POST -i -d "$BODY" localhost:4001/v1/tokens/password-reset`
+
+# Change Password
+`BODY='{"token": "PQR7I6SB6OGKDSWK4ZMQZKWWFQ", "password", "new_password}'
+curl --request PUT -i -d "$BODY" localhost:4001/v1/users/activated`

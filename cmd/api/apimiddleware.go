@@ -12,7 +12,7 @@ import (
 	"talkliketv.net/internal/validator"
 )
 
-func (app *apiApp) recoverPanic(next http.Handler) http.Handler {
+func (app *apiApplication) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Create a deferred function (which will always be run in the event of a panic
 		// as Go unwinds the stack).
@@ -38,7 +38,15 @@ func (app *apiApp) recoverPanic(next http.Handler) http.Handler {
 	})
 }
 
-func (app *apiApp) authenticate(next http.Handler) http.Handler {
+func (app *apiApplication) logRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.Logger.PrintInfo(fmt.Sprintf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI()), nil)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *apiApplication) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Add the "Vary: Authorization" header to the response. This indicates to any
 		// caches that the response may vary based on the value of the Authorization
@@ -108,7 +116,7 @@ func (app *apiApp) authenticate(next http.Handler) http.Handler {
 	})
 }
 
-func (app *apiApp) enableCORS(next http.Handler) http.Handler {
+func (app *apiApplication) enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Origin")
 
@@ -143,7 +151,7 @@ func (app *apiApp) enableCORS(next http.Handler) http.Handler {
 	})
 }
 
-func (app *apiApp) metrics(next http.Handler) http.Handler {
+func (app *apiApplication) metrics(next http.Handler) http.Handler {
 	totalRequestsReceived := expvar.NewInt("total_requests_received")
 	totalResponsesSent := expvar.NewInt("total_responses_sent")
 	totalProcessingTimeMicroseconds := expvar.NewInt("total_processing_time_μs")

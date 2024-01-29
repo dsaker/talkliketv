@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"github.com/stretchr/testify/suite"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -32,17 +33,17 @@ func init() {
 
 type ApiTestSuite struct {
 	suite.Suite
+	app       *apiApplication
 	ts        *test.TestServer
 	testDb    *test.TestDatabase
 	authToken string
-	app       *apiApp
 }
 
 func (suite *ApiTestSuite) SetupSuite() {
 	suite.app, suite.testDb = newTestApplication()
 	suite.ts = newTestServer(suite.app.routes())
 	apiUser := register("setupsuite", suite.T(), suite.ts)
-	suite.activate(apiUser)
+	activate(apiUser.Email, suite.app.Models)
 	suite.authToken = suite.getAuthToken("setupsuite")
 	suite.chooseMovie()
 }
@@ -60,7 +61,7 @@ type ApiNoLoginTestSuite struct {
 	suite.Suite
 	ts     *test.TestServer
 	testDb *test.TestDatabase
-	app    *apiApp
+	app    *apiApplication
 }
 
 func (suite *ApiNoLoginTestSuite) SetupSuite() {
@@ -110,24 +111,6 @@ func register(prefix string, t *testing.T, ts *test.TestServer) *models.User {
 	return &input.User
 }
 
-func (suite *ApiTestSuite) activate(userIn *models.User) {
-
-	user, err := suite.app.Models.Users.Get(userIn.ID)
-	if err != nil {
-		suite.T().Fatalf("could not get user: %s\n", err)
-		return
-	}
-	// Update the user's activation status.
-	user.Activated = true
-	// Save the updated user record in our database, checking for any edit conflicts in
-	// the same way that we did for our movie records.
-	err = suite.app.Models.Users.Update(user)
-	if err != nil {
-		suite.T().Fatalf("could not acitvate user: %s\n", err)
-		return
-	}
-}
-
 func (suite *ApiTestSuite) chooseMovie() {
 	t := suite.T()
 
@@ -174,14 +157,14 @@ func (suite *ApiTestSuite) getAuthToken(prefix string) string {
 	return authToken.Token.Plaintext
 }
 
-func newTestApplication() (*apiApp, *test.TestDatabase) {
+func newTestApplication() (*apiApplication, *test.TestDatabase) {
 	testDb := test.SetupTestDatabase()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	flag.Parse()
 
-	return &apiApp{
+	return &apiApplication{
 		application.Application{
 			Config: cfg,
 			Logger: logger,
@@ -195,4 +178,22 @@ func newTestServer(h http.Handler) *test.TestServer {
 	// Initialize the test server as normal.
 	ts := httptest.NewTLSServer(h)
 	return &test.TestServer{Server: ts}
+}
+
+func activate(email string, models models.Models) {
+
+	user, err := models.Users.GetByEmail(email)
+	if err != nil {
+		log.Fatalf("could not acitvate user: %s\n", err)
+		return
+	}
+	// Update the user's activation status.
+	user.Activated = true
+	// Save the updated user record in our database, checking for any edit conflicts in
+	// the same way that we did for our movie records.
+	err = models.Users.Update(user)
+	if err != nil {
+		log.Fatalf("could not acitvate user: %s\n", err)
+		return
+	}
 }

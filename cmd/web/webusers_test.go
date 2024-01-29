@@ -276,7 +276,6 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 	t := suite.T()
 
 	const (
-		validCurrentPassword         = test.ValidPassword
 		validNewPassword             = "newpassword"
 		validNewPasswordConfirmation = "newpassword"
 		wantTag                      = "<form action='/account/password/update' method='POST' novalidate>"
@@ -293,7 +292,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 	}{
 		{
 			name:                    "Valid submission",
-			currentPassword:         validCurrentPassword,
+			currentPassword:         test.ValidPassword,
 			newPassword:             validNewPassword,
 			newPasswordConfirmation: validNewPasswordConfirmation,
 			csrfToken:               suite.validCSRFToken,
@@ -301,7 +300,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 		},
 		{
 			name:                    "Invalid CSRF Token",
-			currentPassword:         validCurrentPassword,
+			currentPassword:         test.ValidPassword,
 			newPassword:             validNewPassword,
 			newPasswordConfirmation: validNewPasswordConfirmation,
 			csrfToken:               "wrongToken",
@@ -318,7 +317,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 		},
 		{
 			name:                    "Empty New Password",
-			currentPassword:         validCurrentPassword,
+			currentPassword:         test.ValidPassword,
 			newPassword:             "",
 			newPasswordConfirmation: validNewPasswordConfirmation,
 			csrfToken:               suite.validCSRFToken,
@@ -327,7 +326,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 		},
 		{
 			name:                    "Empty Password Confirmation",
-			currentPassword:         validCurrentPassword,
+			currentPassword:         test.ValidPassword,
 			newPassword:             validNewPassword,
 			newPasswordConfirmation: "",
 			csrfToken:               suite.validCSRFToken,
@@ -345,7 +344,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 		},
 		{
 			name:                    "New Password And Confirmation Do Not Match",
-			currentPassword:         validCurrentPassword,
+			currentPassword:         test.ValidPassword,
 			newPassword:             "wrong",
 			newPasswordConfirmation: validNewPasswordConfirmation,
 			csrfToken:               suite.validCSRFToken,
