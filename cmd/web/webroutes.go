@@ -45,6 +45,8 @@ func (app *webApplication) routes() http.Handler {
 	router.Handler(http.MethodPost, "/phrase/correct", protected.ThenFunc(app.phraseCorrect))
 
 	router.Handler(http.MethodPost, "/user/language/switch", protected.ThenFunc(app.userLanguageSwitch))
+	router.Handler(http.MethodGet, "/user/password/reset", dynamic.ThenFunc(app.userPasswordReset))
+	router.Handler(http.MethodPost, "/user/password/reset", dynamic.ThenFunc(app.userPasswordResetPost))
 	router.Handler(http.MethodPost, "/tokens/password-reset", dynamic.ThenFunc(app.createPasswordResetToken))
 
 	router.Handler(http.MethodGet, "/account/view", protected.ThenFunc(app.accountView))

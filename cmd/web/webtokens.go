@@ -45,7 +45,7 @@ func (app *webApplication) createPasswordResetToken(w http.ResponseWriter, r *ht
 
 	// Return an error message if the user is not activated.
 	if !user.Activated {
-		form.AddFieldError("email", "user account must be activated")
+		form.AddNonFieldError("user account must be activated")
 		data := app.newTemplateData(r)
 		data.Form = form
 
@@ -68,9 +68,7 @@ func (app *webApplication) createPasswordResetToken(w http.ResponseWriter, r *ht
 		}
 	})
 
-	form.AddNonFieldError("An email will be sent to you containing password reset instructions")
-	data := app.newTemplateData(r)
-	data.Form = form
-	// And redirect the user to the login page.
-	app.render(w, r, http.StatusOK, "login.gohtml", data)
+	//form.AddNonFieldError("An email will be sent to you containing password reset instructions")
+	app.sessionManager.Put(r.Context(), "flash", "An email will be sent to you containing password reset instructions")
+	http.Redirect(w, r, "/user/password/reset", http.StatusSeeOther)
 }

@@ -199,18 +199,27 @@ func (m UserModel) WebPasswordUpdate(id int, currentPassword, newPassword string
 		}
 	}
 
+	err = m.WebPasswordReset(id, newPassword)
+	return err
+}
+
+func (m UserModel) WebPasswordReset(id int, newPassword string) error {
+
 	newHashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
 	if err != nil {
 		return err
 	}
 
-	stmt = "UPDATE users SET hashed_password = $1 WHERE id = $2"
+	stmt := "UPDATE users SET hashed_password = $1 WHERE id = $2"
+
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
 
 	_, err = m.DB.ExecContext(ctx, stmt, string(newHashedPassword), id)
 	return err
 }
 
-func (m UserModel) ApiPasswordUpdate(id int, newPassword string) error {
+func (m UserModel) PasswordUpdate(id int, newPassword string) error {
 
 	newHashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
 	if err != nil {
