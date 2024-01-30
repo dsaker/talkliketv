@@ -20,17 +20,21 @@ copy-hooks:
 	chmod +x scripts/hooks/*
 	cp -r scripts/hooks .git/.
 
+## expvar: add environment variable required for testing
+expvar:
+	eval $(cat .envrc)
+
 # ==================================================================================== #
 # DEVELOPMENT
 # ==================================================================================== #
 
 ## run/web: run the cmd/web application
 run/web:
-	go run ./cmd/web -db-dsn=${TALKTV_DB_DSN}
+	go run ./cmd/web -db-dsn=${TALKTV_DB_DSN} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD}
 
 ## run/api: run the cmd/api application
 run/api:
-	go run ./cmd/api -db-dsn=${TALKTV_DB_DSN}
+	go run ./cmd/api -db-dsn=${TALKTV_DB_DSN} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD}
 
 ## run: run the docker container
 run/docker:
@@ -39,10 +43,6 @@ run/docker:
 ## db/psql: connect to the database using psql
 db/psql:
 	psql ${TALKTV_DB_DSN}
-
-## db/testdb: connect to the database using psql
-db/testdb:
-	psql ${TEST_DB_DSN}
 
 ## db/migrations/new name=$1: create a new database migration
 db/migrations/new:
@@ -71,7 +71,7 @@ audit:
 ## audit/pipeline: tidy dependencies and format, vet and test all code (race on)
 audit/pipeline:
 	make audit
-	go test -race -vet=off ./... -coverprofile=coverage.out
+	go test -race -vet=off ./... -coverprofile=coverage.out -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD}
 
 ## audit/local: tidy dependencies and format, vet and test all code (race off)
 audit/local:
@@ -149,6 +149,14 @@ production/configure/web.service:
 		&& sudo systemctl enable web \
 		&& sudo systemctl restart web \'
 
+## production/configure/api.service: configure the production systemd api.service file
+production/configure/api.service:
+	rsync -P ./remote/production/api.service talkliketv@${production_host_ip}:~
+	ssh -t talkliketv@${production_host_ip} '\
+		sudo mv ~/api.service /etc/systemd/system/ \
+		&& sudo systemctl enable api \
+		&& sudo systemctl restart api \'
+
 ## production/deploy/uploadcsv: deploy the scripts to production
 production/uploadcsv:
 	## rsync -rP --delete ./scripts/uploadcsv.py talkliketv@${production_host_ip}:~/uploadcsv/
@@ -176,7 +184,3 @@ production/redeploy/api:
 	rsync -rP --delete ./bin/linux_amd64/api talkliketv@${production_host_ip}:~
 	ssh -t talkliketv@${production_host_ip} '\
 		sudo systemctl restart api'
-
-#export TALKTV_DB_DSN=postgres://talktv:pa55word@localhost/talktv?sslmode=disable
-#export DOCKER_DB_DSN=postgres://talktv:pa55word@host.docker.internal/talktv?sslmode=disable
-#export TEST_DB_DSN=postgres://testdb:pa55word@localhost/testdb?sslmode=disable

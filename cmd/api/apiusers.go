@@ -5,10 +5,9 @@ import (
 	"net/http"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/validator"
-	"time"
 )
 
-func (app *apiApp) registerUserHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	var form models.UserSignupForm
 
@@ -53,7 +52,7 @@ func (app *apiApp) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = app.Models.Tokens.New(user.ID, 24*time.Hour, models.ScopeActivation)
+	err = app.SendActivationEmail(user)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -65,7 +64,7 @@ func (app *apiApp) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *apiApp) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the plaintext activation token from the request body.
 	var input struct {
 		TokenPlaintext string `json:"token"`
@@ -125,6 +124,85 @@ func (app *apiApp) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send the updated user details to the client in a JSON response.
 	err = app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+// Verify the password reset token and set a new password for the user.
+func (app *apiApplication) updateUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse and validate the user's new password and password reset token.
+	var input struct {
+		Password       string `json:"password"`
+		TokenPlaintext string `json:"token"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+
+	models.ValidatePassword(v, input.Password)
+	models.ValidateTokenPlaintext(v, input.TokenPlaintext)
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.FieldErrors)
+		return
+	}
+
+	// Retrieve the details of the user associated with the password reset token,
+	// returning an error message if no matching record was found.
+	user, err := app.Models.Users.GetForToken(models.ScopePasswordReset, input.TokenPlaintext)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrNoRecord):
+			v.AddFieldError("token", "invalid or expired password reset token")
+			app.failedValidationResponse(w, r, v.FieldErrors)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	// Set the new password for the user.
+	err = app.Models.Users.PasswordUpdate(user.ID, input.Password)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// If everything was successful, then delete all password reset tokens for the user.
+	err = app.Models.Tokens.DeleteAllForUser(models.ScopePasswordReset, user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Send the user a confirmation message.
+	env := envelope{"message": "your password was successfully reset"}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *apiApplication) updateUserFlippedHandler(w http.ResponseWriter, r *http.Request) {
+
+	user := app.contextGetUser(r)
+	user.Flipped = !user.Flipped
+	err := app.Models.Users.Update(user)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+	// Send the user a confirmation message.
+	env := envelope{"message": "your language was switched successfully"}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

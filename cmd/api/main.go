@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"talkliketv.net/internal/application"
 	"talkliketv.net/internal/config"
 	"talkliketv.net/internal/jsonlog"
+	"talkliketv.net/internal/mailer"
 	"talkliketv.net/internal/models"
 	"time"
 
@@ -21,11 +23,11 @@ var (
 
 const version = "1.0.0"
 
-// Include a sync.WaitGroup in the apiApp struct. The zero-value for a
+// Include a sync.WaitGroup in the apiApplication struct. The zero-value for a
 // sync.WaitGroup type is a valid, usable, sync.WaitGroup with a 'counter' value of 0,
 // so we don't need to do anything else to initialize it before we can use it.
-type apiApp struct {
-	config.Application
+type apiApplication struct {
+	application.Application
 }
 
 func main() {
@@ -81,11 +83,12 @@ func main() {
 		}))
 	}
 
-	app := &apiApp{
-		config.Application{
+	app := &apiApplication{
+		application.Application{
 			Config: cfg,
 			Logger: logger,
-			Models: models.NewModels(db, time.Duration(cfg.CtxTimeout)),
+			Models: models.NewModels(db, cfg.CtxTimeout),
+			Mailer: mailer.New(cfg.Smtp.Host, cfg.Smtp.Port, cfg.Smtp.Username, cfg.Smtp.Password, cfg.Smtp.Sender),
 		},
 	}
 

@@ -14,11 +14,11 @@ import (
 // Define an envelope type.
 type envelope map[string]interface{}
 
-func (webApp *webApplication) render(w http.ResponseWriter, r *http.Request, status int, page string, data *templateData) {
-	ts, ok := webApp.templateCache[page]
+func (app *webApplication) render(w http.ResponseWriter, r *http.Request, status int, page string, data *templateData) {
+	ts, ok := app.templateCache[page]
 	if !ok {
 		err := fmt.Errorf("the template %s does not exist", page)
-		webApp.serverError(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -30,7 +30,7 @@ func (webApp *webApplication) render(w http.ResponseWriter, r *http.Request, sta
 	// and then return.
 	err := ts.ExecuteTemplate(buf, "base", data)
 	if err != nil {
-		webApp.serverError(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -43,16 +43,16 @@ func (webApp *webApplication) render(w http.ResponseWriter, r *http.Request, sta
 	// takes an io.Writer.
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		webApp.serverError(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 }
 
-func (webApp *webApplication) newTemplateData(r *http.Request) *templateData {
-	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+func (app *webApplication) newTemplateData(r *http.Request) *templateData {
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 	var email string
 	if userId != 0 {
-		user, _ := webApp.Models.Users.Get(userId)
+		user, _ := app.Models.Users.Get(userId)
 		email = user.Email
 	} else {
 		email = ""
@@ -60,8 +60,8 @@ func (webApp *webApplication) newTemplateData(r *http.Request) *templateData {
 
 	return &templateData{
 		CurrentYear:     time.Now().Year(),
-		Flash:           webApp.sessionManager.PopString(r.Context(), "flash"),
-		IsAuthenticated: webApp.isAuthenticated(r),
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated: app.isAuthenticated(r),
 		Email:           email,
 		CSRFToken:       nosurf.Token(r), // Add the CSRF token.
 	}
@@ -69,7 +69,7 @@ func (webApp *webApplication) newTemplateData(r *http.Request) *templateData {
 
 // Create a new decodePostForm() helper method. The second parameter here, dst,
 // is the target destination that we want to decode the form data into.
-func (webApp *webApplication) decodePostForm(r *http.Request, dst any) error {
+func (app *webApplication) decodePostForm(r *http.Request, dst any) error {
 	// Call ParseForm() on the request, in the same way that we did in our
 	// createSnippetPost handler.
 	err := r.ParseForm()
@@ -79,7 +79,7 @@ func (webApp *webApplication) decodePostForm(r *http.Request, dst any) error {
 
 	// Call Decode() on our decoder instance, passing the target destination as
 	// the first parameter.
-	err = webApp.formDecoder.Decode(dst, r.PostForm)
+	err = app.formDecoder.Decode(dst, r.PostForm)
 	if err != nil {
 		// If we try to use an invalid target destination, the Decode() method
 		// will return an error with the type *form.InvalidDecoderError.We use
@@ -98,7 +98,7 @@ func (webApp *webApplication) decodePostForm(r *http.Request, dst any) error {
 	return nil
 }
 
-func (webApp *webApplication) isAuthenticated(r *http.Request) bool {
+func (app *webApplication) isAuthenticated(r *http.Request) bool {
 	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
 	if !ok {
 		return false
@@ -108,7 +108,7 @@ func (webApp *webApplication) isAuthenticated(r *http.Request) bool {
 }
 
 // Change the data parameter to have the type envelope instead of interface{}.
-func (webApp *webApplication) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
+func (app *webApplication) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err

@@ -2,6 +2,7 @@ package models
 
 import (
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/test"
 	"testing"
 )
 
@@ -22,14 +23,14 @@ func (suite *ModelTestSuite) TestPhraseModelNextTen() {
 	}{
 		{
 			name:       "Valid ID",
-			movieId:    validMovieId,
-			userId:     validUserId,
+			movieId:    test.ValidMovieIdInt,
+			userId:     test.ValidUserId,
 			numPhrases: 10,
 			flipped:    false,
 		},
 		{
 			name:       "Invalid userId",
-			movieId:    validMovieId,
+			movieId:    test.ValidMovieIdInt,
 			userId:     -9999,
 			flipped:    false,
 			numPhrases: 0,
@@ -54,18 +55,13 @@ func (suite *ModelTestSuite) TestPhraseModelPhraseCorrect() {
 		t.Skip("models: skipping integration test")
 	}
 
-	const (
-		validPhraseId = 2285
-		validFlipped  = false
-	)
-
 	t.Run("Phrase Correct", func(t *testing.T) {
 
-		sumBefore, totalBefore, err := suite.p.PercentageDone(validUserId, validMovieId, validFlipped)
+		sumBefore, totalBefore, err := suite.p.PercentageDone(test.ValidUserId, test.ValidMovieIdInt, falseFlipped)
 		assert.NilError(t, err)
-		err = suite.p.PhraseCorrect(validUserId, validPhraseId, validMovieId, validFlipped)
+		err = suite.p.PhraseCorrect(test.ValidUserId, test.ValidPhraseIdInt, test.ValidMovieIdInt, falseFlipped)
 		assert.NilError(t, err)
-		sumAfter, totalAfter, err := suite.p.PercentageDone(validUserId, validMovieId, validFlipped)
+		sumAfter, totalAfter, err := suite.p.PercentageDone(test.ValidUserId, test.ValidMovieIdInt, falseFlipped)
 		assert.NilError(t, err)
 		assert.GreaterThan(t, sumAfter, sumBefore)
 		assert.Equal(t, totalBefore, totalAfter)

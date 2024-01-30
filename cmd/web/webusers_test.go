@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"talkliketv.net/internal/assert"
+	"talkliketv.net/internal/test"
 	"testing"
 )
 
@@ -12,10 +13,8 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 	t := suite.T()
 
 	const (
-		validName     = "user12"
-		validPassword = "validPa$$word"
-		validEmail    = "bob@example.com"
-		validLanguage = "Spanish"
+		validName  = "usersignup"
+		validEmail = "usersignup@example.com"
 	)
 
 	tests := []struct {
@@ -32,8 +31,8 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			name:         "Valid Submission",
 			userName:     validName,
 			userEmail:    validEmail,
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusSeeOther,
 		},
@@ -41,8 +40,8 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			name:         "Invalid CSRF Token",
 			userName:     "invalidcsrf",
 			userEmail:    "invalidcsrf@email.com",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			csrfToken:    "wrongToken",
 			wantCode:     http.StatusBadRequest,
 		},
@@ -50,8 +49,8 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			name:         "Empty Name",
 			userName:     "",
 			userEmail:    "emptyname@email.com",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  "This field cannot be blank",
@@ -60,8 +59,8 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			name:         "Empty Email",
 			userName:     "emptyemail",
 			userEmail:    "",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  "This field cannot be blank",
@@ -70,7 +69,7 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			name:         "Empty Password",
 			userName:     "emptypassword",
 			userEmail:    "emptypassword@email.com",
-			userLanguage: validLanguage,
+			userLanguage: test.ValidLanguage,
 			userPassword: "",
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
@@ -80,8 +79,8 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			name:         "Invalid Email",
 			userName:     "invalidemail",
 			userEmail:    "bob@example.",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  "This field must be a valid email address",
@@ -90,7 +89,7 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			name:         "Short Password",
 			userName:     "shorpassword",
 			userEmail:    "shorpassword@email.com",
-			userLanguage: validLanguage,
+			userLanguage: test.ValidLanguage,
 			userPassword: "pa$$",
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
@@ -100,8 +99,8 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			name:         "Duplicate Email",
 			userName:     "duplicateemail",
 			userEmail:    "user2@email.com",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  "Email address is already in use",
@@ -111,7 +110,7 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			userName:     "validName1",
 			userEmail:    "validName1@email.com",
 			userLanguage: "Made Up Language",
-			userPassword: validPassword,
+			userPassword: test.ValidPassword,
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusBadRequest,
 			wantFormTag:  "Bad Request",
@@ -120,8 +119,8 @@ func (suite *WebNoLoginTestSuite) TestUserSignupPost() {
 			name:         "Duplicate Name",
 			userName:     "user2",
 			userEmail:    "validName1@email.com",
-			userLanguage: validLanguage,
-			userPassword: validPassword,
+			userLanguage: test.ValidLanguage,
+			userPassword: test.ValidPassword,
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  "Username is already in use",
@@ -151,8 +150,7 @@ func (suite *WebTestSuite) TestAccountLanguageUpdatePost() {
 	t := suite.T()
 
 	const (
-		validLanguage = "Spanish"
-		formTag       = "<form action='/account/language/update' method='POST' novalidate>"
+		formTag = "<form action='/account/language/update' method='POST' novalidate>"
 	)
 
 	tests := []struct {
@@ -164,13 +162,13 @@ func (suite *WebTestSuite) TestAccountLanguageUpdatePost() {
 	}{
 		{
 			name:         "Valid submission",
-			userLanguage: validLanguage,
+			userLanguage: test.ValidLanguage,
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusSeeOther,
 		},
 		{
 			name:         "Invalid CSRF Token",
-			userLanguage: validLanguage,
+			userLanguage: test.ValidLanguage,
 			csrfToken:    "wrongToken",
 			wantCode:     http.StatusBadRequest,
 		},
@@ -211,9 +209,8 @@ func (suite *WebTestSuite) TestUserLoginPost() {
 	t := suite.T()
 
 	const (
-		validPassword = "pa$$word"
-		validEmail    = "alice@example.com"
-		formTag       = "<form action='/user/login' method='POST' novalidate>"
+		validEmail = "alice@example.com"
+		formTag    = "<form action='/user/login' method='POST' novalidate>"
 	)
 
 	tests := []struct {
@@ -227,14 +224,14 @@ func (suite *WebTestSuite) TestUserLoginPost() {
 		{
 			name:         "Invalid CSRF Token",
 			userEmail:    validEmail,
-			userPassword: validPassword,
+			userPassword: test.ValidPassword,
 			csrfToken:    "wrongToken",
 			wantCode:     http.StatusBadRequest,
 		},
 		{
 			name:         "Empty email",
 			userEmail:    "",
-			userPassword: validPassword,
+			userPassword: test.ValidPassword,
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
@@ -250,7 +247,7 @@ func (suite *WebTestSuite) TestUserLoginPost() {
 		{
 			name:         "Invalid email",
 			userEmail:    "bob@example.",
-			userPassword: validPassword,
+			userPassword: test.ValidPassword,
 			csrfToken:    suite.validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantFormTag:  formTag,
@@ -279,7 +276,6 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 	t := suite.T()
 
 	const (
-		validCurrentPassword         = "password"
 		validNewPassword             = "newpassword"
 		validNewPasswordConfirmation = "newpassword"
 		wantTag                      = "<form action='/account/password/update' method='POST' novalidate>"
@@ -296,7 +292,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 	}{
 		{
 			name:                    "Valid submission",
-			currentPassword:         validCurrentPassword,
+			currentPassword:         test.ValidPassword,
 			newPassword:             validNewPassword,
 			newPasswordConfirmation: validNewPasswordConfirmation,
 			csrfToken:               suite.validCSRFToken,
@@ -304,7 +300,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 		},
 		{
 			name:                    "Invalid CSRF Token",
-			currentPassword:         validCurrentPassword,
+			currentPassword:         test.ValidPassword,
 			newPassword:             validNewPassword,
 			newPasswordConfirmation: validNewPasswordConfirmation,
 			csrfToken:               "wrongToken",
@@ -321,7 +317,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 		},
 		{
 			name:                    "Empty New Password",
-			currentPassword:         validCurrentPassword,
+			currentPassword:         test.ValidPassword,
 			newPassword:             "",
 			newPasswordConfirmation: validNewPasswordConfirmation,
 			csrfToken:               suite.validCSRFToken,
@@ -330,7 +326,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 		},
 		{
 			name:                    "Empty Password Confirmation",
-			currentPassword:         validCurrentPassword,
+			currentPassword:         test.ValidPassword,
 			newPassword:             validNewPassword,
 			newPasswordConfirmation: "",
 			csrfToken:               suite.validCSRFToken,
@@ -348,7 +344,7 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 		},
 		{
 			name:                    "New Password And Confirmation Do Not Match",
-			currentPassword:         validCurrentPassword,
+			currentPassword:         test.ValidPassword,
 			newPassword:             "wrong",
 			newPasswordConfirmation: validNewPasswordConfirmation,
 			csrfToken:               suite.validCSRFToken,
@@ -371,6 +367,166 @@ func (suite *WebTestSuite) TestAccountPasswordUpdatePost() {
 
 			if tt.wantTag != "" {
 				assert.StringContains(t, body, tt.wantTag)
+			}
+		})
+	}
+}
+
+func (suite *WebTestSuite) TestFlippedUpdatePost() {
+	t := suite.T()
+
+	tests := []struct {
+		name      string
+		csrfToken string
+		wantCode  int
+		wantTag   string
+	}{
+		{
+			name:      "Valid submission",
+			csrfToken: suite.validCSRFToken,
+			wantCode:  http.StatusSeeOther,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("csrf_token", tt.csrfToken)
+
+			code, _, body := suite.ts.PostForm(t, "/user/language/switch", form)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantTag != "" {
+				assert.StringContains(t, body, tt.wantTag)
+			}
+		})
+	}
+}
+
+func (suite *WebNoLoginTestSuite) TestUserActivatePost() {
+
+	t := suite.T()
+
+	tests := []struct {
+		name       string
+		token      string
+		csrfToken  string
+		wantString string
+		wantCode   int
+	}{
+		{
+			name:       "Empty Token",
+			token:      "",
+			wantString: "This field cannot be blank",
+			csrfToken:  suite.validCSRFToken,
+			wantCode:   http.StatusUnprocessableEntity,
+		},
+		{
+			name:       "Invalid CSRF Token",
+			token:      "doesn't reach here",
+			wantString: "Bad Request",
+			csrfToken:  "invalid_token",
+			wantCode:   http.StatusBadRequest,
+		},
+		{
+			name:       "Wrong Token",
+			token:      "Y7QCRZ7FWOWYLXLAOC2VYOLIPY",
+			wantString: "invalid or expired password reset token",
+			csrfToken:  suite.validCSRFToken,
+			wantCode:   http.StatusUnprocessableEntity,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("token", tt.token)
+			form.Add("csrf_token", tt.csrfToken)
+
+			code, _, body := suite.ts.PostForm(t, "/user/activate", form)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantString != "" {
+				assert.StringContains(t, body, tt.wantString)
+			}
+		})
+	}
+}
+
+func (suite *WebNoLoginTestSuite) TestUserPasswordResetPost() {
+
+	t := suite.T()
+
+	tests := []struct {
+		name            string
+		newPassword     string
+		confirmPassword string
+		token           string
+		csrfToken       string
+		wantString      string
+		wantCode        int
+	}{
+		{
+			name:            "Empty Token",
+			token:           "",
+			newPassword:     test.ValidPassword,
+			confirmPassword: test.ValidPassword,
+			wantString:      "This field cannot be blank",
+			csrfToken:       suite.validCSRFToken,
+			wantCode:        http.StatusUnprocessableEntity,
+		},
+		{
+			name:            "Empty New Password",
+			token:           "Y7QCRZ7FWOWYLXLAOC2VYOLIPY",
+			newPassword:     "",
+			confirmPassword: test.ValidPassword,
+			wantString:      "This field cannot be blank",
+			csrfToken:       suite.validCSRFToken,
+			wantCode:        http.StatusUnprocessableEntity,
+		},
+		{
+			name:            "Empty Confirm Password",
+			token:           "Y7QCRZ7FWOWYLXLAOC2VYOLIPY",
+			newPassword:     test.ValidPassword,
+			confirmPassword: "",
+			wantString:      "This field cannot be blank",
+			csrfToken:       suite.validCSRFToken,
+			wantCode:        http.StatusUnprocessableEntity,
+		},
+		{
+			name:            "Passwords Do Not Match",
+			token:           "Y7QCRZ7FWOWYLXLAOC2VYOLIPY",
+			newPassword:     test.ValidPassword,
+			confirmPassword: "different",
+			wantString:      "Passwords do not match",
+			csrfToken:       suite.validCSRFToken,
+			wantCode:        http.StatusUnprocessableEntity,
+		},
+		{
+			name:            "Invalid CSRF Token",
+			token:           "Y7QCRZ7FWOWYLXLAOC2VYOLIPY",
+			newPassword:     test.ValidPassword,
+			confirmPassword: test.ValidPassword,
+			wantString:      "Bad Request",
+			csrfToken:       "invalid",
+			wantCode:        http.StatusBadRequest,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("token", tt.token)
+			form.Add("newPassword", tt.newPassword)
+			form.Add("confirmPassword", tt.confirmPassword)
+			form.Add("csrf_token", tt.csrfToken)
+
+			code, _, body := suite.ts.PostForm(t, "/user/password/reset", form)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantString != "" {
+				assert.StringContains(t, body, tt.wantString)
 			}
 		})
 	}

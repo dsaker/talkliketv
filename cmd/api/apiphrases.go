@@ -6,7 +6,7 @@ import (
 	"talkliketv.net/internal/models"
 )
 
-func (app *apiApp) phraseCorrect(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 	var input struct {
 		PhraseId int `json:"phrase_id"`

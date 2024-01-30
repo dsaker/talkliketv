@@ -7,87 +7,87 @@ import (
 	"talkliketv.net/internal/validator"
 )
 
-func (webApp *webApplication) accountView(w http.ResponseWriter, r *http.Request) {
-	userID := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+func (app *webApplication) accountView(w http.ResponseWriter, r *http.Request) {
+	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	user, err := webApp.Models.Users.Get(userID)
+	user, err := app.Models.Users.Get(userID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 		} else {
-			webApp.serverError(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
 
-	data := webApp.newTemplateData(r)
+	data := app.newTemplateData(r)
 	data.User = user
-	languages, err := webApp.Models.Languages.All()
+	languages, err := app.Models.Languages.All()
 	if err != nil {
-		webApp.serverError(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
 	data.Languages = languages
-	webApp.render(w, r, http.StatusOK, "account.gohtml", data)
+	app.render(w, r, http.StatusOK, "account.gohtml", data)
 }
 
 // Update the handler so it displays the signup page.
-func (webApp *webApplication) userSignup(w http.ResponseWriter, r *http.Request) {
-	data := webApp.newTemplateData(r)
+func (app *webApplication) userSignup(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
 	data.Form = models.UserSignupForm{}
-	languages, err := webApp.Models.Languages.All()
+	languages, err := app.Models.Languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			webApp.notFound(w, r, err)
+			app.notFound(w, r, err)
 		} else {
-			webApp.serverError(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
 
 	data.Languages = languages
-	webApp.render(w, r, http.StatusOK, "signup.gohtml", data)
+	app.render(w, r, http.StatusOK, "signup.gohtml", data)
 }
 
-func (webApp *webApplication) duplicateError(w http.ResponseWriter, r *http.Request, form models.UserSignupForm, err error) {
-	data := webApp.newTemplateData(r)
+func (app *webApplication) duplicateError(w http.ResponseWriter, r *http.Request, form models.UserSignupForm, err error) {
+	data := app.newTemplateData(r)
 	data.Form = form
-	languages, err2 := webApp.Models.Languages.All()
+	languages, err2 := app.Models.Languages.All()
 	if err2 != nil {
 		if errors.Is(err2, models.ErrNoRecord) {
-			webApp.notFound(w, r, err)
+			app.notFound(w, r, err)
 		} else {
-			webApp.serverError(w, r, err2)
+			app.serverError(w, r, err2)
 		}
 		return
 	}
 
 	data.Languages = languages
-	webApp.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
+	app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
 }
 
-func (webApp *webApplication) userSignupPost(w http.ResponseWriter, r *http.Request) {
+func (app *webApplication) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	var form models.UserSignupForm
 
-	err := webApp.decodePostForm(r, &form)
+	err := app.decodePostForm(r, &form)
 	if err != nil {
-		webApp.clientError(w, r, http.StatusBadRequest, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	models.ValidateUser(&form)
 
 	if !form.Valid() {
-		data := webApp.newTemplateData(r)
+		data := app.newTemplateData(r)
 		data.Form = form
-		webApp.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
 		return
 	}
 
-	languageId, err := webApp.Models.Languages.GetId(form.Language)
+	languageId, err := app.Models.Languages.GetId(form.Language)
 	if err != nil {
-		webApp.clientError(w, r, http.StatusBadRequest, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
@@ -98,26 +98,32 @@ func (webApp *webApplication) userSignupPost(w http.ResponseWriter, r *http.Requ
 		Activated:  false,
 	}
 
-	err = webApp.Models.Users.Insert(user, form.Password)
+	err = app.Models.Users.Insert(user, form.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
-			webApp.duplicateError(w, r, form, err)
+			app.duplicateError(w, r, form, err)
 		} else if errors.Is(err, models.ErrDuplicateUserName) {
 			form.AddFieldError("name", "Username is already in use")
-			webApp.duplicateError(w, r, form, err)
+			app.duplicateError(w, r, form, err)
 		} else {
-			webApp.serverError(w, r, err)
+			app.serverError(w, r, err)
 		}
+		return
+	}
+
+	err = app.SendActivationEmail(user)
+	if err != nil {
+		app.serverError(w, r, err)
 		return
 	}
 
 	// Otherwise add a confirmation flash message to the session confirming that
 	// their signup worked.
-	webApp.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please log in.")
+	app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please check your email for activation code.")
 
 	// And redirect the user to the login page.
-	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/user/activate", http.StatusSeeOther)
 }
 
 // Create a new userLoginForm struct.
@@ -128,18 +134,18 @@ type userLoginForm struct {
 }
 
 // Update the handler so it displays the login page.
-func (webApp *webApplication) userLogin(w http.ResponseWriter, r *http.Request) {
-	data := webApp.newTemplateData(r)
+func (app *webApplication) userLogin(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
 	data.Form = userLoginForm{}
-	webApp.render(w, r, http.StatusOK, "login.gohtml", data)
+	app.render(w, r, http.StatusOK, "login.gohtml", data)
 }
 
-func (webApp *webApplication) userLoginPost(w http.ResponseWriter, r *http.Request) {
+func (app *webApplication) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	var form userLoginForm
 
-	err := webApp.decodePostForm(r, &form)
+	err := app.decodePostForm(r, &form)
 	if err != nil {
-		webApp.clientError(w, r, http.StatusBadRequest, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
@@ -148,40 +154,40 @@ func (webApp *webApplication) userLoginPost(w http.ResponseWriter, r *http.Reque
 	form.CheckField(form.NotBlank(form.Password), "password", "This field cannot be blank")
 
 	if !form.Valid() {
-		data := webApp.newTemplateData(r)
+		data := app.newTemplateData(r)
 		data.Form = form
 
-		webApp.render(w, r, http.StatusUnprocessableEntity, "login.gohtml", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "login.gohtml", data)
 		return
 	}
 
-	id, err := webApp.Models.Users.Authenticate(form.Email, form.Password)
+	id, err := app.Models.Users.Authenticate(form.Email, form.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			form.AddNonFieldError("Email or password is incorrect")
 
-			data := webApp.newTemplateData(r)
+			data := app.newTemplateData(r)
 			data.Form = form
 
-			webApp.render(w, r, http.StatusUnprocessableEntity, "login.gohtml", data)
+			app.render(w, r, http.StatusUnprocessableEntity, "login.gohtml", data)
 		} else {
-			webApp.serverError(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
 
-	err = webApp.sessionManager.RenewToken(r.Context())
+	err = app.sessionManager.RenewToken(r.Context())
 	if err != nil {
-		webApp.serverError(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
-	webApp.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
 
 	// Use the PopString method to retrieve and remove a value from the session
 	// data in one step. If no matching key exists this will return the empty
 	// string.
-	path := webApp.sessionManager.PopString(r.Context(), "redirectPathAfterLogin")
+	path := app.sessionManager.PopString(r.Context(), "redirectPathAfterLogin")
 	if path != "" {
 		http.Redirect(w, r, path, http.StatusSeeOther)
 		return
@@ -190,22 +196,22 @@ func (webApp *webApplication) userLoginPost(w http.ResponseWriter, r *http.Reque
 	http.Redirect(w, r, "/phrase/view", http.StatusSeeOther)
 }
 
-func (webApp *webApplication) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+func (app *webApplication) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	// Use the RenewToken() method on the current session to change the session
 	// ID again.
-	err := webApp.sessionManager.RenewToken(r.Context())
+	err := app.sessionManager.RenewToken(r.Context())
 	if err != nil {
-		webApp.serverError(w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
 	// Remove the authenticatedUserID from the session data so that the user is
 	// 'logged out'.
-	webApp.sessionManager.Remove(r.Context(), "authenticatedUserID")
+	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
 
 	// Add a flash message to the session to confirm to the user that they've been
 	// logged out.
-	webApp.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
+	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
 
 	// Redirect the user to the application home page.
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -218,19 +224,19 @@ type accountPasswordUpdateForm struct {
 	validator.Validator     `form:"-"`
 }
 
-func (webApp *webApplication) accountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
-	data := webApp.newTemplateData(r)
+func (app *webApplication) accountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
 	data.Form = accountPasswordUpdateForm{}
 
-	webApp.render(w, r, http.StatusOK, "password.gohtml", data)
+	app.render(w, r, http.StatusOK, "password.gohtml", data)
 }
 
-func (webApp *webApplication) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
+func (app *webApplication) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
 	var form accountPasswordUpdateForm
 
-	err := webApp.decodePostForm(r, &form)
+	err := app.decodePostForm(r, &form)
 	if err != nil {
-		webApp.clientError(w, r, http.StatusBadRequest, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
@@ -241,41 +247,57 @@ func (webApp *webApplication) accountPasswordUpdatePost(w http.ResponseWriter, r
 	form.CheckField(form.NewPassword == form.NewPasswordConfirmation, "newPasswordConfirmation", "Passwords do not match")
 
 	if !form.Valid() {
-		data := webApp.newTemplateData(r)
+		data := app.newTemplateData(r)
 		data.Form = form
 
-		webApp.render(w, r, http.StatusUnprocessableEntity, "password.gohtml", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "password.gohtml", data)
 		return
 	}
-	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	err = webApp.Models.Users.PasswordUpdate(userId, form.CurrentPassword, form.NewPassword)
+	err = app.Models.Users.WebPasswordUpdate(userId, form.CurrentPassword, form.NewPassword)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			form.AddFieldError("currentPassword", "Current password is incorrect")
 
-			data := webApp.newTemplateData(r)
+			data := app.newTemplateData(r)
 			data.Form = form
 
-			webApp.render(w, r, http.StatusUnprocessableEntity, "password.gohtml", data)
+			app.render(w, r, http.StatusUnprocessableEntity, "password.gohtml", data)
 		} else if err != nil {
-			webApp.serverError(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
 
-	webApp.sessionManager.Put(r.Context(), "flash", "Your password has been updated!")
+	app.sessionManager.Put(r.Context(), "flash", "Your password has been updated!")
 
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }
 
-func (webApp *webApplication) userLanguageSwitch(w http.ResponseWriter, r *http.Request) {
+func (app *webApplication) userLanguageSwitch(w http.ResponseWriter, r *http.Request) {
 
-	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	err := webApp.Models.Users.FlippedUpdate(userId)
+	user, err := app.Models.Users.Get(userId)
 	if err != nil {
-		webApp.serverError(w, r, err)
+		if errors.Is(err, models.ErrNoRecord) {
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	user.Flipped = !user.Flipped
+	err = app.Models.Users.Update(user)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrEditConflict):
+			app.editConflictResponse(w, r, err)
+		default:
+			app.serverError(w, r, err)
+		}
+		return
 	}
 
 	http.Redirect(w, r, "/phrase/view", http.StatusSeeOther)
@@ -286,50 +308,206 @@ type accountLanguageUpdateForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (webApp *webApplication) accountLanguageUpdate(w http.ResponseWriter, r *http.Request) {
-	data := webApp.newTemplateData(r)
+func (app *webApplication) accountLanguageUpdate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
 	data.Form = accountLanguageUpdateForm{}
 
-	languages, err := webApp.Models.Languages.All()
+	languages, err := app.Models.Languages.All()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			webApp.notFound(w, r, err)
+			app.notFound(w, r, err)
 		} else {
-			webApp.serverError(w, r, err)
+			app.serverError(w, r, err)
 		}
 		return
 	}
 
 	data.Languages = languages
-	webApp.render(w, r, http.StatusOK, "languageUpdate.gohtml", data)
+	app.render(w, r, http.StatusOK, "language-update.gohtml", data)
 }
 
-func (webApp *webApplication) accountLanguageUpdatePost(w http.ResponseWriter, r *http.Request) {
+func (app *webApplication) accountLanguageUpdatePost(w http.ResponseWriter, r *http.Request) {
 	var form accountLanguageUpdateForm
 
-	err := webApp.decodePostForm(r, &form)
+	err := app.decodePostForm(r, &form)
 	if err != nil {
-		webApp.clientError(w, r, http.StatusBadRequest, err)
+		app.clientError(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	userId := webApp.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	languageId, err := webApp.Models.Languages.GetId(form.Language)
+	languageId, err := app.Models.Languages.GetId(form.Language)
 	if err != nil {
-		data := webApp.newTemplateData(r)
+		data := app.newTemplateData(r)
 		data.Form = form
-		webApp.render(w, r, http.StatusUnprocessableEntity, "languageUpdate.gohtml", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "language-update.gohtml", data)
 		return
 	}
 
-	err = webApp.Models.Users.LanguageUpdate(userId, languageId)
+	user, err := app.Models.Users.Get(userId)
 	if err != nil {
-		webApp.clientError(w, r, http.StatusBadRequest, err)
+		app.serverError(w, r, err)
+		return
+	}
+	user.LanguageId = languageId
+
+	err = app.Models.Users.Update(user)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrEditConflict):
+			app.editConflictResponse(w, r, err)
+		default:
+			app.serverError(w, r, err)
+		}
 		return
 	}
 
-	webApp.sessionManager.Put(r.Context(), "flash", "Your language has been updated!")
+	app.sessionManager.Put(r.Context(), "flash", "Your language has been updated!")
 
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
+}
+
+type userPasswordResetForm struct {
+	Token               string `form:"token"`
+	NewPassword         string `form:"newPassword"`
+	ConfirmPassword     string `form:"confirmPassword"`
+	validator.Validator `form:"-"`
+}
+
+func (app *webApplication) userPasswordReset(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = userPasswordResetForm{}
+
+	app.render(w, r, http.StatusOK, "password-reset.gohtml", data)
+}
+
+func (app *webApplication) userPasswordResetPost(w http.ResponseWriter, r *http.Request) {
+	var form userPasswordResetForm
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, r, http.StatusBadRequest, err)
+		return
+	}
+
+	form.CheckField(form.NotBlank(form.Token), "token", "This field cannot be blank")
+	form.CheckField(form.NotBlank(form.NewPassword), "newPassword", "This field cannot be blank")
+	form.CheckField(form.NotBlank(form.ConfirmPassword), "confirmPassword", "This field cannot be blank")
+	form.CheckField(form.MinChars(form.NewPassword, 8), "newPassword", "This field must be at least 8 characters long")
+	form.CheckField(form.NewPassword == form.ConfirmPassword, "confirmPassword", "Passwords do not match")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+
+		app.render(w, r, http.StatusUnprocessableEntity, "password-reset.gohtml", data)
+		return
+	}
+
+	// Retrieve the details of the user associated with the password reset token,
+	// returning an error message if no matching record was found.
+	user, err := app.Models.Users.GetForToken(models.ScopePasswordReset, form.Token)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrNoRecord):
+			form.AddFieldError("token", "invalid or expired password reset token")
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, r, http.StatusUnprocessableEntity, "password-reset.gohtml", data)
+		default:
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	// Set the new password for the user.
+	err = app.Models.Users.PasswordUpdate(user.ID, form.NewPassword)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	// If everything was successful, then delete all password reset tokens for the user.
+	err = app.Models.Tokens.DeleteAllForUser(models.ScopePasswordReset, user.ID)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Your password has been updated!")
+
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+}
+
+type userActivateForm struct {
+	Token               string `form:"token"`
+	validator.Validator `form:"-"`
+}
+
+func (app *webApplication) userActivate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = userActivateForm{}
+
+	app.render(w, r, http.StatusOK, "activate.gohtml", data)
+}
+
+func (app *webApplication) userActivatePost(w http.ResponseWriter, r *http.Request) {
+	var form userActivateForm
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, r, http.StatusBadRequest, err)
+		return
+	}
+
+	form.CheckField(form.NotBlank(form.Token), "token", "This field cannot be blank")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+
+		app.render(w, r, http.StatusUnprocessableEntity, "activate.gohtml", data)
+		return
+	}
+
+	// Retrieve the details of the user associated with the password reset token,
+	// returning an error message if no matching record was found.
+	user, err := app.Models.Users.GetForToken(models.ScopeActivation, form.Token)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrNoRecord):
+			form.AddFieldError("token", "invalid or expired password reset token")
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, r, http.StatusUnprocessableEntity, "activate.gohtml", data)
+		default:
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	user.Activated = true
+	// Set the new password for the user.
+	err = app.Models.Users.Update(user)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrEditConflict):
+			app.editConflictResponse(w, r, err)
+		default:
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	// If everything was successful, then delete all password reset tokens for the user.
+	err = app.Models.Tokens.DeleteAllForUser(models.ScopePasswordReset, user.ID)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Your account has been activated!")
+
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }

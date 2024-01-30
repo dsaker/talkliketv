@@ -1,0 +1,34 @@
+{{define "subject"}}Activate your Greenlight account{{end}}
+
+{{define "plainBody"}}
+    Hi,
+
+    To initiate the activation process, kindly visit the following link: `https://talkliketv.click/users/activate` and input the secret code provided below:
+
+    Secret Code: {{.activationToken}}
+
+    Please be aware that this secret code is a one-time use token and will expire in 45 minutes. Should you require another token, kindly visit `https://talkliketv.click/token/activate`.
+
+    Thanks,
+
+    The TalkLikeTv Team
+{{end}}
+
+{{define "htmlBody"}}
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+  <body>
+    <p>Hi,</p>
+    <p>To initiate the activation process, kindly visit the following link: <code>https://talkliketv.click/users/activate</code> and input the secret code provided below:</p>
+    <pre><code>
+    Secret Code: {{.activationToken}}
+    </code></pre>
+    <p>Please be aware that this secret code is a one-time use token and will expire in 45 minutes. Should you require another token, kindly visit <code>https://talkliketv.click/token/activate`.</code></p>
+    <p>Thanks,</p>
+    <p>The Greenlight Team</p>
+  </body>
+</html>
+{{end}}
