@@ -47,7 +47,11 @@ func (app *webApplication) routes() http.Handler {
 	router.Handler(http.MethodPost, "/user/language/switch", protected.ThenFunc(app.userLanguageSwitch))
 	router.Handler(http.MethodGet, "/user/password/reset", dynamic.ThenFunc(app.userPasswordReset))
 	router.Handler(http.MethodPost, "/user/password/reset", dynamic.ThenFunc(app.userPasswordResetPost))
+	router.Handler(http.MethodGet, "/user/activate", dynamic.ThenFunc(app.userActivate))
+	router.Handler(http.MethodPost, "/user/activate", dynamic.ThenFunc(app.userActivatePost))
+
 	router.Handler(http.MethodPost, "/tokens/password-reset", dynamic.ThenFunc(app.createPasswordResetToken))
+	router.Handler(http.MethodPost, "/tokens/activate", dynamic.ThenFunc(app.createActivationToken))
 
 	router.Handler(http.MethodGet, "/account/view", protected.ThenFunc(app.accountView))
 	router.Handler(http.MethodGet, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdate))

@@ -403,3 +403,131 @@ func (suite *WebTestSuite) TestFlippedUpdatePost() {
 		})
 	}
 }
+
+func (suite *WebNoLoginTestSuite) TestUserActivatePost() {
+
+	t := suite.T()
+
+	tests := []struct {
+		name       string
+		token      string
+		csrfToken  string
+		wantString string
+		wantCode   int
+	}{
+		{
+			name:       "Empty Token",
+			token:      "",
+			wantString: "This field cannot be blank",
+			csrfToken:  suite.validCSRFToken,
+			wantCode:   http.StatusUnprocessableEntity,
+		},
+		{
+			name:       "Invalid CSRF Token",
+			token:      "doesn't reach here",
+			wantString: "Bad Request",
+			csrfToken:  "invalid_token",
+			wantCode:   http.StatusBadRequest,
+		},
+		{
+			name:       "Wrong Token",
+			token:      "Y7QCRZ7FWOWYLXLAOC2VYOLIPY",
+			wantString: "invalid or expired password reset token",
+			csrfToken:  suite.validCSRFToken,
+			wantCode:   http.StatusUnprocessableEntity,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("token", tt.token)
+			form.Add("csrf_token", tt.csrfToken)
+
+			code, _, body := suite.ts.PostForm(t, "/user/activate", form)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantString != "" {
+				assert.StringContains(t, body, tt.wantString)
+			}
+		})
+	}
+}
+
+func (suite *WebNoLoginTestSuite) TestUserPasswordResetPost() {
+
+	t := suite.T()
+
+	tests := []struct {
+		name            string
+		newPassword     string
+		confirmPassword string
+		token           string
+		csrfToken       string
+		wantString      string
+		wantCode        int
+	}{
+		{
+			name:            "Empty Token",
+			token:           "",
+			newPassword:     test.ValidPassword,
+			confirmPassword: test.ValidPassword,
+			wantString:      "This field cannot be blank",
+			csrfToken:       suite.validCSRFToken,
+			wantCode:        http.StatusUnprocessableEntity,
+		},
+		{
+			name:            "Empty New Password",
+			token:           "Y7QCRZ7FWOWYLXLAOC2VYOLIPY",
+			newPassword:     "",
+			confirmPassword: test.ValidPassword,
+			wantString:      "This field cannot be blank",
+			csrfToken:       suite.validCSRFToken,
+			wantCode:        http.StatusUnprocessableEntity,
+		},
+		{
+			name:            "Empty Confirm Password",
+			token:           "Y7QCRZ7FWOWYLXLAOC2VYOLIPY",
+			newPassword:     test.ValidPassword,
+			confirmPassword: "",
+			wantString:      "This field cannot be blank",
+			csrfToken:       suite.validCSRFToken,
+			wantCode:        http.StatusUnprocessableEntity,
+		},
+		{
+			name:            "Passwords Do Not Match",
+			token:           "Y7QCRZ7FWOWYLXLAOC2VYOLIPY",
+			newPassword:     test.ValidPassword,
+			confirmPassword: "different",
+			wantString:      "Passwords do not match",
+			csrfToken:       suite.validCSRFToken,
+			wantCode:        http.StatusUnprocessableEntity,
+		},
+		{
+			name:            "Invalid CSRF Token",
+			token:           "Y7QCRZ7FWOWYLXLAOC2VYOLIPY",
+			newPassword:     test.ValidPassword,
+			confirmPassword: test.ValidPassword,
+			wantString:      "Bad Request",
+			csrfToken:       "invalid",
+			wantCode:        http.StatusBadRequest,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("token", tt.token)
+			form.Add("newPassword", tt.newPassword)
+			form.Add("confirmPassword", tt.confirmPassword)
+			form.Add("csrf_token", tt.csrfToken)
+
+			code, _, body := suite.ts.PostForm(t, "/user/password/reset", form)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantString != "" {
+				assert.StringContains(t, body, tt.wantString)
+			}
+		})
+	}
+}

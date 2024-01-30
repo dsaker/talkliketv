@@ -30,8 +30,7 @@ func (suite *WebNoLoginTestSuite) TestCreatePasswordResetToken() {
 			name:      "Valid submission",
 			email:     resetUserEmail,
 			csrfToken: suite.validCSRFToken,
-			wantCode:  http.StatusOK,
-			wantTag:   "An email will be sent to you containing password reset instructions",
+			wantCode:  http.StatusSeeOther,
 		},
 		{
 			name:      "Invalid CSRF Token",

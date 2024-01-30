@@ -48,3 +48,7 @@ func (app *webApplication) methodNotAllowedResponse(w http.ResponseWriter, r *ht
 func (app *webApplication) invalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
 	app.clientError(w, r, http.StatusUnauthorized, nil)
 }
+
+func (app *webApplication) editConflictResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.clientError(w, r, http.StatusConflict, err)
+}

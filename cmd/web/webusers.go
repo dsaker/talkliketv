@@ -120,10 +120,10 @@ func (app *webApplication) userSignupPost(w http.ResponseWriter, r *http.Request
 
 	// Otherwise add a confirmation flash message to the session confirming that
 	// their signup worked.
-	app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please log in.")
+	app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please check your email for activation code.")
 
 	// And redirect the user to the login page.
-	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/user/activate", http.StatusSeeOther)
 }
 
 // Create a new userLoginForm struct.
@@ -291,7 +291,13 @@ func (app *webApplication) userLanguageSwitch(w http.ResponseWriter, r *http.Req
 	user.Flipped = !user.Flipped
 	err = app.Models.Users.Update(user)
 	if err != nil {
-		app.serverError(w, r, err)
+		switch {
+		case errors.Is(err, models.ErrEditConflict):
+			app.editConflictResponse(w, r, err)
+		default:
+			app.serverError(w, r, err)
+		}
+		return
 	}
 
 	http.Redirect(w, r, "/phrase/view", http.StatusSeeOther)
@@ -348,7 +354,12 @@ func (app *webApplication) accountLanguageUpdatePost(w http.ResponseWriter, r *h
 
 	err = app.Models.Users.Update(user)
 	if err != nil {
-		app.serverError(w, r, err)
+		switch {
+		case errors.Is(err, models.ErrEditConflict):
+			app.editConflictResponse(w, r, err)
+		default:
+			app.serverError(w, r, err)
+		}
 		return
 	}
 
@@ -425,6 +436,78 @@ func (app *webApplication) userPasswordResetPost(w http.ResponseWriter, r *http.
 	}
 
 	app.sessionManager.Put(r.Context(), "flash", "Your password has been updated!")
+
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+}
+
+type userActivateForm struct {
+	Token               string `form:"token"`
+	validator.Validator `form:"-"`
+}
+
+func (app *webApplication) userActivate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = userActivateForm{}
+
+	app.render(w, r, http.StatusOK, "activate.gohtml", data)
+}
+
+func (app *webApplication) userActivatePost(w http.ResponseWriter, r *http.Request) {
+	var form userActivateForm
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, r, http.StatusBadRequest, err)
+		return
+	}
+
+	form.CheckField(form.NotBlank(form.Token), "token", "This field cannot be blank")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+
+		app.render(w, r, http.StatusUnprocessableEntity, "activate.gohtml", data)
+		return
+	}
+
+	// Retrieve the details of the user associated with the password reset token,
+	// returning an error message if no matching record was found.
+	user, err := app.Models.Users.GetForToken(models.ScopeActivation, form.Token)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrNoRecord):
+			form.AddFieldError("token", "invalid or expired password reset token")
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, r, http.StatusUnprocessableEntity, "activate.gohtml", data)
+		default:
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	user.Activated = true
+	// Set the new password for the user.
+	err = app.Models.Users.Update(user)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrEditConflict):
+			app.editConflictResponse(w, r, err)
+		default:
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	// If everything was successful, then delete all password reset tokens for the user.
+	err = app.Models.Tokens.DeleteAllForUser(models.ScopePasswordReset, user.ID)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Your account has been activated!")
 
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
