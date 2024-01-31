@@ -62,5 +62,5 @@ curl --request PUT -i -d "$BODY" localhost:4001/v1/users/activated`
 curl --request POST -i -d "$BODY" localhost:4001/v1/tokens/password-reset`
 
 # Change Password
-`BODY='{"token": "PQR7I6SB6OGKDSWK4ZMQZKWWFQ", "password", "new_password}'
-curl --request PUT -i -d "$BODY" localhost:4001/v1/users/activated`
+`BODY='{"token": "26LDI3W4LV2POBDVYL3MCLC3VY", "password": "new_password"}'
+curl --request PUT -i -d "$BODY" localhost:4001/v1/users/password`

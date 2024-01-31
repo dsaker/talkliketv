@@ -13,6 +13,7 @@ import (
 func (suite *ApiNoLoginTestSuite) TestCreateAuthenticationTokenHandler() {
 	t := suite.T()
 	prefix := "token-handler"
+	validEmail := prefix + test.TestEmail
 	register(prefix, t, suite.ts)
 
 	tests := []struct {
@@ -21,10 +22,11 @@ func (suite *ApiNoLoginTestSuite) TestCreateAuthenticationTokenHandler() {
 		userPassword string
 		wantCode     int
 		wantToken    bool
+		wantString   string
 	}{
 		{
 			name:         "Valid Submission",
-			userEmail:    prefix + test.TestEmail,
+			userEmail:    validEmail,
 			userPassword: test.ValidPassword,
 			wantCode:     http.StatusCreated,
 			wantToken:    true,
@@ -49,6 +51,14 @@ func (suite *ApiNoLoginTestSuite) TestCreateAuthenticationTokenHandler() {
 			userPassword: test.ValidPassword,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantToken:    false,
+		},
+		{
+			name:         "Wrong Password",
+			userEmail:    validEmail,
+			userPassword: "wrongPassword",
+			wantCode:     http.StatusUnauthorized,
+			wantToken:    false,
+			wantString:   "invalid authentication credentials",
 		},
 	}
 	for _, tt := range tests {
@@ -79,6 +89,10 @@ func (suite *ApiNoLoginTestSuite) TestCreateAuthenticationTokenHandler() {
 
 				assert.Equal(t, len(tokenStruct.Token.Plaintext), 26)
 			}
+
+			if tt.wantString != "" {
+				assert.StringContains(t, body, tt.wantString)
+			}
 		})
 	}
 }
@@ -88,6 +102,7 @@ func (suite *ApiTestSuite) TestCreatePasswordResetTokenHandler() {
 	prefix := "password-token-handler"
 	register(prefix, t, suite.ts)
 	activate(prefix+test.TestEmail, suite.app.Models)
+	validEmail := prefix + test.TestEmail
 	tests := []struct {
 		name      string
 		userEmail string
@@ -95,7 +110,7 @@ func (suite *ApiTestSuite) TestCreatePasswordResetTokenHandler() {
 	}{
 		{
 			name:      "Valid Submission",
-			userEmail: prefix + test.TestEmail,
+			userEmail: validEmail,
 			wantCode:  http.StatusAccepted,
 		},
 		{
@@ -128,6 +143,69 @@ func (suite *ApiTestSuite) TestCreatePasswordResetTokenHandler() {
 			code, _, _ := suite.ts.Post(t, "/v1/tokens/password-reset", jsonData)
 
 			assert.Equal(t, code, tt.wantCode)
+
+		})
+	}
+}
+
+func (suite *ApiTestSuite) TestCreateActivationTokenHandler() {
+	t := suite.T()
+	prefix := "activation-token-handler"
+	register(prefix, t, suite.ts)
+
+	validEmail := prefix + test.TestEmail
+
+	tests := []struct {
+		name       string
+		userEmail  string
+		wantCode   int
+		wantString string
+	}{
+		{
+			name:      "Valid Submission",
+			userEmail: validEmail,
+			wantCode:  http.StatusAccepted,
+		},
+		{
+			name:      "Empty Email",
+			userEmail: "",
+			wantCode:  http.StatusUnprocessableEntity,
+		},
+		{
+			name:      "Email Not Found",
+			userEmail: "emailnotfound@email.com",
+			wantCode:  http.StatusUnprocessableEntity,
+		},
+		{
+			name:      "Malformed Email",
+			userEmail: "malformed.email",
+			wantCode:  http.StatusUnprocessableEntity,
+		},
+		{
+			name:       "Already Activated",
+			userEmail:  suite.apiUser.Email,
+			wantCode:   http.StatusUnprocessableEntity,
+			wantString: "user has already been activated",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := map[string]interface{}{
+				"email": tt.userEmail,
+			}
+
+			jsonData, err := json.Marshal(data)
+			if err != nil {
+				fmt.Printf("could not marshal json: %s\n", err)
+				return
+			}
+			code, _, body := suite.ts.Post(t, "/v1/tokens/activation", jsonData)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantString != "" {
+				assert.StringContains(t, body, tt.wantString)
+			}
 
 		})
 	}

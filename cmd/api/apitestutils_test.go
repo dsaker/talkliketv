@@ -37,13 +37,14 @@ type ApiTestSuite struct {
 	ts        *test.TestServer
 	testDb    *test.TestDatabase
 	authToken string
+	apiUser   *models.User
 }
 
 func (suite *ApiTestSuite) SetupSuite() {
 	suite.app, suite.testDb = newTestApplication()
 	suite.ts = newTestServer(suite.app.routes())
-	apiUser := register("setupsuite", suite.T(), suite.ts)
-	activate(apiUser.Email, suite.app.Models)
+	suite.apiUser = register("setupsuite", suite.T(), suite.ts)
+	activate(suite.apiUser.Email, suite.app.Models)
 	suite.authToken = suite.getAuthToken("setupsuite")
 	suite.chooseMovie()
 }

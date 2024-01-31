@@ -167,6 +167,11 @@ func (app *apiApplication) updateUserPasswordHandler(w http.ResponseWriter, r *h
 		return
 	}
 
+	if !user.Activated {
+		app.inactiveAccountResponse(w, r)
+		return
+	}
+
 	// Set the new password for the user.
 	err = app.Models.Users.PasswordUpdate(user.ID, input.Password)
 	if err != nil {
