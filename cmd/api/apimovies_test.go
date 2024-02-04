@@ -113,7 +113,7 @@ func (suite *ApiTestSuite) TestApiMoviesMp3Flow() {
 
 		activate(email, suite.app.Models)
 		authToken := getAuthToken(prefix, t, suite.ts)
-		code, _, body = suite.ts.Request(t, nil, validUrl, http.MethodGet, authToken)
+		code, _, _ = suite.ts.Request(t, nil, validUrl, http.MethodGet, authToken)
 		assert.Equal(t, code, http.StatusOK)
 	})
 }

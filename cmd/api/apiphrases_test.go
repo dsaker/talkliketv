@@ -68,7 +68,7 @@ func (suite *ApiNoLoginTestSuite) TestListPhrasesHandler() {
 	register(prefix, t, suite.ts)
 	activate(email, suite.app.Models)
 
-	user, err := suite.app.Models.Users.GetByEmail(email)
+	_, err := suite.app.Models.Users.GetByEmail(email)
 	if err != nil {
 		t.Fatalf("could not get user by email: %s", err)
 	}
@@ -89,8 +89,4 @@ func (suite *ApiNoLoginTestSuite) TestListPhrasesHandler() {
 		assert.Equal(t, code, http.StatusOK)
 		assert.StringContains(t, body, "NothingToSeeHereS01E01")
 	})
-
-	user.Activated = true
-	err = suite.app.Models.Users.Update(user)
-
 }
