@@ -42,6 +42,11 @@ func (app *apiApplication) serverErrorResponse(w http.ResponseWriter, r *http.Re
 	app.errorResponse(w, r, http.StatusInternalServerError, message)
 }
 
+func (app *apiApplication) authenticationRequiredResponse(w http.ResponseWriter, r *http.Request) {
+	message := "you must be authenticated to access this resource"
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
 // The notFoundResponse() method will be used to send a 404 Not Found status code and
 // JSON response to the client.
 func (app *apiApplication) notFoundResponse(w http.ResponseWriter, r *http.Request) {

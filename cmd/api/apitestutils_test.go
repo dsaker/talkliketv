@@ -45,8 +45,8 @@ func (suite *ApiTestSuite) SetupSuite() {
 	suite.ts = newTestServer(suite.app.routes())
 	suite.apiUser = register("setupsuite", suite.T(), suite.ts)
 	activate(suite.apiUser.Email, suite.app.Models)
-	suite.authToken = suite.getAuthToken("setupsuite")
-	suite.chooseMovie()
+	suite.authToken = getAuthToken("setupsuite", suite.T(), suite.ts)
+	chooseMovie(suite.T(), suite.ts, suite.authToken)
 }
 
 func (suite *ApiTestSuite) TearDownSuite() {
@@ -112,8 +112,7 @@ func register(prefix string, t *testing.T, ts *test.TestServer) *models.User {
 	return &input.User
 }
 
-func (suite *ApiTestSuite) chooseMovie() {
-	t := suite.T()
+func chooseMovie(t *testing.T, ts *test.TestServer, authToken string) {
 
 	jsonData, err := json.Marshal(map[string]interface{}{
 		"movie_id": test.ValidMovieIdInt,
@@ -123,13 +122,12 @@ func (suite *ApiTestSuite) chooseMovie() {
 		t.Fatalf("could not marshal json: %s\n", err)
 		return
 	}
-	code, _, _ := suite.ts.Request(t, jsonData, "/v1/movies/choose", http.MethodPatch, suite.authToken)
+	code, _, _ := ts.Request(t, jsonData, "/v1/movies/choose", http.MethodPatch, authToken)
 
 	assert.Equal(t, code, http.StatusOK)
 }
 
-func (suite *ApiTestSuite) getAuthToken(prefix string) string {
-	t := suite.T()
+func getAuthToken(prefix string, t *testing.T, ts *test.TestServer) string {
 	data := map[string]interface{}{
 		"password": test.ValidPassword,
 		"email":    prefix + test.TestEmail,
@@ -139,7 +137,7 @@ func (suite *ApiTestSuite) getAuthToken(prefix string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	code, _, body := suite.ts.Post(t, "/v1/tokens/authentication", jsonData)
+	code, _, body := ts.Post(t, "/v1/tokens/authentication", jsonData)
 
 	assert.Equal(t, code, http.StatusCreated)
 	assert.StringContains(t, body, "authentication_token")

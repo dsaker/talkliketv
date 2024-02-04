@@ -46,6 +46,21 @@ func (app *apiApplication) logRequest(next http.Handler) http.Handler {
 	})
 }
 
+// Create a new requireAuthenticatedUser() middleware to check that a user is not
+// anonymous.
+func (app *apiApplication) requireAuthenticatedUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+
+		if user.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (app *apiApplication) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Add the "Vary: Authorization" header to the response. This indicates to any

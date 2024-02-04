@@ -13,7 +13,7 @@ func (suite *ApiTestSuite) TestApiPhraseCorrect() {
 
 	tests := []struct {
 		name     string
-		phraseId int
+		phraseId any
 		movieId  int
 		wantCode int
 	}{
@@ -35,6 +35,12 @@ func (suite *ApiTestSuite) TestApiPhraseCorrect() {
 			movieId:  -2,
 			wantCode: http.StatusNotFound,
 		},
+		{
+			name:     "Bad Request",
+			phraseId: "string",
+			movieId:  test.ValidMovieIdInt,
+			wantCode: http.StatusBadRequest,
+		},
 	}
 
 	for _, tt := range tests {
@@ -53,4 +59,38 @@ func (suite *ApiTestSuite) TestApiPhraseCorrect() {
 
 		})
 	}
+}
+
+func (suite *ApiNoLoginTestSuite) TestListPhrasesHandler() {
+	t := suite.T()
+	prefix := "listphrases"
+	email := prefix + test.TestEmail
+	register(prefix, t, suite.ts)
+	activate(email, suite.app.Models)
+
+	user, err := suite.app.Models.Users.GetByEmail(email)
+	if err != nil {
+		t.Fatalf("could not get user by email: %s", err)
+	}
+	t.Run("List Phrases Flow", func(t *testing.T) {
+
+		code, _, body := suite.ts.Get(t, "/v1/phrases")
+
+		assert.Equal(t, code, http.StatusUnauthorized)
+		assert.StringContains(t, body, "you must be authenticated to access this resource")
+
+		authToken := getAuthToken(prefix, t, suite.ts)
+		code, _, body = suite.ts.Request(t, nil, "/v1/phrases", http.MethodGet, authToken)
+		assert.Equal(t, code, http.StatusUnprocessableEntity)
+		assert.StringContains(t, body, "please choose a movie first")
+
+		chooseMovie(t, suite.ts, authToken)
+		code, _, body = suite.ts.Request(t, nil, "/v1/phrases", http.MethodGet, authToken)
+		assert.Equal(t, code, http.StatusOK)
+		assert.StringContains(t, body, "NothingToSeeHereS01E01")
+	})
+
+	user.Activated = true
+	err = suite.app.Models.Users.Update(user)
+
 }

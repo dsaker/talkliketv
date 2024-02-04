@@ -15,6 +15,7 @@ func (suite *ApiNoLoginTestSuite) TestCreateAuthenticationTokenHandler() {
 	prefix := "token-handler"
 	validEmail := prefix + test.TestEmail
 	register(prefix, t, suite.ts)
+	activate(validEmail, suite.app.Models)
 
 	tests := []struct {
 		name         string

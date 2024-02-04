@@ -43,7 +43,7 @@ func (suite *ApiTestSuite) TestAuthenticate() {
 		t.Fatal(err)
 	}
 	bytes.TrimSpace(body)
-	
+
 	message := "invalid or missing authentication token"
 	assert.StringContains(t, string(body), message)
 }

@@ -13,38 +13,16 @@ import (
 
 func (suite *ApiNoLoginTestSuite) TestActivateUserHandler() {
 	t := suite.T()
+	prefix := "activateUserHandler"
+	email := prefix + test.TestEmail
+	user := register(prefix, t, suite.ts)
+
+	token, err := suite.app.Models.Tokens.New(user.ID, 24*time.Hour, models.ScopeActivation)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	data := map[string]interface{}{
-		"name":     "ActivateUserHandler",
-		"password": test.ValidPassword,
-		"email":    "activateuserhandler@email.com",
-		"language": test.ValidLanguage,
-	}
-
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	code, _, body := suite.ts.Post(t, "/v1/users", jsonData)
-
-	assert.Equal(t, code, http.StatusAccepted)
-
-	var userStruct struct {
-		User models.User `json:"user"`
-	}
-
-	err = json.Unmarshal([]byte(body), &userStruct)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	token, err := suite.app.Models.Tokens.New(userStruct.User.ID, 24*time.Hour, models.ScopeActivation)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	data = map[string]interface{}{
 		"token": token.Plaintext,
 	}
 
@@ -53,9 +31,13 @@ func (suite *ApiNoLoginTestSuite) TestActivateUserHandler() {
 		t.Fatal(err)
 	}
 
-	code, _, _ = suite.ts.Request(t, jsonToken, "/v1/users/activated", http.MethodPut, "")
+	code, _, _ := suite.ts.Request(t, jsonToken, "/v1/users/activated", http.MethodPut, "")
 
 	assert.Equal(t, code, http.StatusOK)
+
+	after, _ := suite.app.Models.Users.GetByEmail(email)
+
+	assert.Equal(t, user.Activated, !after.Activated)
 }
 
 func (suite *ApiTestSuite) TestApiFlipped() {
@@ -181,4 +163,143 @@ func (suite *ApiTestSuite) TestApiUpdateUserPasswordFlow() {
 		assert.Equal(t, code, http.StatusOK)
 		assert.StringContains(t, body, "your password was successfully reset")
 	})
+}
+
+func (suite *ApiTestSuite) TestRegisterUserHandler() {
+	t := suite.T()
+
+	const (
+		validUsername = "resgisterUser"
+		validEmail    = "registerUser@email.com"
+	)
+	tests := []struct {
+		name         string
+		userName     string
+		userEmail    string
+		userPassword string
+		userLanguage any
+		wantCode     int
+		wantString   string
+	}{
+		{
+			name:         "Invalid Json",
+			userName:     validUsername,
+			userEmail:    validEmail,
+			userPassword: test.ValidPassword,
+			userLanguage: 1,
+			wantCode:     http.StatusBadRequest,
+			wantString:   "body contains incorrect JSON type for field ",
+		},
+		{
+			name:         "Invalid Language",
+			userName:     validUsername,
+			userEmail:    validEmail,
+			userPassword: test.ValidPassword,
+			userLanguage: "invalidLanguage",
+			wantCode:     http.StatusBadRequest,
+			wantString:   "no matching record found",
+		},
+		{
+			name:         "Invalid Email",
+			userName:     validUsername,
+			userEmail:    "invalidEmail",
+			userPassword: test.ValidPassword,
+			userLanguage: test.ValidLanguage,
+			wantCode:     http.StatusUnprocessableEntity,
+			wantString:   "This field must be a valid email address",
+		},
+		{
+			name:         "Email Already Exists",
+			userName:     validUsername,
+			userEmail:    suite.apiUser.Email,
+			userPassword: test.ValidPassword,
+			userLanguage: test.ValidLanguage,
+			wantCode:     http.StatusUnprocessableEntity,
+			wantString:   "a user with this email address already exists",
+		},
+		{
+			name:         "Username Already Exists",
+			userName:     suite.apiUser.Name,
+			userEmail:    validEmail,
+			userPassword: test.ValidPassword,
+			userLanguage: test.ValidLanguage,
+			wantCode:     http.StatusUnprocessableEntity,
+			wantString:   "a user with this username already exists",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := map[string]interface{}{
+				"name":     tt.userName,
+				"email":    tt.userEmail,
+				"password": tt.userPassword,
+				"language": tt.userLanguage,
+			}
+
+			jsonData, err := json.Marshal(data)
+			if err != nil {
+				fmt.Printf("could not marshal json: %s\n", err)
+				return
+			}
+			code, _, body := suite.ts.Post(t, "/v1/users", jsonData)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantString != "" {
+				assert.StringContains(t, body, tt.wantString)
+			}
+
+		})
+	}
+}
+
+func (suite *ApiTestSuite) TestActivateUserHandler() {
+	t := suite.T()
+
+	tests := []struct {
+		name       string
+		token      any
+		wantCode   int
+		wantString string
+	}{
+		{
+			name:       "Invalid Json",
+			token:      1,
+			wantCode:   http.StatusBadRequest,
+			wantString: "body contains incorrect JSON type for field ",
+		},
+		{
+			name:       "Short Token",
+			token:      "invalid",
+			wantCode:   http.StatusUnprocessableEntity,
+			wantString: "must be 26 bytes long",
+		},
+		{
+			name:       "Invalid Token",
+			token:      "26LDI3W4LV2POBDVYL3MCLC3VY",
+			wantCode:   http.StatusUnprocessableEntity,
+			wantString: "invalid or expired activation token",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := map[string]interface{}{
+				"token": tt.token,
+			}
+
+			jsonData, err := json.Marshal(data)
+			if err != nil {
+				fmt.Printf("could not marshal json: %s\n", err)
+				return
+			}
+			//code, _, body := suite.ts.Post(t, "/v1/users/activated", jsonData)
+			code, _, body := suite.ts.Request(t, jsonData, "/v1/users/activated", http.MethodPut, "")
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantString != "" {
+				assert.StringContains(t, body, tt.wantString)
+			}
+
+		})
+	}
 }
