@@ -46,6 +46,11 @@ func (app *apiApplication) createAuthenticationTokenHandler(w http.ResponseWrite
 		return
 	}
 
+	if !user.Activated {
+		app.inactiveAccountResponse(w, r)
+		return
+	}
+
 	// Check if the provided password matches the actual password for the user.
 	match, err := app.Models.Users.Matches(input.Password, user.HashedPassword)
 	if err != nil {

@@ -3,6 +3,7 @@ package main
 import (
 	"expvar"
 	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/alice"
 	"net/http"
 )
 
@@ -12,6 +13,8 @@ func (app *apiApplication) routes() http.Handler {
 
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
+
+	protected := alice.New(app.requireAuthenticatedUser)
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 
@@ -24,15 +27,21 @@ func (app *apiApplication) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/password-reset", app.createPasswordResetTokenHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/activation", app.createActivationTokenHandler)
 
-	router.HandlerFunc(http.MethodGet, "/v1/movies/mp3/:id", app.moviesMp3)
-	router.HandlerFunc(http.MethodPatch, "/v1/movies/choose", app.moviesChoose)
-	router.HandlerFunc(http.MethodGet, "/v1/movies", app.listMoviesHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/phrase/correct", app.phraseCorrect)
+	router.Handler(http.MethodGet, "/v1/movies/mp3/:id", protected.ThenFunc(app.moviesMp3))
+	router.Handler(http.MethodPatch, "/v1/movies/choose", protected.ThenFunc(app.moviesChoose))
+	router.Handler(http.MethodGet, "/v1/movies", protected.ThenFunc(app.listMoviesHandler))
+
+	router.Handler(http.MethodGet, "/v1/phrases", protected.ThenFunc(app.listPhrasesHandler))
+	router.Handler(http.MethodPost, "/v1/phrase/correct", protected.ThenFunc(app.phraseCorrect))
 
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 
+	var standard alice.Chain
 	if app.Config.ExpVarEnabled {
-		return app.metrics(app.logRequest(app.recoverPanic(app.enableCORS(app.Config.RateLimit(app.authenticate(router))))))
+		standard = alice.New(app.metrics, app.recoverPanic, app.logRequest, app.enableCORS, app.Config.RateLimit, app.authenticate)
+	} else {
+		standard = alice.New(app.recoverPanic, app.logRequest, app.enableCORS, app.Config.RateLimit, app.authenticate)
 	}
-	return app.logRequest(app.recoverPanic(app.enableCORS(app.Config.RateLimit(app.authenticate(router)))))
+
+	return standard.Then(router)
 }
