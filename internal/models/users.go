@@ -102,24 +102,25 @@ func (m UserModel) Insert(user *User, password string) error {
 	return nil
 }
 
-func (m UserModel) Authenticate(email, password string) (int, error) {
+func (m UserModel) Authenticate(email, password string) (int, bool, error) {
 	// Retrieve the id and hashed password associated with the given email. If
 	// no matching email exists we return the ErrInvalidCredentials error.
 	var id int
 	var hashedPassword []byte
+	var activated bool
 
-	query := "SELECT id, hashed_password FROM users WHERE email = $1"
+	query := "SELECT id, hashed_password, activated FROM users WHERE email = $1"
 
 	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, email).Scan(&id, &hashedPassword)
+	err := m.DB.QueryRowContext(ctx, query, email).Scan(&id, &hashedPassword, &activated)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, ErrInvalidCredentials
+			return 0, false, ErrInvalidCredentials
 		} else {
-			return 0, err
+			return 0, false, err
 		}
 	}
 
@@ -128,14 +129,14 @@ func (m UserModel) Authenticate(email, password string) (int, error) {
 	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return 0, ErrInvalidCredentials
+			return 0, false, ErrInvalidCredentials
 		} else {
-			return 0, err
+			return 0, false, err
 		}
 	}
 
 	// Otherwise, the password is correct. Return the user ID.
-	return id, nil
+	return id, activated, nil
 }
 
 func (m UserModel) Exists(id int) (bool, error) {

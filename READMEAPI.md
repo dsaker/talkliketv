@@ -68,5 +68,3 @@ curl --request PUT -i -d "$BODY" localhost:4001/v1/users/password`
 # Download Mp3
 `BODY='{"token": "26LDI3W4LV2POBDVYL3MCLC3VY", "password": "new_password"}'
 curl --request PUT -i -d "$BODY" localhost:4001/v1/users/password`
-
-curl -i localhost:4001/v1/movies/mp3/1
