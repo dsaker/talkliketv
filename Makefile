@@ -30,7 +30,7 @@ expvar:
 
 ## run/web: run the cmd/web application
 run/web:
-	go run ./cmd/web -db-dsn=${TALKTV_DB_DSN} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD}
+	go run ./cmd/web -db-dsn=${TALKTV_DB_DSN} -smtp-username=3900bd4f685db3 -smtp-password=47a2b4ce47422f
 
 ## run/api: run the cmd/api application
 run/api:

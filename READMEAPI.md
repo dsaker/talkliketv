@@ -16,7 +16,7 @@ talkliketv is a simple web application to learn a language by using subtitle fro
 
 # Register User
 
-`BODY='{"name": "newuser6", "password": "password12", "email": "newuser6@email.com", "language": "Spanish"}'
+`BODY='{"name": "newuser11", "password": "password12", "email": "newuser11@email.com", "language": "Spanish"}'
 curl -i -d "$BODY" localhost:4001/v1/users`
 
 
