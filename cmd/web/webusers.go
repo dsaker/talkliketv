@@ -120,7 +120,7 @@ func (app *webApplication) userSignupPost(w http.ResponseWriter, r *http.Request
 
 	// Otherwise add a confirmation flash message to the session confirming that
 	// their signup worked.
-	app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please check your email for activation code.")
+	app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please email or text site creator for activation code.")
 
 	// And redirect the user to the login page.
 	http.Redirect(w, r, "/user/activate", http.StatusSeeOther)
@@ -161,7 +161,7 @@ func (app *webApplication) userLoginPost(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	id, err := app.Models.Users.Authenticate(form.Email, form.Password)
+	id, activated, err := app.Models.Users.Authenticate(form.Email, form.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			form.AddNonFieldError("Email or password is incorrect")
@@ -173,6 +173,13 @@ func (app *webApplication) userLoginPost(w http.ResponseWriter, r *http.Request)
 		} else {
 			app.serverError(w, r, err)
 		}
+		return
+	}
+
+	if !activated {
+		app.sessionManager.Put(r.Context(), "flash", "You need to be activated. Please email or text site creator for activation code.")
+		// And redirect the user to the login page.
+		http.Redirect(w, r, "/user/activate", http.StatusSeeOther)
 		return
 	}
 
@@ -275,7 +282,7 @@ func (app *webApplication) accountPasswordUpdatePost(w http.ResponseWriter, r *h
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }
 
-func (app *webApplication) userLanguageSwitch(w http.ResponseWriter, r *http.Request) {
+func (app *webApplication) userLanguageFlip(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 

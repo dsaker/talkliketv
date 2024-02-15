@@ -66,7 +66,7 @@ func (cfg *Config) SetConfigs() {
 	// make sure to replace the default values for smtp-username and smtp-password
 	// with your own Mailtrap credentials.
 	flag.StringVar(&cfg.Smtp.Host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
-	flag.IntVar(&cfg.Smtp.Port, "smtp-port", 25, "SMTP port")
+	flag.IntVar(&cfg.Smtp.Port, "smtp-port", 2525, "SMTP port")
 	flag.StringVar(&cfg.Smtp.Username, "smtp-username", "", "SMTP username")
 	flag.StringVar(&cfg.Smtp.Password, "smtp-password", "", "SMTP password")
 	flag.StringVar(&cfg.Smtp.Sender, "smtp-sender", "TalkLikeTV <no-reply@talkliketv.click>", "SMTP sender")

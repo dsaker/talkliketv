@@ -2,7 +2,6 @@ package validator
 
 import (
 	"net/mail"
-	"regexp"
 	"strings"
 	"unicode/utf8"
 )
@@ -45,9 +44,9 @@ func (v *Validator) CheckField(ok bool, key, message string) {
 
 // Matches returns true if a value matches a provided compiled regular
 // expression pattern.
-func Matches(value string, rx *regexp.Regexp) bool {
-	return rx.MatchString(value)
-}
+//func Matches(value string, rx *regexp.Regexp) bool {
+//	return rx.MatchString(value)
+//}
 
 func (v *Validator) IsEmail(email string) bool {
 	emailAddress, err := mail.ParseAddress(email)
@@ -86,6 +85,16 @@ func (v *Validator) MinChars(value string, n int) bool {
 
 // Matches returns true if a value matches a provided compiled regular
 // expression pattern.
-func (v *Validator) Matches(value string, rx *regexp.Regexp) bool {
-	return rx.MatchString(value)
+//func (v *Validator) Matches(value string, rx *regexp.Regexp) bool {
+//	return rx.MatchString(value)
+//}
+
+// In returns true if a specific value is in a list of strings.
+func (v *Validator) In(value string, list ...string) bool {
+	for i := range list {
+		if value == list[i] {
+			return true
+		}
+	}
+	return false
 }

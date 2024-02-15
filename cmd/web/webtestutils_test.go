@@ -52,6 +52,7 @@ func (suite *WebTestSuite) SetupSuite() {
 	suite.app, suite.testDb = newTestApplication(t)
 	suite.ts = newWebTestServer(t, suite.app.routes())
 	signup(t, suite.ts, testuser)
+	activate(testuser+test.TestEmail, suite.app.Models)
 	suite.validCSRFToken = login(t, suite.ts, testuser)
 	chooseMovie(t, suite.ts, suite.validCSRFToken)
 }

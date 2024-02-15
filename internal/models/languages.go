@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"talkliketv.net/internal/validator"
 	"time"
 )
 
@@ -15,6 +16,10 @@ type Language struct {
 type LanguageModel struct {
 	DB         *sql.DB
 	CtxTimeout time.Duration
+}
+
+func ValidateLanguage(v *validator.Validator, language string) {
+	v.CheckField(v.NotBlank(language), "language", "This field cannot be blank")
 }
 
 func (m *LanguageModel) GetId(language string) (int, error) {

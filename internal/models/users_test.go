@@ -189,7 +189,7 @@ func (suite *ModelTestSuite) TestUserModelAuthenticate() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			UserId, err := suite.u.Authenticate(tt.userEmail, tt.userPassword)
+			UserId, _, err := suite.u.Authenticate(tt.userEmail, tt.userPassword)
 
 			if tt.wantUserId {
 				assert.NotEqual(t, UserId, 0)
@@ -258,7 +258,7 @@ func (suite *ModelTestSuite) TestUserModelPasswordUpdate() {
 		log.Fatal("failed to insert user: TestUserModelPasswordUpdate ", err)
 	}
 
-	validUserPasswordId, err := suite.u.Authenticate(validUserEmail, test.ValidPassword)
+	validUserPasswordId, _, err := suite.u.Authenticate(validUserEmail, test.ValidPassword)
 	if err != nil {
 		log.Fatal("failed to authenticate user: TestUserModelPasswordUpdate ", err)
 	}

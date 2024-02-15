@@ -11,9 +11,9 @@ import (
 	"time"
 )
 
-func (suite *ApiNoLoginTestSuite) TestActivateUserHandler() {
+func (suite *ApiNoLoginTestSuite) TestActivateUser() {
 	t := suite.T()
-	prefix := "activateUserHandler"
+	prefix := "activateUser"
 	email := prefix + test.TestEmail
 	user := register(prefix, t, suite.ts)
 
@@ -61,7 +61,7 @@ func (suite *ApiTestSuite) TestApiFlipped() {
 	})
 }
 
-func (suite *ApiTestSuite) TestApiUpdateUserPasswordHandler() {
+func (suite *ApiTestSuite) TestApiUpdateUserPassword() {
 	t := suite.T()
 	prefix := "apiUpdateUserPassword"
 	email := prefix + test.TestEmail
@@ -126,6 +126,76 @@ func (suite *ApiTestSuite) TestApiUpdateUserPasswordHandler() {
 	}
 }
 
+func (suite *ApiTestSuite) TestApiUpdateUserLanguage() {
+	t := suite.T()
+
+	tests := []struct {
+		name        string
+		newLanguage string
+		authToken   string
+		wantCode    int
+		wantTag     string
+	}{
+		{
+			name:        "Valid Langauge",
+			newLanguage: "French",
+			authToken:   suite.authToken,
+			wantCode:    http.StatusOK,
+			wantTag:     "your language was updated successfully",
+		},
+		{
+			name:        "Invalid Langauge",
+			newLanguage: "Frenc",
+			authToken:   suite.authToken,
+			wantCode:    http.StatusUnprocessableEntity,
+			wantTag:     "invalid language",
+		},
+		{
+			name:        "Empty New Language",
+			newLanguage: "",
+			authToken:   suite.authToken,
+			wantCode:    http.StatusUnprocessableEntity,
+			wantTag:     "This field cannot be blank",
+		},
+		{
+			name:        "Empty Auth Token",
+			newLanguage: test.ValidLanguage,
+			authToken:   "",
+			wantCode:    http.StatusUnauthorized,
+			wantTag:     "you must be authenticated to access this resource",
+		},
+		{
+			name:        "Invalid Token",
+			newLanguage: test.ValidLanguage,
+			authToken:   "PQR7I6SB6OGKDSWK4ZMQZKWWFQ",
+			wantCode:    http.StatusUnauthorized,
+			wantTag:     "invalid or missing authentication token",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := map[string]interface{}{
+				"language": tt.newLanguage,
+			}
+
+			jsonData, err := json.Marshal(data)
+			if err != nil {
+				fmt.Printf("could not marshal json: %s\n", err)
+				return
+			}
+
+			code, _, body := suite.ts.Request(t, jsonData, "/v1/user/language/switch", http.MethodPut, tt.authToken)
+
+			assert.Equal(t, code, tt.wantCode)
+
+			if tt.wantTag != "" {
+				assert.StringContains(t, body, tt.wantTag)
+			}
+		})
+	}
+}
+
 func (suite *ApiTestSuite) TestApiUpdateUserPasswordFlow() {
 	t := suite.T()
 	prefix := "userPasswordFlow"
@@ -165,7 +235,7 @@ func (suite *ApiTestSuite) TestApiUpdateUserPasswordFlow() {
 	})
 }
 
-func (suite *ApiTestSuite) TestRegisterUserHandler() {
+func (suite *ApiTestSuite) TestRegisterUser() {
 	t := suite.T()
 
 	const (
@@ -253,7 +323,7 @@ func (suite *ApiTestSuite) TestRegisterUserHandler() {
 	}
 }
 
-func (suite *ApiTestSuite) TestActivateUserHandler() {
+func (suite *ApiTestSuite) TestActivateUser() {
 	t := suite.T()
 
 	tests := []struct {

@@ -122,10 +122,12 @@ func (app *Application) SendActivationEmail(user *models.User) error {
 
 		err = app.Mailer.Send(user.Email, "user_welcome.gohtml", data)
 		if err != nil {
+			app.Logger.PrintInfo(fmt.Sprintf("email failed to send: %s", user.Email), nil)
 			app.Logger.PrintError(err, nil)
+		} else {
+			// log that email was sent
+			app.Logger.PrintInfo(fmt.Sprintf("email sent to: %s", user.Email), nil)
 		}
-		// log that email was sent
-		app.Logger.PrintInfo(fmt.Sprintf("email sent to: %s", user.Email), nil)
 	})
 
 	return nil
