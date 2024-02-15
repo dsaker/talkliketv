@@ -7,7 +7,7 @@ import (
 	"talkliketv.net/internal/validator"
 )
 
-func (app *apiApplication) registerUserHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) registerUser(w http.ResponseWriter, r *http.Request) {
 
 	var form models.UserSignupForm
 
@@ -64,7 +64,7 @@ func (app *apiApplication) registerUserHandler(w http.ResponseWriter, r *http.Re
 	}
 }
 
-func (app *apiApplication) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) activateUser(w http.ResponseWriter, r *http.Request) {
 	// Parse the plaintext activation token from the request body.
 	var input struct {
 		TokenPlaintext string `json:"token"`
@@ -129,8 +129,56 @@ func (app *apiApplication) activateUserHandler(w http.ResponseWriter, r *http.Re
 	}
 }
 
+func (app *apiApplication) updateUserLanguage(w http.ResponseWriter, r *http.Request) {
+
+	user := app.contextGetUser(r)
+
+	var input struct {
+		Language string `json:"language"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+	models.ValidateLanguage(v, input.Language)
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.FieldErrors)
+		return
+	}
+
+	languageId, err := app.Models.Languages.GetId(input.Language)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			v.AddFieldError("langauge", "invalid language")
+			app.failedValidationResponse(w, r, v.FieldErrors)
+			return
+		} else {
+			app.serverErrorResponse(w, r, err)
+		}
+	}
+
+	user.LanguageId = languageId
+
+	err = app.Models.Users.Update(user)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+	// Send the user a confirmation message.
+	env := envelope{"message": "your language was updated successfully"}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
 // Verify the password reset token and set a new password for the user.
-func (app *apiApplication) updateUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) updateUserPassword(w http.ResponseWriter, r *http.Request) {
 	// Parse and validate the user's new password and password reset token.
 	var input struct {
 		Password       string `json:"password"`
@@ -195,7 +243,7 @@ func (app *apiApplication) updateUserPasswordHandler(w http.ResponseWriter, r *h
 	}
 }
 
-func (app *apiApplication) updateUserFlippedHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) updateUserFlipped(w http.ResponseWriter, r *http.Request) {
 
 	user := app.contextGetUser(r)
 	user.Flipped = !user.Flipped

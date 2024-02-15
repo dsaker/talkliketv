@@ -282,7 +282,7 @@ func (app *webApplication) accountPasswordUpdatePost(w http.ResponseWriter, r *h
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }
 
-func (app *webApplication) userLanguageSwitch(w http.ResponseWriter, r *http.Request) {
+func (app *webApplication) userLanguageFlip(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
