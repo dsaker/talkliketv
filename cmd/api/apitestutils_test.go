@@ -83,7 +83,7 @@ func register(prefix string, t *testing.T, ts *test.TestServer) *models.User {
 
 	email := prefix + test.TestEmail
 	data := map[string]interface{}{
-		"name":     prefix + "apiUser",
+		"name":     prefix + "ApiUser",
 		"password": test.ValidPassword,
 		"email":    email,
 		"language": test.ValidLanguage,

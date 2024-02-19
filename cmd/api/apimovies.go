@@ -65,7 +65,7 @@ func (app *apiApplication) moviesChoose(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *apiApplication) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) listMovies(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 
 	var input struct {

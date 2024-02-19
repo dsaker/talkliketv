@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (app *apiApplication) createAuthenticationTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) createAuthenticationToken(w http.ResponseWriter, r *http.Request) {
 	// Parse the email and password from the request body.
 	var input struct {
 		Email    string `json:"email"`
@@ -81,7 +81,7 @@ func (app *apiApplication) createAuthenticationTokenHandler(w http.ResponseWrite
 	}
 }
 
-func (app *apiApplication) createActivationTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) createActivationToken(w http.ResponseWriter, r *http.Request) {
 	// Parse and validate the user's email address.
 	var input struct {
 		Email string `json:"email"`
@@ -152,7 +152,7 @@ func (app *apiApplication) createActivationTokenHandler(w http.ResponseWriter, r
 	}
 }
 
-func (app *apiApplication) createPasswordResetTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) createPasswordResetToken(w http.ResponseWriter, r *http.Request) {
 
 	// Parse and validate the user's email address.
 	var input struct {

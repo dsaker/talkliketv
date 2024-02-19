@@ -53,7 +53,7 @@ func (suite *ApiTestSuite) TestApiPhraseCorrect() {
 				t.Errorf("could not marshal json: %s\n", err)
 				return
 			}
-			code, _, _ := suite.ts.Request(t, jsonData, "/v1/phrase/correct", http.MethodPost, suite.authToken)
+			code, _, _ := suite.ts.Request(t, jsonData, "/v1/phrases/correct", http.MethodPost, suite.authToken)
 
 			assert.Equal(t, code, tt.wantCode)
 

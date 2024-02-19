@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -31,13 +32,41 @@ func (suite *ApiNoLoginTestSuite) TestActivateUser() {
 		t.Fatal(err)
 	}
 
-	code, _, _ := suite.ts.Request(t, jsonToken, "/v1/users/activated", http.MethodPut, "")
+	t.Run("Account View Before and After Activation", func(t *testing.T) {
+		// before activation
+		code, _, _ := suite.ts.Request(t, jsonToken, "/v1/account/view", http.MethodGet, "")
 
-	assert.Equal(t, code, http.StatusOK)
+		assert.Equal(t, code, http.StatusUnauthorized)
 
-	after, _ := suite.app.Models.Users.GetByEmail(email)
+		// activate account
+		code, _, _ = suite.ts.Request(t, jsonToken, "/v1/users/activated", http.MethodPut, "")
 
-	assert.Equal(t, user.Activated, !after.Activated)
+		assert.Equal(t, code, http.StatusOK)
+
+		after, _ := suite.app.Models.Users.GetByEmail(email)
+
+		assert.Equal(t, user.Activated, !after.Activated)
+
+		// account view after activation
+		authToken := getAuthToken(prefix, t, suite.ts)
+		code, _, body := suite.ts.Request(t, nil, "/v1/account/view", http.MethodGet, authToken)
+		dec := json.NewDecoder(bytes.NewBufferString(body))
+
+		var input struct {
+			ResponseUser models.User `json:"user"`
+		}
+		err = dec.Decode(&input)
+		if err != nil {
+			t.Fatalf("error decoding account view response: %s", err)
+		}
+		assert.Equal(t, code, http.StatusOK)
+
+		assert.Equal(t, input.ResponseUser.Email, email)
+		assert.Equal(t, input.ResponseUser.Activated, true)
+		assert.Equal(t, input.ResponseUser.Name, prefix+"ApiUser")
+		assert.Equal(t, input.ResponseUser.MovieId, -1)
+		assert.Equal(t, input.ResponseUser.Flipped, false)
+	})
 }
 
 func (suite *ApiTestSuite) TestApiFlipped() {
@@ -362,7 +391,6 @@ func (suite *ApiTestSuite) TestActivateUser() {
 				fmt.Printf("could not marshal json: %s\n", err)
 				return
 			}
-			//code, _, body := suite.ts.Post(t, "/v1/users/activated", jsonData)
 			code, _, body := suite.ts.Request(t, jsonData, "/v1/users/activated", http.MethodPut, "")
 			assert.Equal(t, code, tt.wantCode)
 

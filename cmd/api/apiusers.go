@@ -260,3 +260,16 @@ func (app *apiApplication) updateUserFlipped(w http.ResponseWriter, r *http.Requ
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *apiApplication) accountView(w http.ResponseWriter, r *http.Request) {
+	user := app.contextGetUser(r)
+
+	dBUser, err := app.Models.Users.Get(user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+	err = app.writeJSON(w, http.StatusOK, envelope{"user": dBUser}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}

@@ -14,7 +14,12 @@ type envelope map[string]interface{}
 
 // Change the data parameter to have the type envelope instead of interface{}.
 func (app *apiApplication) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
-	js, err := json.MarshalIndent(data, "", "\t")
+	//js, err := json.MarshalIndent(data, "", "\t")
+	//if err != nil {
+	//	return err
+	//}
+
+	js, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}

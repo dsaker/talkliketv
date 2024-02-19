@@ -6,7 +6,7 @@ import (
 	"talkliketv.net/internal/models"
 )
 
-func (app *apiApplication) listPhrasesHandler(w http.ResponseWriter, r *http.Request) {
+func (app *apiApplication) listPhrases(w http.ResponseWriter, r *http.Request) {
 
 	user := app.contextGetUser(r)
 

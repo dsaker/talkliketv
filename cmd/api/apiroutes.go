@@ -24,18 +24,18 @@ func (app *apiApplication) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/users/flipped", app.updateUserFlipped)
 	router.Handler(http.MethodPut, "/v1/user/language/switch", protected.ThenFunc(app.updateUserLanguage))
 
-	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/tokens/password-reset", app.createPasswordResetTokenHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/tokens/activation", app.createActivationTokenHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationToken)
+	router.HandlerFunc(http.MethodPost, "/v1/tokens/password-reset", app.createPasswordResetToken)
+	router.HandlerFunc(http.MethodPost, "/v1/tokens/activation", app.createActivationToken)
 
 	router.Handler(http.MethodGet, "/v1/movies/mp3/:id", protected.ThenFunc(app.moviesMp3))
 	router.Handler(http.MethodPatch, "/v1/movies/choose", protected.ThenFunc(app.moviesChoose))
-	router.Handler(http.MethodGet, "/v1/movies", protected.ThenFunc(app.listMoviesHandler))
+	router.Handler(http.MethodGet, "/v1/movies", protected.ThenFunc(app.listMovies))
 
-	router.Handler(http.MethodGet, "/v1/phrases", protected.ThenFunc(app.listPhrasesHandler))
+	router.Handler(http.MethodGet, "/v1/phrases", protected.ThenFunc(app.listPhrases))
 	router.Handler(http.MethodPost, "/v1/phrases/correct", protected.ThenFunc(app.phraseCorrect))
 
-	//router.Handler(http.MethodGet, "/account/view", protected.ThenFunc(app.accountView))
+	router.Handler(http.MethodGet, "/v1/account/view", protected.ThenFunc(app.accountView))
 	//router.Handler(http.MethodGet, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdate))
 	//router.Handler(http.MethodPost, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdatePost))
 	//router.Handler(http.MethodGet, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdate))

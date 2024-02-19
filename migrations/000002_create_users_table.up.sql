@@ -7,5 +7,5 @@ CREATE TABLE users (
    email citext unique NOT NULL,
    hashed_password bytea NOT NULL,
    flipped bool NOT NUll DEFAULT FALSE,
-   created timestamp(0) with time zone NOT NULL DEFAULT NOW()
+   created timestamp(0) NOT NULL DEFAULT NOW()
 );
