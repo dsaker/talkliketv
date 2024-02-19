@@ -214,7 +214,7 @@ func (suite *ApiTestSuite) TestApiUpdateUserLanguage() {
 				return
 			}
 
-			code, _, body := suite.ts.Request(t, jsonData, "/v1/user/language/switch", http.MethodPut, tt.authToken)
+			code, _, body := suite.ts.Request(t, jsonData, "/v1/account/language/update", http.MethodPut, tt.authToken)
 
 			assert.Equal(t, code, tt.wantCode)
 

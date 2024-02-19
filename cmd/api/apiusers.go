@@ -250,6 +250,7 @@ func (app *apiApplication) updateUserFlipped(w http.ResponseWriter, r *http.Requ
 	err := app.Models.Users.Update(user)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
+		return
 	}
 
 	// Send the user a confirmation message.

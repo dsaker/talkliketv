@@ -22,7 +22,6 @@ func (app *apiApplication) routes() http.Handler {
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activateUser)
 	router.HandlerFunc(http.MethodPut, "/v1/users/password", app.updateUserPassword)
 	router.HandlerFunc(http.MethodPost, "/v1/users/flipped", app.updateUserFlipped)
-	router.Handler(http.MethodPut, "/v1/user/language/switch", protected.ThenFunc(app.updateUserLanguage))
 
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationToken)
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/password-reset", app.createPasswordResetToken)
@@ -36,11 +35,8 @@ func (app *apiApplication) routes() http.Handler {
 	router.Handler(http.MethodPost, "/v1/phrases/correct", protected.ThenFunc(app.phraseCorrect))
 
 	router.Handler(http.MethodGet, "/v1/account/view", protected.ThenFunc(app.accountView))
-	//router.Handler(http.MethodGet, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdate))
-	//router.Handler(http.MethodPost, "/account/language/update", protected.ThenFunc(app.accountLanguageUpdatePost))
-	//router.Handler(http.MethodGet, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdate))
-	//router.Handler(http.MethodPost, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdatePost))
-	//
+	router.Handler(http.MethodPut, "/v1/account/language/update", protected.ThenFunc(app.updateUserLanguage))
+
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 
 	var standard alice.Chain

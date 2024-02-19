@@ -155,13 +155,16 @@ func (m UserModel) Exists(id int) (bool, error) {
 func (m UserModel) Get(id int) (*User, error) {
 	var user User
 
-	stmt := `SELECT id, movie_id, language_id, created, flipped, version FROM users WHERE id = $1`
+	stmt := `SELECT id, name, email, activated, movie_id, language_id, created, flipped, version FROM users WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, stmt, id).Scan(
 		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.Activated,
 		&user.MovieId,
 		&user.LanguageId,
 		&user.Created,
