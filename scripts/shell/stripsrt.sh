@@ -24,6 +24,16 @@ Help()
 ############################################################
 # Process the input options. Add options as needed.        #
 ############################################################
+
+# function to count words
+count_words() {
+  wordcount=$(wc -w <<< "$1")
+  if [[ $wordcount -gt 3 ]]; then
+    return 0
+  fi
+  return 1
+}
+
 # Get the options
 while getopts ":hi:" opt; do
    case $opt in
@@ -53,7 +63,7 @@ else
   # create output file variable
   outfile="$filepath.out"
   # empty output file if exists
-  echo "" > "$outfile"
+  true > "$outfile"
 
   # remove in place macOS
   sed -i '' -e 's/-//g' "$filepath"
@@ -73,12 +83,17 @@ else
       read -r nextline
       # if next line starts with letter then combine both lines
       if [[ $nextline =~ ^[A-Za-z] ]] ; then
-        my_var="$line $nextline"
-        # this command works to concat the two lines but throws an error
-        ${my_var//$'\n'/} >> "$outfile" 2>/dev/null
+        # remove '\n' from $line and combine with nextline
+        newline="${line%?} $nextline"
+        if count_words "$newline"; then
+          echo "$newline" >> "$outfile"
+        fi
       else
-        echo "$line" >> "$outfile"
+        if count_words "$line" ; then
+          echo "$line" >> "$outfile"
+        fi
       fi
     fi
   done < "$filepath"
+
 fi
