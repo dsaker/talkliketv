@@ -51,49 +51,48 @@ done
 if [ -z "$filepath" ]; then
   echo "Missing -i" >&2
   exit 1
-else
-  # make sure file exists
-  if [ ! -f "$filepath" ]; then
-    echo "File does not exist."
-    exit 1
-  fi
+fi
 
-  echo "stripping srt file: $filepath"
+# make sure file exists
+if [ ! -f "$filepath" ]; then
+  echo "File does not exist."
+  exit 1
+fi
 
-  # create output file variable
-  outfile="$filepath.out"
-  # empty output file if exists
-  true > "$outfile"
+echo "stripping srt file: $filepath"
 
-  # remove in place macOS
-  sed -i '' -e 's/-//g' "$filepath"
-  sed -i '' -e 's/<i>//g' "$filepath"
-  sed -i '' -e 's/<\/i>//g' "$filepath"
-  # delete all strings between brackets including brackets
-  sed -i '' -e "s/[{][^)]*[}]//g" "$filepath"
+# create output file variable
+outfile="$filepath.out"
+# empty output file if exists
+true > "$outfile"
 
-  # remove in place GNU
-  # sed -i 's/\b(-|<i>|<\/i>)\b//g' "$filepath"
+# remove in place macOS
+sed -i '' -e 's/-//g' "$filepath"
+sed -i '' -e 's/<i>//g' "$filepath"
+sed -i '' -e 's/<\/i>//g' "$filepath"
+# delete all strings between brackets including brackets
+sed -i '' -e "s/[{][^)]*[}]//g" "$filepath"
 
-  # read file by line
-  while read -r line
-  do
-    # if line begins with letter then we want to output
-    if [[ $line =~ ^[A-Za-z] ]] ; then
-      read -r nextline
-      # if next line starts with letter then combine both lines
-      if [[ $nextline =~ ^[A-Za-z] ]] ; then
-        # remove '\n' from $line and combine with nextline
-        newline="${line%?} $nextline"
-        if count_words "$newline"; then
-          echo "$newline" >> "$outfile"
-        fi
-      else
-        if count_words "$line" ; then
-          echo "$line" >> "$outfile"
-        fi
+# remove in place GNU
+# sed -i 's/\b(-|<i>|<\/i>)\b//g' "$filepath"
+
+# read file by line
+while read -r line
+do
+  # if line begins with letter then we want to output
+  if [[ $line =~ ^[A-Za-z] ]] ; then
+    read -r nextline
+    # if next line starts with letter then combine both lines
+    if [[ $nextline =~ ^[A-Za-z] ]] ; then
+      # remove '\n' from $line and combine with nextline
+      newline="${line%?} $nextline"
+      if count_words "$newline"; then
+        echo "$newline" >> "$outfile"
+      fi
+    else
+      if count_words "$line" ; then
+        echo "$line" >> "$outfile"
       fi
     fi
-  done < "$filepath"
-
-fi
+  fi
+done < "$filepath"
