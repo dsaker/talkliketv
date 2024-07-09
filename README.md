@@ -59,6 +59,6 @@ and extract
 
 ### To Do
 
-GetAllMovies when not signed in
-delete account
-password reset web
+- GetAllMovies when not signed in
+- delete account
+- password reset web
