@@ -62,3 +62,5 @@ and extract
 - GetAllMovies when not signed in
 - delete account
 - password reset web
+- add comments
+- connect to google language translator
