@@ -6,8 +6,7 @@ The unique approach involves learning from the subtitles of TV shows and then wa
 
 You can use a tab separated file to upload any phrases you want to learn using the bash script `./scripts/shell/uploadtsv.sh`. 
 
-The books [Let's Go] (https://lets-go.alexedwards.net/) and [Let's Go Further] (https://lets-go-further.alexedwards.net/) were used heavily in creating this application. I would highly recommend them to anyone wanting to learn Golang.
-
+The books [Let's Go](https://lets-go.alexedwards.net/) and [Let's Go Further](https://lets-go-further.alexedwards.net/) were used heavily in creating this application. I would highly recommend them to anyone wanting to learn Golang.
 
 ### Dependencies
 
