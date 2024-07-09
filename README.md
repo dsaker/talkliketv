@@ -1,10 +1,13 @@
 # talkliketv
 
-TalkLikeTV is a revolutionary language learning application designed to address the shortcomings of other language apps. Unlike other platforms, TalkLikeTV focuses on bridging the gaps in native-to-foreign language translation and provides an immersive experience by incorporating authentic native speakers conversing at real speeds and tones.
+TalkLikeTV is a language learning application designed to address the shortcomings of other language apps by incorporating authentic native speakers conversing at real speeds and tones.
 
-With TalkLikeTV, you can elevate your language skills to sound and comprehend like a local. The unique approach involves learning from the subtitles of TV shows and then listening to the episodes at your convenience. By translating from your native language to the spoken subtitles of a TV show, you not only grasp how native speakers communicate but also enhance your ability to understand the actors in the show.
+The unique approach involves learning from the subtitles of TV shows and then watching the episodes at your convenience. By translating from your native language to the spoken subtitles of a TV show, you not only grasp how native speakers communicate but also enhance your ability to understand the actors in the show.
 
-This innovative method not only prepares you to speak the language naturally but also boosts your confidence in using it. Say goodbye to traditional language learning hurdles and embrace a more effective and enjoyable language acquisition experience with TalkLikeTV.
+You can use a tab separated file to upload any phrases you want to learn using the bash script `./scripts/shell/uploadtsv.sh`. 
+
+The books [Let's Go] (https://lets-go.alexedwards.net/) and [Let's Go Further] (https://lets-go-further.alexedwards.net/) were used heavily in creating this application. I would highly recommend them to anyone wanting to learn Golang.
+
 
 ### Dependencies
 
@@ -58,7 +61,5 @@ and extract
 ### To Do
 
 GetAllMovies when not signed in
-Browserstack e2e testing of production
 delete account
 password reset web
-Spanish (LA) and Spanish (Spain)

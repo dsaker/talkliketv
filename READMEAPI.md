@@ -1,6 +1,6 @@
 # talkliketv api
 
-talkliketv is a simple web application to learn a language by using subtitle from popular tv shows
+talkliketv is a simple web application to learn a language by using subtitles from popular tv shows
 
 # Dependencies
 
