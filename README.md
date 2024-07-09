@@ -8,15 +8,18 @@ You can use a tab separated file to upload any phrases you want to learn using t
 
 The books [Let's Go](https://lets-go.alexedwards.net/) and [Let's Go Further](https://lets-go-further.alexedwards.net/) were used heavily in creating this application. I would highly recommend them to anyone wanting to learn Golang.
 
-### Dependencies
-
-- Go version 1.21
-
 ### Make
 
 To list available make commands
 
 `make help`
+
+### Create Mailtrap account
+
+- Create an account at [Mailtrap](https://mailtrap.io/)
+- Create an inbox in [Email Testing](https://mailtrap.io/inboxes)
+- Run `cp .envrc.default .envrc`
+- Copy the username and password into SMTP_USERNAME and SMTP_PASSWORD in .envrc
 
 ### Startup Locally
 
