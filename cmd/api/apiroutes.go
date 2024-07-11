@@ -8,7 +8,7 @@ import (
 )
 
 // Update the routes() method to return a http.Handler instead of a *httprouter.Router.
-func (app *apiApplication) routes() http.Handler {
+func (app *api) routes() http.Handler {
 	router := httprouter.New()
 
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
@@ -36,6 +36,8 @@ func (app *apiApplication) routes() http.Handler {
 
 	router.Handler(http.MethodGet, "/v1/account/view", protected.ThenFunc(app.accountView))
 	router.Handler(http.MethodPut, "/v1/account/language/update", protected.ThenFunc(app.updateUserLanguage))
+
+	router.Handler(http.MethodGet, "/v1/translate/text", protected.ThenFunc(app.translateText))
 
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 

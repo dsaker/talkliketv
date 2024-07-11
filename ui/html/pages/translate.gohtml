@@ -1,0 +1,31 @@
+{{define "title"}}Translate{{end}}
+
+{{define "main"}}
+  <form action='/translate/text' method='POST' enctype="multipart/form-data" novalidate>
+    <!-- Include the CSRF token -->
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    <div>
+      <label for="lang">Language</label>
+      <select name="languages" id="languages">
+        {{if .Languages}}
+          {{range .Languages}}
+            <option value="{{.Language}}">"{{.Language}}</option>
+          {{end}}
+        {{end}}
+      </select>
+{{/*      <label>Language:</label>*/}}
+{{/*      <input list='languages' name='language'>*/}}
+{{/*      <datalist id='languages'>*/}}
+{{/*        {{if .Languages}}*/}}
+{{/*          {{range .Languages}}*/}}
+{{/*            <option value="{{.Language}}"></option>*/}}
+{{/*          {{end}}*/}}
+{{/*        {{end}}*/}}
+{{/*      </datalist>*/}}
+    </div>
+    <input type="file" name="file" id="file" />
+    <div>
+      <input type='submit' value='Upload'>
+    </div>
+  </form>
+{{end}}

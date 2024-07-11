@@ -67,3 +67,7 @@ and extract
 - password reset web
 - add comments
 - connect to google language translator
+
+### Setup Google Cloud Translate
+
+https://cloud.google.com/translate/docs/setup

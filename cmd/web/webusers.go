@@ -7,7 +7,7 @@ import (
 	"talkliketv.net/internal/validator"
 )
 
-func (app *webApplication) accountView(w http.ResponseWriter, r *http.Request) {
+func (app *web) accountView(w http.ResponseWriter, r *http.Request) {
 	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
 	user, err := app.Models.Users.Get(userID)
@@ -22,7 +22,7 @@ func (app *webApplication) accountView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.User = user
-	languages, err := app.Models.Languages.All()
+	languages, err := app.Models.Languages.All(true)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -33,10 +33,10 @@ func (app *webApplication) accountView(w http.ResponseWriter, r *http.Request) {
 }
 
 // Update the handler so it displays the signup page.
-func (app *webApplication) userSignup(w http.ResponseWriter, r *http.Request) {
+func (app *web) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = models.UserSignupForm{}
-	languages, err := app.Models.Languages.All()
+	languages, err := app.Models.Languages.All(true)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -50,10 +50,10 @@ func (app *webApplication) userSignup(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "signup.gohtml", data)
 }
 
-func (app *webApplication) duplicateError(w http.ResponseWriter, r *http.Request, form models.UserSignupForm, err error) {
+func (app *web) duplicateError(w http.ResponseWriter, r *http.Request, form models.UserSignupForm, err error) {
 	data := app.newTemplateData(r)
 	data.Form = form
-	languages, err2 := app.Models.Languages.All()
+	languages, err2 := app.Models.Languages.All(true)
 	if err2 != nil {
 		if errors.Is(err2, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -67,7 +67,7 @@ func (app *webApplication) duplicateError(w http.ResponseWriter, r *http.Request
 	app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
 }
 
-func (app *webApplication) userSignupPost(w http.ResponseWriter, r *http.Request) {
+func (app *web) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	var form models.UserSignupForm
 
 	err := app.decodePostForm(r, &form)
@@ -85,16 +85,10 @@ func (app *webApplication) userSignupPost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	languageId, err := app.Models.Languages.GetId(form.Language)
-	if err != nil {
-		app.clientError(w, r, http.StatusBadRequest, err)
-		return
-	}
-
 	user := &models.User{
 		Name:       form.Name,
 		Email:      form.Email,
-		LanguageId: languageId,
+		LanguageId: form.LanguageId,
 		Activated:  false,
 	}
 
@@ -120,7 +114,7 @@ func (app *webApplication) userSignupPost(w http.ResponseWriter, r *http.Request
 
 	// Otherwise add a confirmation flash message to the session confirming that
 	// their signup worked.
-	app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please email or text site creator for activation code.")
+	app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please check your email for activation code.")
 
 	// And redirect the user to the login page.
 	http.Redirect(w, r, "/user/activate", http.StatusSeeOther)
@@ -134,13 +128,13 @@ type userLoginForm struct {
 }
 
 // Update the handler so it displays the login page.
-func (app *webApplication) userLogin(w http.ResponseWriter, r *http.Request) {
+func (app *web) userLogin(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = userLoginForm{}
 	app.render(w, r, http.StatusOK, "login.gohtml", data)
 }
 
-func (app *webApplication) userLoginPost(w http.ResponseWriter, r *http.Request) {
+func (app *web) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	var form userLoginForm
 
 	err := app.decodePostForm(r, &form)
@@ -203,7 +197,7 @@ func (app *webApplication) userLoginPost(w http.ResponseWriter, r *http.Request)
 	http.Redirect(w, r, "/phrase/view", http.StatusSeeOther)
 }
 
-func (app *webApplication) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+func (app *web) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	// Use the RenewToken() method on the current session to change the session
 	// ID again.
 	err := app.sessionManager.RenewToken(r.Context())
@@ -231,14 +225,14 @@ type accountPasswordUpdateForm struct {
 	validator.Validator     `form:"-"`
 }
 
-func (app *webApplication) accountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
+func (app *web) accountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = accountPasswordUpdateForm{}
 
 	app.render(w, r, http.StatusOK, "password.gohtml", data)
 }
 
-func (app *webApplication) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
+func (app *web) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
 	var form accountPasswordUpdateForm
 
 	err := app.decodePostForm(r, &form)
@@ -282,7 +276,7 @@ func (app *webApplication) accountPasswordUpdatePost(w http.ResponseWriter, r *h
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }
 
-func (app *webApplication) userLanguageFlip(w http.ResponseWriter, r *http.Request) {
+func (app *web) userLanguageFlip(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
@@ -315,11 +309,11 @@ type accountLanguageUpdateForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (app *webApplication) accountLanguageUpdate(w http.ResponseWriter, r *http.Request) {
+func (app *web) accountLanguageUpdate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = accountLanguageUpdateForm{}
 
-	languages, err := app.Models.Languages.All()
+	languages, err := app.Models.Languages.All(true)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w, r, err)
@@ -333,7 +327,7 @@ func (app *webApplication) accountLanguageUpdate(w http.ResponseWriter, r *http.
 	app.render(w, r, http.StatusOK, "language-update.gohtml", data)
 }
 
-func (app *webApplication) accountLanguageUpdatePost(w http.ResponseWriter, r *http.Request) {
+func (app *web) accountLanguageUpdatePost(w http.ResponseWriter, r *http.Request) {
 	var form accountLanguageUpdateForm
 
 	err := app.decodePostForm(r, &form)
@@ -382,14 +376,14 @@ type userPasswordResetForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (app *webApplication) userPasswordReset(w http.ResponseWriter, r *http.Request) {
+func (app *web) userPasswordReset(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = userPasswordResetForm{}
 
 	app.render(w, r, http.StatusOK, "password-reset.gohtml", data)
 }
 
-func (app *webApplication) userPasswordResetPost(w http.ResponseWriter, r *http.Request) {
+func (app *web) userPasswordResetPost(w http.ResponseWriter, r *http.Request) {
 	var form userPasswordResetForm
 
 	err := app.decodePostForm(r, &form)
@@ -452,14 +446,14 @@ type userActivateForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (app *webApplication) userActivate(w http.ResponseWriter, r *http.Request) {
+func (app *web) userActivate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = userActivateForm{}
 
 	app.render(w, r, http.StatusOK, "activate.gohtml", data)
 }
 
-func (app *webApplication) userActivatePost(w http.ResponseWriter, r *http.Request) {
+func (app *web) userActivatePost(w http.ResponseWriter, r *http.Request) {
 	var form userActivateForm
 
 	err := app.decodePostForm(r, &form)

@@ -13,7 +13,7 @@ import (
 type envelope map[string]interface{}
 
 // Change the data parameter to have the type envelope instead of interface{}.
-func (app *apiApplication) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
+func (app *api) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	//js, err := json.MarshalIndent(data, "", "\t")
 	//if err != nil {
 	//	return err
@@ -38,7 +38,7 @@ func (app *apiApplication) writeJSON(w http.ResponseWriter, status int, data env
 	return nil
 }
 
-func (app *apiApplication) readJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
+func (app *api) readJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
 	// Use http.MaxBytesReader() to limit the size of the request body to 1MB.
 	maxBytes := 1_048_576
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))

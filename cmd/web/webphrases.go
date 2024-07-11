@@ -7,7 +7,7 @@ import (
 	"talkliketv.net/internal/models"
 )
 
-func (app *webApplication) phraseView(w http.ResponseWriter, r *http.Request) {
+func (app *web) phraseView(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
@@ -63,7 +63,7 @@ func (app *webApplication) phraseView(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "phrases.gohtml", data)
 }
 
-func (app *webApplication) phraseCorrect(w http.ResponseWriter, r *http.Request) {
+func (app *web) phraseCorrect(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
 	user, err := app.Models.Users.Get(userId)

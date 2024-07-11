@@ -36,7 +36,7 @@ type UserSignupForm struct {
 	Name                string `form:"name"`
 	Email               string `form:"email"`
 	Password            string `form:"password"`
-	Language            string `form:"language"`
+	LanguageId          int    `form:"language_id"`
 	validator.Validator `form:"-"`
 }
 
