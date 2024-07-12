@@ -95,7 +95,7 @@ nav {
 }
 
 nav a {
-    margin-right: 1.5em;
+    margin-right: 1em;
     display: inline-block;
 }
 
@@ -170,11 +170,12 @@ form div:last-child {
 
 form input[type="radio"] {
     margin-left: 18px;
+    transform: scale(1.5);
 }
 
 form input[type="text"], form input[type="password"], form input[type="email"], input[type="text"] {
-    padding: 0.75em 18px;
-    width: 100%;
+    padding: 0.5em 8px;
+    width: 13em;
 }
 
 form input[type=text], form input[type="password"], form input[type="email"], textarea {

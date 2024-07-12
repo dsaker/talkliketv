@@ -45,6 +45,25 @@ func (m *LanguageModel) GetId(language string) (int, error) {
 	return id, nil
 }
 
+func (m *LanguageModel) Get(id int) (*Language, error) {
+	v := &Language{}
+
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, "SELECT id, language, tag FROM languages WHERE  id = $1", id).Scan(&v.ID, &v.Language, &v.Tag)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+
+	return v, nil
+}
+
 func (m *LanguageModel) All(inUse bool) ([]*Language, error) {
 
 	var query string

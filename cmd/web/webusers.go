@@ -32,7 +32,6 @@ func (app *web) accountView(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "account.gohtml", data)
 }
 
-// Update the handler so it displays the signup page.
 func (app *web) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = models.UserSignupForm{}
@@ -50,7 +49,7 @@ func (app *web) userSignup(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "signup.gohtml", data)
 }
 
-func (app *web) duplicateError(w http.ResponseWriter, r *http.Request, form models.UserSignupForm, err error) {
+func (app *web) duplicateError(w http.ResponseWriter, r *http.Request, form any, err error) {
 	data := app.newTemplateData(r)
 	data.Form = form
 	languages, err2 := app.Models.Languages.All(true)

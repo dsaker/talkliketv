@@ -2,7 +2,7 @@
 
 TalkLikeTV is a language learning application designed to address the shortcomings of other language apps by incorporating authentic native speakers conversing at real speeds and tones.
 
-The unique approach involves learning from the subtitles of TV shows and then watching the episodes at your convenience. By translating from your native language to the spoken subtitles of a TV show, you not only grasp how native speakers communicate but also enhance your ability to understand the actors in the show.
+The unique approach involves learning from the subtitles of TV shows and then watching the episodes at your convenience. By translating from your native language to the spoken subtitles of a TV show, you not only grasp how native speakers communicate but also enhance your ability to understand the dialogue of the show.
 
 You can use a tab separated file to upload any phrases you want to learn using the bash script `./scripts/shell/uploadtsv.sh`. 
 
@@ -62,6 +62,8 @@ and extract
 
 ### To Do
 
+- add comments
+- create native and learning lang
 - GetAllMovies when not signed in
 - delete account
 - password reset web

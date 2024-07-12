@@ -3,10 +3,10 @@
     <div>
         <a href='/'>Home</a>
         <a href='/about'>About</a>
-        <a href='/user/activate'>Activate</a>
-         {{if .IsAuthenticated}}
+        {{if .IsAuthenticated}}
             <a href='/phrase/view'>Learn</a>
-            <a href='/movies/view'>Movies</a>
+            <a href='/movies/view'>Titles</a>
+            <a href='/translate/text'>Upload</a>
         {{end}}
     </div>
     <div>
@@ -17,9 +17,6 @@
                 <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                 <button>Logout</button>
             </form>
-{{/*            {{if eq .Email "user1@email.com"}}*/}}
-{{/*                <a href='/user/signup'>Signup</a>*/}}
-{{/*            {{end}}*/}}
         {{else}}
             <a href='/user/login'>Login</a>
             <a href='/user/signup'>Signup</a>

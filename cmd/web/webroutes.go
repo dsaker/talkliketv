@@ -59,7 +59,8 @@ func (app *web) routes() http.Handler {
 	router.Handler(http.MethodGet, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdate))
 	router.Handler(http.MethodPost, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdatePost))
 
-	router.Handler(http.MethodPost, "/translate/text", protected.ThenFunc(app.translateText))
+	router.Handler(http.MethodPost, "/translate/text", protected.ThenFunc(app.translateTextPost))
+	router.Handler(http.MethodGet, "/translate/text", protected.ThenFunc(app.translateText))
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 	return standard.Then(router)

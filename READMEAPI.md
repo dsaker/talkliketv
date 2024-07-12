@@ -38,7 +38,7 @@ curl -i -d "$BODY" localhost:4001/v1/tokens/authentication`
 
 # Store Token In TOKEN
 
-`BODY='{"email": "newuser18@email.com", "password": "password12"}'
+`BODY='{"email": "user1@email.com", "password": "password12"}'
 TOKEN=$(curl -d "$BODY" localhost:4001/v1/tokens/authentication | jq -r '.authentication_token.token')
 `
 
