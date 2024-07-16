@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS languages (
     tag text NOT NULL
 );
 
-INSERT INTO languages (id, language, tag) VALUES (-1, 'Not a Language', 'NaL');
+INSERT INTO languages (id, language, tag) VALUES (0, 'Not a Language', 'NaL');
 INSERT INTO languages (language, tag) VALUES
                                           ('Afrikaans', 'af'),
                                           ('Albanian', 'sq'),

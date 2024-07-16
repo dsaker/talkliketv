@@ -59,3 +59,8 @@ input:checked + .slider:before {
 .slider.round:before {
     border-radius: 50%;
 }
+
+input[type="text"].phrase_input {
+    padding: 0.5em 8px;
+    width: 100%;
+}

@@ -6,14 +6,13 @@
     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     <div>
         <label>Language:</label>
-        <input list='languages' name='language'>
-        <datalist id='languages'>
+        <select name="language_id" id="language_id">
             {{if .Languages}}
                 {{range .Languages}}
-                    <option value="{{.Language}}"></option>
+                    <option value="{{.ID}}">{{.Language}}</option>
                 {{end}}
             {{end}}
-        </datalist>
+        </select>
     </div>
     <div>
         <input type='submit' value='Change language'>

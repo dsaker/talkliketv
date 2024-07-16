@@ -9,6 +9,7 @@ import (
 	"golang.org/x/text/language"
 	"net/http"
 	"strings"
+	"sync"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/validator"
 	"unicode"
@@ -109,43 +110,53 @@ func (app *web) translateTextPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lang, err := language.Parse(langModel.Tag)
+	// if file is from english use language tag passed from form else translate to english
+	var langTag string
+	if form.FromEnglish == "true" {
+		langTag = langModel.Tag
+	} else {
+		langTag = "en"
+	}
+
+	lang, err := language.Parse(langTag)
 	if err != nil {
 		app.serverError(w, r, fmt.Errorf("language.Parse: %w", err))
 		return
 	}
 
-	// create new translate client to connect with google cloud
-	ctx := context.Background()
-	client, err := translate.NewClient(ctx)
-	if err != nil {
-		app.serverError(w, r, fmt.Errorf(" client translate error getting new client: %w", err))
-		return
+	// concurrently get all the responses from Google Translate
+	var wg sync.WaitGroup
+	responses := make([]string, numLines)
+	for i, phrase := range phrasesSlice {
+		wg.Add(1)
+		go getResponse(lang, phrase, responses, i, &wg)
 	}
-	defer client.Close()
+	wg.Wait()
 
-	for _, phrase := range phrasesSlice {
-		if len(phrase) == 0 {
-			continue
-		}
-		resp, err := client.Translate(ctx, []string{phrase}, lang, nil)
-		if err != nil {
-			app.serverError(w, r, fmt.Errorf("translate error: %w", err))
-			return
-		}
-		if len(resp) == 0 {
-			app.serverError(w, r, fmt.Errorf("translate returned empty response to text: %s", phrasesSlice))
-			return
+	for i := range phrasesSlice {
+		// How it is stored in the database and looked up english needs to be stored as Phrase
+		// in the phraseModel and the other language as Translates, so it needs to be switched
+		// depending on if the file uploaded is from or to english
+		var usePhrase, translates string
+		if form.FromEnglish == "true" {
+			usePhrase = phrasesSlice[i]
+			translates = responses[i]
+		} else {
+			usePhrase = responses[i]
+			translates = phrasesSlice[i]
 		}
 
+		// build the phrase model
 		phraseModel := &models.Phrase{
-			Phrase:         phrase,
-			Translates:     resp[0].Text,
-			PhraseHint:     makeHintString(phrase),
-			TranslatesHint: makeHintString(resp[0].Text),
+			Phrase:         usePhrase,
+			Translates:     translates,
+			PhraseHint:     makeHintString(usePhrase),
+			TranslatesHint: makeHintString(translates),
 			MovieId:        movieID,
 		}
 
+		// insert the phrase model into the database. I am not doing this concurrently because
+		// I want the phrases in the DB in the same order as they are uploaded
 		err = app.Models.Phrases.Insert(phraseModel)
 		if err != nil {
 			app.serverError(w, r, fmt.Errorf("language.Parse: %w", err))
@@ -153,8 +164,7 @@ func (app *web) translateTextPost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Otherwise add a confirmation flash message to the session confirming that
-	// their signup worked.
+	// Add a confirmation flash message to the session confirming that upload was successful
 	app.sessionManager.Put(r.Context(), "flash", "Your file was uploaded successfully.")
 
 	// And redirect the user to the login page.
@@ -208,4 +218,24 @@ func makeHintString(s string) string {
 		hintString += " "
 	}
 	return hintString
+}
+
+func getResponse(lang language.Tag, phrase string, responses []string, i int, wg *sync.WaitGroup) {
+	ctx := context.Background()
+	client, err := translate.NewClient(ctx)
+	if err != nil {
+		println(fmt.Errorf("error creating client: %s", err))
+	}
+	defer client.Close()
+
+	resp, err := client.Translate(ctx, []string{phrase}, lang, nil)
+	if err != nil {
+		println(fmt.Errorf("translate: %w", err))
+	}
+	if len(resp) == 0 {
+		println(fmt.Errorf("translate returned empty response to text: %s", phrase))
+	}
+	responses[i] = resp[0].Text
+
+	wg.Done()
 }

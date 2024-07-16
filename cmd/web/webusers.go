@@ -304,7 +304,7 @@ func (app *web) userLanguageFlip(w http.ResponseWriter, r *http.Request) {
 }
 
 type accountLanguageUpdateForm struct {
-	Language            string `form:"language"`
+	LanguageId          int `form:"language_id"`
 	validator.Validator `form:"-"`
 }
 
@@ -337,20 +337,12 @@ func (app *web) accountLanguageUpdatePost(w http.ResponseWriter, r *http.Request
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
-	languageId, err := app.Models.Languages.GetId(form.Language)
-	if err != nil {
-		data := app.newTemplateData(r)
-		data.Form = form
-		app.render(w, r, http.StatusUnprocessableEntity, "language-update.gohtml", data)
-		return
-	}
-
 	user, err := app.Models.Users.Get(userId)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	user.LanguageId = languageId
+	user.LanguageId = form.LanguageId
 
 	err = app.Models.Users.Update(user)
 	if err != nil {
