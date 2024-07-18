@@ -119,7 +119,7 @@ func (suite *WebNoLoginTestSuite) TestViewsNotLoggedIn() {
 			name:     "About View",
 			urlPath:  "/about",
 			wantCode: http.StatusOK,
-			wantTag:  " TalkLikeTV is a revolutionary language learning application",
+			wantTag:  "TalkLikeTV is a language learning application designed ",
 		},
 		{
 			name:     "User Signup View",

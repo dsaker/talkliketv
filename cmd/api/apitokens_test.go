@@ -13,7 +13,7 @@ import (
 func (suite *ApiNoLoginTestSuite) TestCreateAuthenticationTokenHandler() {
 	t := suite.T()
 	prefix := "token-handler"
-	validEmail := prefix + test.TestEmail
+	validEmail := prefix + test.ValidEmail
 	register(prefix, t, suite.ts)
 	activate(validEmail, suite.app.Models)
 
@@ -102,8 +102,8 @@ func (suite *ApiTestSuite) TestCreatePasswordResetTokenHandler() {
 	t := suite.T()
 	prefix := "password-token-handler"
 	register(prefix, t, suite.ts)
-	activate(prefix+test.TestEmail, suite.app.Models)
-	validEmail := prefix + test.TestEmail
+	activate(prefix+test.ValidEmail, suite.app.Models)
+	validEmail := prefix + test.ValidEmail
 	tests := []struct {
 		name      string
 		userEmail string
@@ -154,7 +154,7 @@ func (suite *ApiTestSuite) TestCreateActivationTokenHandler() {
 	prefix := "activation-token-handler"
 	register(prefix, t, suite.ts)
 
-	validEmail := prefix + test.TestEmail
+	validEmail := prefix + test.ValidEmail
 
 	tests := []struct {
 		name       string

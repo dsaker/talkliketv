@@ -58,7 +58,7 @@ func (suite *ApiTestSuite) TestApiMoviesMp3() {
 	}{
 		{
 			name:     "Valid submission",
-			movieId:  test.ValidMovieId,
+			movieId:  "2",
 			wantCode: http.StatusOK,
 		},
 		{
@@ -102,8 +102,8 @@ func (suite *ApiTestSuite) TestApiMoviesMp3() {
 func (suite *ApiTestSuite) TestApiMoviesMp3Flow() {
 	t := suite.T()
 	prefix := "mp3flow"
-	validUrl := "/v1/movies/mp3/" + test.ValidMovieId
-	email := prefix + test.TestEmail
+	validUrl := "/v1/movies/mp3/" + test.Mp3MovieId
+	email := prefix + test.ValidEmail
 	_ = register(prefix, t, suite.ts)
 	t.Run("Api Movies Mp3 Flow", func(t *testing.T) {
 
@@ -134,23 +134,23 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			url:        "/v1/movies",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: "MissAdrenalineS01E01",
-			wantSize:   5,
+			wantString: test.MovieString,
+			wantSize:   test.ValidMovieSize,
 		},
 		{
 			name:       "Title Nothing",
 			url:        "/v1/movies?title=nothing&page_size=10",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: "NothingToSeeHereS01E01",
-			wantSize:   5,
+			wantString: test.MovieString,
+			wantSize:   test.ValidMovieSize,
 		},
 		{
 			name:       "Mp3 False",
 			url:        "/v1/movies?mp3=false",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: "GreysAnatomyS05E14",
+			wantString: test.MovieString,
 			wantSize:   2,
 		},
 		{
@@ -158,15 +158,15 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			url:        "/v1/movies?mp3=true",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: "NothingToSeeHereS01E01",
-			wantSize:   3,
+			wantString: "{\"metadata\":{},\"movies\":null}",
+			wantSize:   0,
 		},
 		{
 			name:       "Page Size 1",
 			url:        "/v1/movies?page_size=1",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: "NothingToSeeHereS01E02",
+			wantString: test.MovieString,
 			wantSize:   1,
 		},
 		{
@@ -174,7 +174,7 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			url:        "/v1/movies?page_size=1&sort=num_subs",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: "NothingToSeeHereS01E02",
+			wantString: test.MovieString,
 			wantSize:   1,
 		},
 		{
@@ -182,7 +182,7 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			url:        "/v1/movies?page_size=1&sort=-num_subs",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: "MissAdrenalineS01E01",
+			wantString: test.MovieString,
 			wantSize:   1,
 		},
 		{
@@ -190,7 +190,7 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			url:        "/v1/movies?page_size=1&sort=title",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: "GreysAnatomyS05E14",
+			wantString: test.MovieString,
 			wantSize:   1,
 		},
 		{
@@ -206,7 +206,7 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			url:        "/v1/movies?page=2&page_size=1&sort=-title",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: "NothingToSeeHereS01E02",
+			wantString: test.MovieString,
 			wantSize:   1,
 		},
 		{

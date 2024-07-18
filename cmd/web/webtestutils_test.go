@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"talkliketv.net/internal/application"
 	"talkliketv.net/internal/assert"
 	"talkliketv.net/internal/config"
@@ -52,7 +53,7 @@ func (suite *WebTestSuite) SetupSuite() {
 	suite.app, suite.testDb = newTestApplication(t)
 	suite.ts = newWebTestServer(t, suite.app.routes())
 	signup(t, suite.ts, testuser)
-	activate(testuser+test.TestEmail, suite.app.Models)
+	activate(testuser+test.ValidEmail, suite.app.Models)
 	suite.validCSRFToken = login(t, suite.ts, testuser)
 	chooseMovie(t, suite.ts, suite.validCSRFToken)
 }
@@ -157,7 +158,7 @@ func newWebTestServer(t *testing.T, h http.Handler) *test.TestServer {
 
 func chooseMovie(t *testing.T, ts *test.TestServer, validToken string) {
 	setupUserForm := url.Values{}
-	setupUserForm.Add("movie_id", "6")
+	setupUserForm.Add("movie_id", "1")
 	setupUserForm.Add("csrf_token", validToken)
 
 	code, _, _ := ts.PostForm(t, "/movies/choose", setupUserForm)
@@ -170,7 +171,7 @@ func login(t *testing.T, ts *test.TestServer, username string) string {
 	validCSRFToken := extractCSRFToken(t, body)
 
 	loginForm := url.Values{}
-	loginForm.Add("email", username+test.TestEmail)
+	loginForm.Add("email", username+test.ValidEmail)
 	loginForm.Add("password", test.ValidPassword)
 	loginForm.Add("csrf_token", validCSRFToken)
 
@@ -187,9 +188,9 @@ func signup(t *testing.T, ts *test.TestServer, username string) {
 
 	signupForm := url.Values{}
 	signupForm.Add("name", username)
-	signupForm.Add("email", username+test.TestEmail)
+	signupForm.Add("email", username+test.ValidEmail)
 	signupForm.Add("password", test.ValidPassword)
-	signupForm.Add("language", test.ValidLanguage)
+	signupForm.Add("language_id", strconv.Itoa(test.ValidLanguageId))
 	signupForm.Add("csrf_token", validCSRFToken)
 
 	code, _, _ := ts.PostForm(t, "/user/signup", signupForm)

@@ -21,8 +21,8 @@ type User struct {
 	HashedPassword []byte    `json:"-"`
 	Activated      bool      `json:"activated"`
 	Version        int       `json:"-"`
-	MovieId        int       `json:"movieId"`
-	LanguageId     int       `json:"languageId"`
+	MovieId        int       `json:"movie_id"`
+	LanguageId     int       `json:"language_id"`
 	Flipped        bool      `json:"flipped"`
 }
 

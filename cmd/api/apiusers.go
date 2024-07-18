@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/validator"
@@ -21,6 +22,17 @@ func (app *api) registerUser(w http.ResponseWriter, r *http.Request) {
 
 	if !form.Valid() {
 		app.failedValidationResponse(w, r, form.FieldErrors)
+		return
+	}
+
+	_, err = app.Models.Languages.Get(form.LanguageId)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.errorResponse(w, r, http.StatusBadRequest, fmt.Sprintf("language id invalid: %d", form.LanguageId))
+			app.notFoundResponse(w, r)
+		} else {
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 

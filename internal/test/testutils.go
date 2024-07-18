@@ -28,15 +28,17 @@ const (
 
 const (
 	ValidUserId      = 3
-	ValidPhraseId    = "2285"
-	ValidPhraseIdInt = 2285
-	ValidMovieId     = "6"
-	ValidMovieIdInt  = 6
-	ValidLanguage    = "Spanish"
-	ValidLanguageId  = 2
+	ValidPhraseId    = "1"
+	ValidPhraseIdInt = 1
+	ValidMovieId     = "1"
+	ValidMovieIdInt  = 1
+	ValidLanguageId  = 109 // Spanish
 	ValidPassword    = "validPassword"
-	TestEmail        = "Test@email.com"
+	ValidEmail       = "Test@email.com"
 	DbCtxTimeout     = 60 * time.Second
+	ValidMovieSize   = 2
+	MovieString      = "MissAdrenalineS01E02"
+	Mp3MovieId       = "2"
 )
 
 type TestDatabase struct {
@@ -87,7 +89,7 @@ func SetupTestDatabase() *TestDatabase {
 		Password: DbPass,
 	})
 
-	restoreExec := restore.Exec(dir+"testdata/talkliketv_1705949676.sql.tar.gz", pg.ExecOptions{StreamPrint: false})
+	restoreExec := restore.Exec(dir+"testdata/talktv_db_1721165208.tar", pg.ExecOptions{StreamPrint: false})
 	if restoreExec.Error != nil {
 		fmt.Println(restoreExec.Error.Err)
 		fmt.Println(restoreExec.Output)
@@ -97,10 +99,6 @@ func SetupTestDatabase() *TestDatabase {
 		fmt.Println(restoreExec.Output)
 
 	}
-	//_, err = db.Exec(string(script))
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
 
 	if err != nil {
 		log.Fatal("failed to perform db migration", err)

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"talkliketv.net/internal/assert"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/test"
@@ -15,7 +16,7 @@ import (
 func (suite *ApiNoLoginTestSuite) TestActivateUser() {
 	t := suite.T()
 	prefix := "activateUser"
-	email := prefix + test.TestEmail
+	email := prefix + test.ValidEmail
 	user := register(prefix, t, suite.ts)
 
 	token, err := suite.app.Models.Tokens.New(user.ID, 24*time.Hour, models.ScopeActivation)
@@ -93,7 +94,7 @@ func (suite *ApiTestSuite) TestApiFlipped() {
 func (suite *ApiTestSuite) TestApiUpdateUserPassword() {
 	t := suite.T()
 	prefix := "apiUpdateUserPassword"
-	email := prefix + test.TestEmail
+	email := prefix + test.ValidEmail
 	register(prefix, t, suite.ts)
 	activate(email, suite.app.Models)
 
@@ -188,14 +189,14 @@ func (suite *ApiTestSuite) TestApiUpdateUserLanguage() {
 		},
 		{
 			name:        "Empty Auth Token",
-			newLanguage: test.ValidLanguage,
+			newLanguage: strconv.Itoa(test.ValidLanguageId),
 			authToken:   "",
 			wantCode:    http.StatusUnauthorized,
 			wantTag:     "you must be authenticated to access this resource",
 		},
 		{
 			name:        "Invalid Token",
-			newLanguage: test.ValidLanguage,
+			newLanguage: strconv.Itoa(test.ValidLanguageId),
 			authToken:   "PQR7I6SB6OGKDSWK4ZMQZKWWFQ",
 			wantCode:    http.StatusUnauthorized,
 			wantTag:     "invalid or missing authentication token",
@@ -228,7 +229,7 @@ func (suite *ApiTestSuite) TestApiUpdateUserLanguage() {
 func (suite *ApiTestSuite) TestApiUpdateUserPasswordFlow() {
 	t := suite.T()
 	prefix := "userPasswordFlow"
-	email := prefix + test.TestEmail
+	email := prefix + test.ValidEmail
 	apiUser := register(prefix, t, suite.ts)
 
 	token, err := suite.app.Models.Tokens.New(apiUser.ID, 5*time.Second, models.ScopePasswordReset)
@@ -285,7 +286,7 @@ func (suite *ApiTestSuite) TestRegisterUser() {
 			userName:     validUsername,
 			userEmail:    validEmail,
 			userPassword: test.ValidPassword,
-			userLanguage: 1,
+			userLanguage: "1",
 			wantCode:     http.StatusBadRequest,
 			wantString:   "body contains incorrect JSON type for field ",
 		},
@@ -294,16 +295,16 @@ func (suite *ApiTestSuite) TestRegisterUser() {
 			userName:     validUsername,
 			userEmail:    validEmail,
 			userPassword: test.ValidPassword,
-			userLanguage: "invalidLanguage",
+			userLanguage: -2,
 			wantCode:     http.StatusBadRequest,
-			wantString:   "no matching record found",
+			wantString:   "language id invalid",
 		},
 		{
 			name:         "Invalid Email",
 			userName:     validUsername,
 			userEmail:    "invalidEmail",
 			userPassword: test.ValidPassword,
-			userLanguage: test.ValidLanguage,
+			userLanguage: test.ValidLanguageId,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantString:   "This field must be a valid email address",
 		},
@@ -312,7 +313,7 @@ func (suite *ApiTestSuite) TestRegisterUser() {
 			userName:     validUsername,
 			userEmail:    suite.apiUser.Email,
 			userPassword: test.ValidPassword,
-			userLanguage: test.ValidLanguage,
+			userLanguage: test.ValidLanguageId,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantString:   "a user with this email address already exists",
 		},
@@ -321,7 +322,7 @@ func (suite *ApiTestSuite) TestRegisterUser() {
 			userName:     suite.apiUser.Name,
 			userEmail:    validEmail,
 			userPassword: test.ValidPassword,
-			userLanguage: test.ValidLanguage,
+			userLanguage: test.ValidLanguageId,
 			wantCode:     http.StatusUnprocessableEntity,
 			wantString:   "a user with this username already exists",
 		},
@@ -329,10 +330,10 @@ func (suite *ApiTestSuite) TestRegisterUser() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			data := map[string]interface{}{
-				"name":     tt.userName,
-				"email":    tt.userEmail,
-				"password": tt.userPassword,
-				"language": tt.userLanguage,
+				"name":       tt.userName,
+				"email":      tt.userEmail,
+				"password":   tt.userPassword,
+				"languageId": tt.userLanguage,
 			}
 
 			jsonData, err := json.Marshal(data)

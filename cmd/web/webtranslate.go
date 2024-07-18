@@ -55,7 +55,7 @@ func (app *web) translateTextPost(w http.ResponseWriter, r *http.Request) {
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
-
+		data.Languages = app.getLang(w, r)
 		app.render(w, r, http.StatusUnprocessableEntity, "translate.gohtml", data)
 		return
 	}
