@@ -1,33 +1,65 @@
 package validator
 
 import (
-	"regexp"
+	"net/mail"
 	"strings"
 	"unicode/utf8"
 )
 
-var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-
-// Add a new NonFieldErrors []string field to the struct, which we will use to
+// Validator Add a new NonFieldErrors []string field to the struct, which we will use to
 // hold any validation errors which are not related to a specific form field.
 type Validator struct {
 	NonFieldErrors []string
 	FieldErrors    map[string]string
 }
 
-// Update the Valid() method to also check that the NonFieldErrors slice is
+// New is a helper which creates a new Validator instance with an empty errors map.
+func New() *Validator {
+	return &Validator{FieldErrors: make(map[string]string)}
+}
+
+// Valid Update the Valid() method to also check that the NonFieldErrors slice is
 // empty.
 func (v *Validator) Valid() bool {
 	return len(v.FieldErrors) == 0 && len(v.NonFieldErrors) == 0
 }
 
-// Create an AddNonFieldError() helper for adding error messages to the new
+// In returns true if a specific value is in a list of strings.
+func In(value string, list ...string) bool {
+	for i := range list {
+		if value == list[i] {
+			return true
+		}
+	}
+	return false
+}
+
+// CheckField adds an error message to the FieldErrors map only if a
+// validation check is not 'ok'.
+func (v *Validator) CheckField(ok bool, key, message string) {
+	if !ok {
+		v.AddFieldError(key, message)
+	}
+}
+
+// Matches returns true if a value matches a provided compiled regular
+// expression pattern.
+//func Matches(value string, rx *regexp.Regexp) bool {
+//	return rx.MatchString(value)
+//}
+
+func (v *Validator) IsEmail(email string) bool {
+	emailAddress, err := mail.ParseAddress(email)
+	return err == nil && emailAddress.Address == email
+}
+
+// AddNonFieldError Create an AddNonFieldError() helper for adding error messages to the new
 // NonFieldErrors slice.
 func (v *Validator) AddNonFieldError(message string) {
 	v.NonFieldErrors = append(v.NonFieldErrors, message)
 }
 
-// AddFieldError() adds an error message to the FieldErrors map (so long as no
+// AddFieldError adds an error message to the FieldErrors map (so long as no
 // entry already exists for the given key).
 func (v *Validator) AddFieldError(key, message string) {
 	// Note: We need to initialize the map first, if it isn't already
@@ -41,44 +73,33 @@ func (v *Validator) AddFieldError(key, message string) {
 	}
 }
 
-// CheckField() adds an error message to the FieldErrors map only if a
-// validation check is not 'ok'.
-func (v *Validator) CheckField(ok bool, key, message string) {
-	if !ok {
-		v.AddFieldError(key, message)
-	}
-}
-
-// NotBlank() returns true if a value is not an empty string.
-func NotBlank(value string) bool {
+// NotBlank returns true if a value is not an empty string.
+func (v *Validator) NotBlank(value string) bool {
 	return strings.TrimSpace(value) != ""
 }
 
-// MaxChars() returns true if a value contains no more than n characters.
-func MaxChars(value string, n int) bool {
-	return utf8.RuneCountInString(value) <= n
+// NotNil returns true if a value is not nill.
+func (v *Validator) NotNil(value any) bool {
+	return value != nil
 }
 
-// PermittedInt() returns true if a value is in a list of permitted integers.
-// Replace PermittedInt() with a generic PermittedValue() function. This returns
-// true if the value of type T equals one of the variadic permittedValues
-// parameters.
-func PermittedValue[T comparable](value T, permittedValues ...T) bool {
-	for i := range permittedValues {
-		if value == permittedValues[i] {
+// MinChars returns true if a value contains at least n characters.
+func (v *Validator) MinChars(value string, n int) bool {
+	return utf8.RuneCountInString(value) >= n
+}
+
+// Matches returns true if a value matches a provided compiled regular
+// expression pattern.
+//func (v *Validator) Matches(value string, rx *regexp.Regexp) bool {
+//	return rx.MatchString(value)
+//}
+
+// In returns true if a specific value is in a list of strings.
+func (v *Validator) In(value string, list ...string) bool {
+	for i := range list {
+		if value == list[i] {
 			return true
 		}
 	}
 	return false
-}
-
-// MinChars() returns true if a value contains at least n characters.
-func MinChars(value string, n int) bool {
-	return utf8.RuneCountInString(value) >= n
-}
-
-// Matches() returns true if a value matches a provided compiled regular
-// expression pattern.
-func Matches(value string, rx *regexp.Regexp) bool {
-	return rx.MatchString(value)
 }

@@ -26,15 +26,14 @@
         <input type='password' name='password'>
     </div>
     <div>
-        <label>Language:</label>
-        <input list='languages' name='language'>
-        <datalist id='languages'>
+        <label>Language to learn:</label>
+        <select name="language_id" id="language_id">
             {{if .Languages}}
-            {{range .Languages}}
-            <option value="{{.Language}}"></option>
+                {{range .Languages}}
+                    <option value="{{.ID}}">{{.Language}}</option>
+                {{end}}
             {{end}}
-            {{end}}
-        </datalist>
+        </select>
     </div>
     <div>
         <input type='submit' value='Signup'>

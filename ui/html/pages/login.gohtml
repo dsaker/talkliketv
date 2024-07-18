@@ -7,22 +7,48 @@
     {{range .Form.NonFieldErrors}}
         <div class='error'>{{.}}</div>
     {{end}}
-    <div>
-        <label>Email:</label>
-        {{with .Form.FieldErrors.email}}
-            <label class='error'>{{.}}</label>
-        {{end}}
-        <input type='email' name='email' value='{{.Form.Email}}'>
-    </div>
-    <div>
-        <label>Password:</label>
-        {{with .Form.FieldErrors.password}}
-            <label class='error'>{{.}}</label>
-        {{end}}
-        <input type='password' name='password'>
-    </div>
-    <div>
+            <div>
+                <label>Email:</label>
+                {{with .Form.FieldErrors.email}}
+                    <label class='error'>{{.}}</label>
+                {{end}}
+                <input type='email' name='email' value='{{.Form.Email}}'>
+            </div>
+            <div>
+                <label>Password:</label>
+                {{with .Form.FieldErrors.password}}
+                    <label class='error'>{{.}}</label>
+                {{end}}
+                <input type='password' name='password'>
+            </div>
+        <div>
         <input type='submit' value='Login'>
     </div>
 </form>
+<div>
+    <!-- Trigger/Open The Modal -->
+    <button id="myBtn">Forgot Password</button>
+</div>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <form action='/tokens/password-reset' method='POST' novalidate>
+            <!-- Include the CSRF token -->
+            <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+            <div>
+                <label>Email:</label>
+                <input type='email' name='email'>
+            </div>
+            <div>
+                <input type='submit' value='Send Token'>
+            </div>
+        </form>
+    </div>
+
+</div>
+<script src="/static/js/modal.js" type="text/javascript"></script>
 {{end}}

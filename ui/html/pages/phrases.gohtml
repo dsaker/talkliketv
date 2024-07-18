@@ -12,8 +12,8 @@
         <table>
             <tr>
                 <td>
-                    <input type='hidden' id='phraseHint{{$index}}' value='{{.Hint}}'>
-                    <input id="solution{{$index}}" type="text" placeholder="solución">
+                    <input class='phrase_input' type='hidden' id='phraseHint{{$index}}' value='{{.Hint}}'>
+                    <input class='phrase_input' id="solution{{$index}}" type="text" placeholder="solución">
                 </td>
             </tr>
         </table>
@@ -26,6 +26,7 @@
              <tr>
                  <td><button id="hintButton" name="hintButton">Hint</button></td>
                  <td><button id="showButton" name="showButton">Show</button></td>
+                 <td><button name="rejectButton">Repeat</button></td>
                  <td>
                      <form name='phraseCorrectForm' novalidate>
                          <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
@@ -34,7 +35,6 @@
                          <button>Accept</button>
                      </form>
                  </td>
-                 <td><button name="rejectButton">Repeat</button></td>
              </tr>
          </table>
     </div>
@@ -44,6 +44,18 @@
     <table>
         <tr>
             <td><button id="startButton">Start</button></td>
+        </tr>
+    </table>
+    <table>
+        <tr>
+            <td>
+                <form action='/user/language/switch' method='POST' id='switchSliderForm'>
+                    <label class="switch" >
+                        <input type="checkbox" name='csrf_token' value='{{.CSRFToken}}' onclick="this.form.submit()">
+                        <span class="slider round"></span>
+                    </label> Switch
+                </form>
+            </td><td>{{.Movie.Title}}</td><td>{{.Sum}}/{{.Total}}</td>
         </tr>
     </table>
     <br>

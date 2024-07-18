@@ -1,0 +1,21 @@
+{{define "title"}}Change Language{{end}}
+
+{{define "main"}}
+<h2>Change Language</h2>
+<form action='/account/language/update' method='POST' novalidate>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    <div>
+        <label>Language:</label>
+        <select name="language_id" id="language_id">
+            {{if .Languages}}
+                {{range .Languages}}
+                    <option value="{{.ID}}">{{.Language}}</option>
+                {{end}}
+            {{end}}
+        </select>
+    </div>
+    <div>
+        <input type='submit' value='Change language'>
+    </div>
+</form>
+{{end}}

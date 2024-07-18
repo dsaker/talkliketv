@@ -1,14 +1,31 @@
 package assert
 
 import (
+	"cmp"
 	"strings"
 	"testing"
 )
 
-func Equal[T comparable](t *testing.T, actual, expected T) {
+func Equal[E comparable](t *testing.T, actual, expected E) {
 	t.Helper()
 
 	if actual != expected {
+		t.Errorf("got: %v; want: %v", actual, expected)
+	}
+}
+
+func GreaterThan[E cmp.Ordered](t *testing.T, actual, expected E) {
+	t.Helper()
+
+	if actual <= expected {
+		t.Errorf("got: %v; want: %v", actual, expected)
+	}
+}
+
+func NotEqual[T comparable](t *testing.T, actual, expected T) {
+	t.Helper()
+
+	if actual == expected {
 		t.Errorf("got: %v; want: %v", actual, expected)
 	}
 }

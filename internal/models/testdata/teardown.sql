@@ -1,6 +1,0 @@
-DROP TABLE users_phrases CASCADE;
-DROP TABLE users CASCADE ;
-DROP TABLE sessions CASCADE ;
-DROP TABLE movies CASCADE ;
-DROP TABLE languages CASCADE ;
-DROP TABLE phrases CASCADE ;
