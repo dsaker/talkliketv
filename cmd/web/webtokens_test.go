@@ -13,7 +13,7 @@ func (suite *WebNoLoginTestSuite) TestCreatePasswordResetToken() {
 
 	const (
 		resetUser      = "passwordReset"
-		resetUserEmail = resetUser + test.TestEmail
+		resetUserEmail = resetUser + test.ValidEmail
 		wantTag        = "<form action='/user/login' method='POST' novalidate>"
 	)
 	signup(t, suite.ts, resetUser)
@@ -83,7 +83,7 @@ func (suite *WebNoLoginTestSuite) TestCreatePasswordResetTokenNotActivated() {
 
 	t.Run("Password Reset Not Activated", func(t *testing.T) {
 		form := url.Values{}
-		form.Add("email", notActiveUser+test.TestEmail)
+		form.Add("email", notActiveUser+test.ValidEmail)
 		form.Add("csrf_token", suite.validCSRFToken)
 
 		code, _, body := suite.ts.PostForm(t, "/tokens/password-reset", form)

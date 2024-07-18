@@ -12,7 +12,7 @@ Help()
    echo "You must first export your postgres connection string in form: "
    echo "export TALKTV_DB_DSN=postgres://<user>:<password>@localhost/<host>?sslmode=disable"
    echo
-   echo "Syntax: uploadcsv [-f|t|l|h]"
+   echo "Syntax: uploadtsv [-f|t|l|h]"
    echo "options:"
    echo "f     The path of input file to be uploaded."
    echo "t     The title of the phrases to be uploaded."

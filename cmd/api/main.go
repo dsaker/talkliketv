@@ -5,6 +5,7 @@ import (
 	"expvar"
 	"flag"
 	"fmt"
+	_ "github.com/lib/pq"
 	"os"
 	"runtime"
 	"talkliketv.net/internal/application"
@@ -13,8 +14,6 @@ import (
 	"talkliketv.net/internal/mailer"
 	"talkliketv.net/internal/models"
 	"time"
-
-	_ "github.com/lib/pq"
 )
 
 var (
@@ -23,10 +22,10 @@ var (
 
 const version = "1.0.0"
 
-// Include a sync.WaitGroup in the apiApplication struct. The zero-value for a
+// Include a sync.WaitGroup in the api struct. The zero-value for a
 // sync.WaitGroup type is a valid, usable, sync.WaitGroup with a 'counter' value of 0,
 // so we don't need to do anything else to initialize it before we can use it.
-type apiApplication struct {
+type api struct {
 	application.Application
 }
 
@@ -83,7 +82,7 @@ func main() {
 		}))
 	}
 
-	app := &apiApplication{
+	app := &api{
 		application.Application{
 			Config: cfg,
 			Logger: logger,

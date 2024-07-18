@@ -27,8 +27,9 @@ Help()
 
 # function to count words
 count_words() {
+  # if word count of line is greater than 2 return true
   wordcount=$(wc -w <<< "$1")
-  if [[ $wordcount -gt 3 ]]; then
+  if [[ $wordcount -gt 2 ]]; then
     return 0
   fi
   return 1
@@ -48,6 +49,7 @@ while getopts ":hi:" opt; do
    esac
 done
 
+# if filepath is missing print missing -i (input)
 if [ -z "$filepath" ]; then
   echo "Missing -i" >&2
   exit 1
@@ -85,11 +87,12 @@ do
     # if next line starts with letter then combine both lines
     if [[ $nextline =~ ^[A-Za-z] ]] ; then
       # remove '\n' from $line and combine with nextline
-      newline="${line%?} $nextline"
+      newline="${line//[$'\t\r\n']} $nextline"
       if count_words "$newline"; then
         echo "$newline" >> "$outfile"
       fi
     else
+      # if count_words() returns true output line to output file
       if count_words "$line" ; then
         echo "$line" >> "$outfile"
       fi

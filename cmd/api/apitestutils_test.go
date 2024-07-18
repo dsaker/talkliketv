@@ -33,7 +33,7 @@ func init() {
 
 type ApiTestSuite struct {
 	suite.Suite
-	app       *apiApplication
+	app       *api
 	ts        *test.TestServer
 	testDb    *test.TestDatabase
 	authToken string
@@ -62,7 +62,7 @@ type ApiNoLoginTestSuite struct {
 	suite.Suite
 	ts     *test.TestServer
 	testDb *test.TestDatabase
-	app    *apiApplication
+	app    *api
 }
 
 func (suite *ApiNoLoginTestSuite) SetupSuite() {
@@ -75,18 +75,18 @@ func (suite *ApiNoLoginTestSuite) TearDownSuite() {
 	defer suite.ts.Close()
 }
 
-func TestTestSuite(t *testing.T) {
+func TestApiNoLoginTestSuite(t *testing.T) {
 	suite.Run(t, new(ApiNoLoginTestSuite))
 }
 
 func register(prefix string, t *testing.T, ts *test.TestServer) *models.User {
 
-	email := prefix + test.TestEmail
+	email := prefix + test.ValidEmail
 	data := map[string]interface{}{
-		"name":     prefix + "ApiUser",
-		"password": test.ValidPassword,
-		"email":    email,
-		"language": test.ValidLanguage,
+		"name":       prefix + "ApiUser",
+		"password":   test.ValidPassword,
+		"email":      email,
+		"languageId": test.ValidLanguageId,
 	}
 
 	jsonData, err := json.Marshal(data)
@@ -130,7 +130,7 @@ func chooseMovie(t *testing.T, ts *test.TestServer, authToken string) {
 func getAuthToken(prefix string, t *testing.T, ts *test.TestServer) string {
 	data := map[string]interface{}{
 		"password": test.ValidPassword,
-		"email":    prefix + test.TestEmail,
+		"email":    prefix + test.ValidEmail,
 	}
 
 	jsonData, err := json.Marshal(data)
@@ -156,14 +156,14 @@ func getAuthToken(prefix string, t *testing.T, ts *test.TestServer) string {
 	return authToken.Token.Plaintext
 }
 
-func newTestApplication() (*apiApplication, *test.TestDatabase) {
+func newTestApplication() (*api, *test.TestDatabase) {
 	testDb := test.SetupTestDatabase()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	flag.Parse()
 
-	return &apiApplication{
+	return &api{
 		application.Application{
 			Config: cfg,
 			Logger: logger,

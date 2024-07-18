@@ -23,7 +23,7 @@ var (
 	version   string
 )
 
-type webApplication struct {
+type web struct {
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
@@ -82,7 +82,7 @@ func main() {
 	//// unsecure HTTP connection).
 	sessionManager.Cookie.Secure = true
 
-	app := &webApplication{
+	app := &web{
 		templateCache,
 		formDecoder,
 		sessionManager,

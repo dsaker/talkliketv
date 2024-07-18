@@ -6,14 +6,14 @@ import (
 	"runtime/debug"
 )
 
-func (app *webApplication) clientError(w http.ResponseWriter, r *http.Request, status int, err error) {
+func (app *web) clientError(w http.ResponseWriter, r *http.Request, status int, err error) {
 	if err != nil {
 		app.logError(r, err)
 	}
 	http.Error(w, http.StatusText(status), status)
 }
 
-func (app *webApplication) logError(r *http.Request, err error) {
+func (app *web) logError(r *http.Request, err error) {
 	// Use the PrintError() method to log the error message, and include the current
 	// request method and URL as properties in the log entry.
 	app.Logger.PrintError(err, map[string]string{
@@ -22,7 +22,7 @@ func (app *webApplication) logError(r *http.Request, err error) {
 	})
 }
 
-func (app *webApplication) serverError(w http.ResponseWriter, r *http.Request, err error) {
+func (app *web) serverError(w http.ResponseWriter, r *http.Request, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 	app.logError(r, err)
 
@@ -35,20 +35,20 @@ func (app *webApplication) serverError(w http.ResponseWriter, r *http.Request, e
 
 // The notFound() method will be used to send a 404 Not Found status code and
 // JSON response to the client.
-func (app *webApplication) notFound(w http.ResponseWriter, r *http.Request, err error) {
+func (app *web) notFound(w http.ResponseWriter, r *http.Request, err error) {
 	app.clientError(w, r, http.StatusNotFound, err)
 }
 
 // The methodNotAllowedResponse() method will be used to send a 405 Method Not Allowed
 // status code and JSON response to the client.
-func (app *webApplication) methodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
+func (app *web) methodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
 	app.clientError(w, r, http.StatusMethodNotAllowed, nil)
 }
 
-func (app *webApplication) invalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
+func (app *web) invalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
 	app.clientError(w, r, http.StatusUnauthorized, nil)
 }
 
-func (app *webApplication) editConflictResponse(w http.ResponseWriter, r *http.Request, err error) {
+func (app *web) editConflictResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.clientError(w, r, http.StatusConflict, err)
 }

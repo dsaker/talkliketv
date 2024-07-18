@@ -78,6 +78,11 @@ func (v *Validator) NotBlank(value string) bool {
 	return strings.TrimSpace(value) != ""
 }
 
+// NotNil returns true if a value is not nill.
+func (v *Validator) NotNil(value any) bool {
+	return value != nil
+}
+
 // MinChars returns true if a value contains at least n characters.
 func (v *Validator) MinChars(value string, n int) bool {
 	return utf8.RuneCountInString(value) >= n

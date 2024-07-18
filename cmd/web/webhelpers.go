@@ -14,7 +14,7 @@ import (
 // Define an envelope type.
 type envelope map[string]interface{}
 
-func (app *webApplication) render(w http.ResponseWriter, r *http.Request, status int, page string, data *templateData) {
+func (app *web) render(w http.ResponseWriter, r *http.Request, status int, page string, data *templateData) {
 	ts, ok := app.templateCache[page]
 	if !ok {
 		err := fmt.Errorf("the template %s does not exist", page)
@@ -48,7 +48,7 @@ func (app *webApplication) render(w http.ResponseWriter, r *http.Request, status
 	}
 }
 
-func (app *webApplication) newTemplateData(r *http.Request) *templateData {
+func (app *web) newTemplateData(r *http.Request) *templateData {
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 	var email string
 	if userId != 0 {
@@ -69,7 +69,7 @@ func (app *webApplication) newTemplateData(r *http.Request) *templateData {
 
 // Create a new decodePostForm() helper method. The second parameter here, dst,
 // is the target destination that we want to decode the form data into.
-func (app *webApplication) decodePostForm(r *http.Request, dst any) error {
+func (app *web) decodePostForm(r *http.Request, dst any) error {
 	// Call ParseForm() on the request, in the same way that we did in our
 	// createSnippetPost handler.
 	err := r.ParseForm()
@@ -98,7 +98,7 @@ func (app *webApplication) decodePostForm(r *http.Request, dst any) error {
 	return nil
 }
 
-func (app *webApplication) isAuthenticated(r *http.Request) bool {
+func (app *web) isAuthenticated(r *http.Request) bool {
 	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
 	if !ok {
 		return false
@@ -108,7 +108,7 @@ func (app *webApplication) isAuthenticated(r *http.Request) bool {
 }
 
 // Change the data parameter to have the type envelope instead of interface{}.
-func (app *webApplication) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
+func (app *web) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err

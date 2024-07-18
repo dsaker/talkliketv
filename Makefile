@@ -54,6 +54,11 @@ db/migrations/up: confirm
 	@echo 'Running up migrations...'
 	migrate -path ./migrations -database ${TALKTV_DB_DSN} up
 
+## db/dump: pg_dump current talktv database
+db/dump: confirm
+	pg_dump --dbname=${TALKTV_DB_DSN} -F t >> internal/test/testdata/talktv_db_$(shell date +%s).tar
+
+
 # ==================================================================================== #
 # QUALITY CONTROL
 # ==================================================================================== #

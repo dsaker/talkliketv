@@ -4,18 +4,18 @@ import (
 	"net/http"
 )
 
-func (app *webApplication) home(w http.ResponseWriter, r *http.Request) {
+func (app *web) home(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 
 	app.render(w, r, http.StatusOK, "home.gohtml", data)
 }
 
-func (app *webApplication) about(w http.ResponseWriter, r *http.Request) {
+func (app *web) about(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	app.render(w, r, http.StatusOK, "about.gohtml", data)
 }
 
-func (app *webApplication) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
+func (app *web) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	env := envelope{
 		"status": "available",
 		"system_info": map[string]string{

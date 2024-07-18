@@ -9,11 +9,11 @@ import (
 )
 
 type Movie struct {
-	ID      int    `json:"id"`
-	Title   string `json:"title"`
-	Year    int32  `json:"year,omitempty"`
-	NumSubs string `json:"num_subs"`
-	Mp3     bool   `json:"mp3"`
+	ID         int    `json:"id"`
+	Title      string `json:"title"`
+	NumSubs    int    `json:"num_subs"`
+	LanguageId int    `json:"language_id"`
+	Mp3        bool   `json:"mp3"`
 }
 
 type MovieModel struct {
@@ -81,7 +81,7 @@ func (m *MovieModel) Get(id int) (*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, "SELECT id, title, year, num_subs FROM movies WHERE  id = $1", id).Scan(&v.ID, &v.Title, &v.Year, &v.NumSubs)
+	err := m.DB.QueryRowContext(ctx, "SELECT id, title, num_subs FROM movies WHERE  id = $1", id).Scan(&v.ID, &v.Title, &v.NumSubs)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -94,8 +94,37 @@ func (m *MovieModel) Get(id int) (*Movie, error) {
 	return v, nil
 }
 
+func (m *MovieModel) Insert(movie *Movie) (int, error) {
+	query := `
+        INSERT INTO movies (title, num_subs, language_id) 
+        VALUES ($1, $2, $3)
+        RETURNING id, title, num_subs, language_id`
+
+	args := []interface{}{movie.Title, movie.NumSubs, movie.LanguageId}
+
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
+		&movie.ID,
+		&movie.Title,
+		&movie.NumSubs,
+		&movie.LanguageId)
+
+	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "users_title_key"`:
+			return movie.ID, ErrDuplicateTitle
+		default:
+			return movie.ID, err
+		}
+	}
+
+	return movie.ID, nil
+}
+
 func (m *MovieModel) All(languageId int, title string, filters Filters, mp3 int) ([]*Movie, Metadata, error) {
-	stmt := `SELECT count(*) OVER(), id, title, similarity(title, $1) AS similarity, year, num_subs, mp3
+	stmt := `SELECT count(*) OVER(), id, title, similarity(title, $1) AS similarity, num_subs, mp3
 		   FROM movies
 		   WHERE language_id = $2`
 
@@ -135,7 +164,7 @@ func (m *MovieModel) All(languageId int, title string, filters Filters, mp3 int)
 
 	for rows.Next() {
 		v := &Movie{}
-		err = rows.Scan(&totalRecords, &v.ID, &v.Title, &similarity, &v.Year, &v.NumSubs, &v.Mp3)
+		err = rows.Scan(&totalRecords, &v.ID, &v.Title, &similarity, &v.NumSubs, &v.Mp3)
 
 		if err != nil {
 			return nil, Metadata{}, err

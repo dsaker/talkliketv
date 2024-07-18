@@ -10,6 +10,7 @@ import (
 
 type Language struct {
 	ID       int    `json:"id"`
+	Tag      string `json:"tag"`
 	Language string `json:"language"`
 }
 
@@ -44,14 +45,39 @@ func (m *LanguageModel) GetId(language string) (int, error) {
 	return id, nil
 }
 
-func (m *LanguageModel) All() ([]*Language, error) {
-	// Write the SQL statement we want to execute.
-	stmt := `SELECT id, language FROM languages where id > 0`
+func (m *LanguageModel) Get(id int) (*Language, error) {
+	v := &Language{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.QueryContext(ctx, stmt)
+	err := m.DB.QueryRowContext(ctx, "SELECT id, language, tag FROM languages WHERE  id = $1", id).Scan(&v.ID, &v.Language, &v.Tag)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+
+	return v, nil
+}
+
+func (m *LanguageModel) All(inUse bool) ([]*Language, error) {
+
+	var query string
+	if inUse {
+		query = `SELECT id, language, tag FROM languages where id in ( 
+			SELECT DISTINCT language_id FROM movies where language_id > 0)`
+	} else {
+		query = `SELECT id, language, tag FROM languages where id > 0`
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +89,7 @@ func (m *LanguageModel) All() ([]*Language, error) {
 	for rows.Next() {
 		l := &Language{}
 
-		err = rows.Scan(&l.ID, &l.Language)
+		err = rows.Scan(&l.ID, &l.Language, &l.Tag)
 		if err != nil {
 			return nil, err
 		}

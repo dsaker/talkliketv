@@ -64,7 +64,7 @@ func (suite *ApiTestSuite) TestApiPhraseCorrect() {
 func (suite *ApiNoLoginTestSuite) TestListPhrasesHandler() {
 	t := suite.T()
 	prefix := "listphrases"
-	email := prefix + test.TestEmail
+	email := prefix + test.ValidEmail
 	register(prefix, t, suite.ts)
 	activate(email, suite.app.Models)
 
@@ -87,6 +87,6 @@ func (suite *ApiNoLoginTestSuite) TestListPhrasesHandler() {
 		chooseMovie(t, suite.ts, authToken)
 		code, _, body = suite.ts.Request(t, nil, "/v1/phrases", http.MethodGet, authToken)
 		assert.Equal(t, code, http.StatusOK)
-		assert.StringContains(t, body, "NothingToSeeHereS01E01")
+		assert.StringContains(t, body, "MissAdrenalineS01E02")
 	})
 }

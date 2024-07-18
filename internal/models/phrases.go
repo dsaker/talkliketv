@@ -163,3 +163,23 @@ func (m *PhraseModel) PercentageDone(userId int, movieId int, flipped bool) (int
 
 	return sum, total, nil
 }
+
+func (m PhraseModel) Insert(phrase *Phrase) error {
+
+	query := `
+        INSERT INTO phrases (movie_id, phrase, translates, phrase_hint, translates_hint) 
+        VALUES ($1, $2, $3, $4, $5)`
+
+	args := []interface{}{phrase.MovieId, phrase.Phrase, phrase.Translates, phrase.PhraseHint, phrase.TranslatesHint}
+
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, query, args...)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

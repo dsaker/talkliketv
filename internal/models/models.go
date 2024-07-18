@@ -16,6 +16,8 @@ var (
 	ErrDuplicateUserName = errors.New("models: duplicate name")
 
 	ErrEditConflict = errors.New("edit conflict")
+
+	ErrDuplicateTitle = errors.New("models: duplicate title")
 )
 
 type Models struct {

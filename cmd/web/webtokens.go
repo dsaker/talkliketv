@@ -14,7 +14,7 @@ type tokenRequestForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (app *webApplication) createPasswordResetToken(w http.ResponseWriter, r *http.Request) {
+func (app *web) createPasswordResetToken(w http.ResponseWriter, r *http.Request) {
 	user := app.decodeEmail(w, r)
 	if user == nil {
 		return
@@ -40,7 +40,7 @@ func (app *webApplication) createPasswordResetToken(w http.ResponseWriter, r *ht
 	http.Redirect(w, r, "/user/password/reset", http.StatusSeeOther)
 }
 
-func (app *webApplication) createActivationToken(w http.ResponseWriter, r *http.Request) {
+func (app *web) createActivationToken(w http.ResponseWriter, r *http.Request) {
 	user := app.decodeEmail(w, r)
 	if user == nil {
 		return
@@ -67,7 +67,7 @@ func (app *webApplication) createActivationToken(w http.ResponseWriter, r *http.
 	http.Redirect(w, r, "/user/password/reset", http.StatusSeeOther)
 }
 
-func (app *webApplication) decodeEmail(w http.ResponseWriter, r *http.Request) *models.User {
+func (app *web) decodeEmail(w http.ResponseWriter, r *http.Request) *models.User {
 	var form tokenRequestForm
 
 	err := app.decodePostForm(r, &form)

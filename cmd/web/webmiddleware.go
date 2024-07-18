@@ -21,7 +21,7 @@ func secureHeaders(next http.Handler) http.Handler {
 	})
 }
 
-func (app *webApplication) logRequest(next http.Handler) http.Handler {
+func (app *web) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.Logger.PrintInfo(fmt.Sprintf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI()), nil)
 
@@ -29,7 +29,7 @@ func (app *webApplication) logRequest(next http.Handler) http.Handler {
 	})
 }
 
-func (app *webApplication) recoverPanic(next http.Handler) http.Handler {
+func (app *web) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Create a deferred function (which will always be run in the event
 		// of a panic as Go unwinds the stack).
@@ -49,7 +49,7 @@ func (app *webApplication) recoverPanic(next http.Handler) http.Handler {
 	})
 }
 
-func (app *webApplication) requireAuthentication(next http.Handler) http.Handler {
+func (app *web) requireAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !app.isAuthenticated(r) {
 			// Add the path that the user is trying to access to their session
@@ -78,7 +78,7 @@ func noSurf(next http.Handler) http.Handler {
 	return csrfHandler
 }
 
-func (app *webApplication) authenticate(next http.Handler) http.Handler {
+func (app *web) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Retrieve the authenticatedUserID value from the session using the
 		// GetInt() method. This will return the zero value for an int (0) if no

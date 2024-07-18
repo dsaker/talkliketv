@@ -21,8 +21,8 @@ type User struct {
 	HashedPassword []byte    `json:"-"`
 	Activated      bool      `json:"activated"`
 	Version        int       `json:"-"`
-	MovieId        int       `json:"movieId"`
-	LanguageId     int       `json:"languageId"`
+	MovieId        int       `json:"movie_id"`
+	LanguageId     int       `json:"language_id"`
 	Flipped        bool      `json:"flipped"`
 }
 
@@ -36,7 +36,7 @@ type UserSignupForm struct {
 	Name                string `form:"name"`
 	Email               string `form:"email"`
 	Password            string `form:"password"`
-	Language            string `form:"language"`
+	LanguageId          int    `form:"language_id"`
 	validator.Validator `form:"-"`
 }
 

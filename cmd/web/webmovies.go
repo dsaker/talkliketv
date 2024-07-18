@@ -10,7 +10,7 @@ import (
 	"talkliketv.net/ui"
 )
 
-func (app *webApplication) moviesView(w http.ResponseWriter, r *http.Request) {
+func (app *web) moviesView(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
@@ -50,7 +50,7 @@ func (app *webApplication) moviesView(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "movies.gohtml", data)
 }
 
-func (app *webApplication) moviesMp3(w http.ResponseWriter, r *http.Request) {
+func (app *web) moviesMp3(w http.ResponseWriter, r *http.Request) {
 	id, err := models.ReadIDParam(r)
 	if err != nil {
 		app.clientError(w, r, http.StatusBadRequest, err)
@@ -84,7 +84,7 @@ func (app *webApplication) moviesMp3(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *webApplication) moviesChoose(w http.ResponseWriter, r *http.Request) {
+func (app *web) moviesChoose(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
