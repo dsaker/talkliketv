@@ -18,6 +18,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.32.0
 	github.com/tomasen/realip v0.0.0-20180522021738-f0c99a92ddce
 	golang.org/x/crypto v0.25.0
+	golang.org/x/sync v0.7.0
 	golang.org/x/text v0.16.0
 	golang.org/x/time v0.5.0
 )

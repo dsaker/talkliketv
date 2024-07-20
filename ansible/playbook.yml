@@ -7,11 +7,20 @@
   roles:
     - role: postgres
 
-#- name: Install Caddy
-#  hosts: all
-#  become: True
-#  gather_facts: yes
-#  tags:
-#    - caddy
-#  roles:
-#    - role: caddy
+- name: Install Caddy
+  hosts: all
+  become: True
+  gather_facts: yes
+  tags:
+    - caddy
+  roles:
+    - role: caddy
+
+- name: Install Talkliketv
+  hosts: all
+  become: True
+  gather_facts: yes
+  tags:
+    - talkliketv
+  roles:
+    - role: talkliketv

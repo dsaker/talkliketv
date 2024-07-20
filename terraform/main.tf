@@ -1,3 +1,7 @@
+resource "google_compute_address" "static" {
+  name = "talkliketv-ipv4-address"
+}
+
 resource "google_compute_network" "vpc_network" {
   name                    = "talkliketv-vpc-network"
   auto_create_subnetworks = false
@@ -14,10 +18,10 @@ resource "google_compute_subnetwork" "subnetwork_talkliketv" {
 # Create a single Compute Engine instance
 resource "google_compute_instance" "talkliketv" {
   name         = "talkliketv-vm"
-  machine_type = "f1-micro"
+  machine_type = "e2-small"
   zone         = "us-west1-a"
-  tags         = ["ssh"]
-
+  tags         = ["ssh-talkliketv", "https-talkliketv"]
+  allow_stopping_for_update = true
   metadata = {
     ssh-keys = "${var.gce_ssh_user}:${file(var.gce_ssh_pub_key_file)}"
   }
@@ -32,7 +36,7 @@ resource "google_compute_instance" "talkliketv" {
     subnetwork = google_compute_subnetwork.subnetwork_talkliketv.id
 
     access_config {
-      # Include this section to give the VM an external IP address
+      nat_ip = google_compute_address.static.address
     }
   }
 
@@ -52,7 +56,20 @@ resource "google_compute_firewall" "talkliketv_vpc_network_allow_ssh" {
     ports    = ["22"]
   }
 
-  target_tags = ["ssh"]
+  target_tags = ["ssh-talkliketv"]
+  source_ranges = ["0.0.0.0/0"]
+}
+
+resource "google_compute_firewall" "talkliketv_vpc_network_allow_https" {
+  name    = "talkliketv-vpc-network-allow-https"
+  network = google_compute_network.vpc_network.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["443"]
+  }
+
+  target_tags = ["https-talkliketv"]
   source_ranges = ["0.0.0.0/0"]
 }
 

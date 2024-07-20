@@ -63,13 +63,17 @@ and extract
 ### To Do
 
 - add comments
+- add text translate tests
+- openapi3 spec (Huma)
+- add observability and monitoring
+- use gmail for smtp
 - create native and learning lang
 - GetAllMovies when not signed in
 - delete account
 - password reset web
-- add comments
-- connect to google language translator
 
 ### Setup Google Cloud Translate
 
 https://cloud.google.com/translate/docs/setup
+https://cloud.google.com/docs/authentication/provide-credentials-adc#local-dev
+https://cloud.google.com/docs/authentication/provide-credentials-adc#attached-sa

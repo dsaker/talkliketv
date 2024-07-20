@@ -4,15 +4,14 @@
   user:
     name: "{{ web_user }}"  # Username
     state: present  # Ensure the user is present
-    createhome: no  # Create the user's home directory
+    createhome: yes  # Create the user's home directory
     shell: /usr/sbin/nologin
     append: yes
-  become: true
 
 - name: Copy talkliketv binary to server
   copy:
-    src: ~/
-    dest: /etc/systemd/system/
+    src: ../../../bin/linux_amd64/web
+    dest: /usr/local/bin/
     owner: "{{ web_user }}"
     group: "{{ web_user }}"
     mode: "744"
@@ -25,6 +24,9 @@
     group: "{{ web_user }}"
     mode: "664"
 
-    echo "TALKLIKETV_DB_DSN='postgres://talkliketv:${DB_PASSWORD}@localhost/talkliketv'" >> /etc/environment
-    echo "SMTP_PASSWORD=${SMTP_PASSWORD}" >> /etc/environment
-    echo "SMTP_USERNAME=${SMTP_USERNAME}" >> /etc/environment
+- name: Echo values to environment file
+  shell: |
+    echo "TALKLIKETV_DB_DSN='postgres://"{{db_user}}":"{{db_password}}"@localhost/"{{db_name}}"'" | sudo tee -a /etc/environment
+    echo "SMTP_PASSWORD='{{smtp_password}}'" | sudo tee -a /etc/environment
+    echo "SMTP_USERNAME='{{smtp_username}}'" | sudo tee -a /etc/environment
+  notify: Restart web

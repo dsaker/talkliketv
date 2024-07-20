@@ -19,8 +19,7 @@ Type=exec
 User=talkliketv
 Group=talkliketv
 EnvironmentFile=/etc/environment
-WorkingDirectory=/home/talkliketv
-ExecStart=/home/talkliketv/web -port=4000 -db-dsn=${TALKLIKETV_DB_DSN} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD} -env=production
+ExecStart=/usr/local/bin/web -port=4000 -db-dsn=${TALKLIKETV_DB_DSN} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD} -env=production
 
 # Automatically restart the service after a 5-second wait if it exits with a non-zero
 # exit code. If it restarts more than 5 times in 600 seconds, then the rate limit we # configured above will be hit and it won't be restarted anymore.

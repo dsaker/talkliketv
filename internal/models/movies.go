@@ -94,6 +94,23 @@ func (m *MovieModel) Get(id int) (*Movie, error) {
 	return v, nil
 }
 
+func (m *MovieModel) Delete(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, "DELETE FROM movies WHERE  id = $1", id)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNoRecord
+		} else {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (m *MovieModel) Insert(movie *Movie) (int, error) {
 	query := `
         INSERT INTO movies (title, num_subs, language_id) 

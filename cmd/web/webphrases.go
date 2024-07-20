@@ -38,6 +38,25 @@ func (app *web) phraseView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(phrases) == 0 {
+		movieId := user.MovieId
+		user.MovieId = -1
+		err = app.Models.Users.Update(user)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+		err = app.Models.Movies.Delete(movieId)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+		app.sessionManager.Put(r.Context(), "flash", "This movie was not uploaded successfully correctly and has been deleted")
+		data := app.newTemplateData(r)
+		app.render(w, r, http.StatusOK, "movies.gohtml", data)
+		return
+	}
+
 	sum, total, err := app.Models.Phrases.PercentageDone(userId, user.MovieId, user.Flipped)
 	if err != nil {
 		app.serverError(w, r, err)

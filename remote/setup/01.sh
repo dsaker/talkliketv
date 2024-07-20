@@ -52,6 +52,7 @@ apt --yes install postgresql
 # Set up the talkliketv DB and create a user account with the password entered earlier.
 sudo -i -u postgres psql -c "CREATE DATABASE talkliketv"
 sudo -i -u postgres psql -d talkliketv -c "CREATE EXTENSION IF NOT EXISTS citext"
+sudo -i -u postgres psql -d talkliketv -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
 sudo -i -u postgres psql -d talkliketv -c "CREATE ROLE talkliketv WITH LOGIN PASSWORD '${DB_PASSWORD}'"
 # Add a DSN for connecting to the talkliketv database to the system-wide environment
 # variables in the /etc/environment file.
@@ -66,6 +67,5 @@ curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --d
 apt update
 apt --yes install caddy
 apt --yes install postgresql-contrib
-sudo -i -u postgres psql -d talkliketv -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
 echo "Script complete! Rebooting..."
 reboot

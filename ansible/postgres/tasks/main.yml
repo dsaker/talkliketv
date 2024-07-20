@@ -9,6 +9,7 @@
       - postgresql
       - acl
       - python3-pip
+      - rsync # installed in case you want to use any of the Makefile commands that use rsync
     state: present
     update_cache: yes
   notify:
@@ -57,10 +58,13 @@
 
 - name: Adds citext extension to the database "{{ db_name }}"
   community.postgresql.postgresql_ext:
-    name: citext
+    name: "{{ item.ext }}"
     db: "{{ db_name }}"
   become: yes
   become_user: postgres
+  with_items:
+    - { ext: citext }
+    - { ext: pg_trgm }
 
 - name: Copy sql file to server
   template:
