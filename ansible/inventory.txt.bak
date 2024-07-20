@@ -1,0 +1,13 @@
+[talkliketv:vars]
+ansible_user = dustysaker
+ansible_private_key_file = /Users/dustysaker/.ssh/id_ed25519
+gcp_public_ip = <output of terraform apply>
+vm_username = talkliketv
+db_user: talkliketv
+db_password: talkliketv_password
+db_name: talkliketv
+smtp_password: <get from mailtrap.io>
+smtp_username: <get from mailtrap.io>
+
+[talkliketv]
+<output of terraform apply>

@@ -1,0 +1,78 @@
+---
+#  vars_files:
+#    - vars.yml
+
+- name: Install packages
+  ansible.builtin.apt:
+    name:
+      - fail2ban
+      - postgresql
+      - acl
+      - python3-pip
+    state: present
+    update_cache: yes
+  notify:
+    - Restart Postgres
+
+- name: Install psycopg2 python package
+  ansible.builtin.pip:
+    name: psycopg2-binary
+
+- name: "Create app database"
+  community.postgresql.postgresql_db:
+    state: present
+    name: "{{ db_name }}"
+  become: yes
+  become_user: postgres
+
+- name: "Create db user"
+  community.postgresql.postgresql_user:
+    state: present
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+  become: yes
+  become_user: postgres
+
+- name: "Grant db user access to app db"
+  community.postgresql.postgresql_privs:
+    type: database
+    database: "{{ db_name }}"
+    roles: "{{ db_user }}"
+    grant_option: no
+    privs: all
+  become: yes
+  become_user: postgres
+
+- name: "Allow md5 connection for the db user"
+  community.postgresql.postgresql_pg_hba:
+    dest: "/etc/postgresql/12/main/pg_hba.conf"
+    contype: host
+    databases: all
+    method: md5
+    users: "{{ db_user }}"
+    create: true
+  become: yes
+  become_user: postgres
+  notify: Restart Postgres
+
+- name: Adds citext extension to the database "{{ db_name }}"
+  community.postgresql.postgresql_ext:
+    name: citext
+    db: "{{ db_name }}"
+  become: yes
+  become_user: postgres
+
+- name: Copy sql file to server
+  template:
+    src: talkliketvdb.sql.j2
+    dest: ~/talkliketvdb.sql
+    owner: postgres
+    group: postgres
+    mode: "664"
+  become: yes
+  become_user: postgres
+
+- name: "Execute script from variable"
+  command: "psql postgres://{{db_user}}:{{db_password}}@localhost/{{db_name}}?sslmode=disable -f ~/talkliketvdb.sql"
+  become: yes
+  become_user: postgres

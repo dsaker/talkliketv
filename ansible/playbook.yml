@@ -1,0 +1,17 @@
+- name: Install Postgres
+  hosts: all
+  become: True
+  gather_facts: yes
+  tags:
+    - postgres
+  roles:
+    - role: postgres
+
+#- name: Install Caddy
+#  hosts: all
+#  become: True
+#  gather_facts: yes
+#  tags:
+#    - caddy
+#  roles:
+#    - role: caddy

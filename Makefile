@@ -132,60 +132,58 @@ build/pack:
 	pack build talkliketv --env "LINKER_FLAGS=${linker_flags}" --env "DB_DSN=${DOCKER_DB_DSN}" --builder paketobuildpacks/builder-jammy-base
 
 # ==================================================================================== #
-# PRODUCTION
+# CLOUD
 # ==================================================================================== #
 
-production_host_ip = "164.92.111.120"
+## cloud/connect: connect to the cloud server
+cloud/connect:
+	ssh ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}
 
-## production/connect: connect to the production server
-production/connect:
-	ssh talkliketv@${production_host_ip}
+## cloud/deploy/api: deploy the web application to cloud
+cloud/deploy/web:
+	rsync -rP --delete ./bin/linux_amd64/web ./migrations ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}:~
+	ssh -t ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP} 'migrate -path ~/migrations -database $TALKLIKETV_DB_DSN up'
 
-## production/deploy/api: deploy the api to production
-production/deploy/web:
-	rsync -rP --delete ./bin/linux_amd64/web ./migrations talkliketv@${production_host_ip}:~
-	ssh -t talkliketv@${production_host_ip} 'migrate -path ~/migrations -database $TALKLIKETV_DB_DSN up'
-
-## production/configure/web.service: configure the production systemd web.service file
-production/configure/web.service:
-	rsync -P ./remote/production/web.service talkliketv@${production_host_ip}:~
-	ssh -t talkliketv@${production_host_ip} '\
+## cloud/configure/web.service: configure the cloud systemd web.service file
+cloud/configure/web.service:
+	rsync -P ./remote/cloud/web.service ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}:~
+	ssh -t ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP} '\
 		sudo mv ~/web.service /etc/systemd/system/ \
 		&& sudo systemctl enable web \
 		&& sudo systemctl restart web \'
 
-## production/configure/api.service: configure the production systemd api.service file
-production/configure/api.service:
-	rsync -P ./remote/production/api.service talkliketv@${production_host_ip}:~
-	ssh -t talkliketv@${production_host_ip} '\
+## cloud/configure/api.service: configure the cloud systemd api.service file
+cloud/configure/api.service:
+	rsync -P ./remote/cloud/api.service ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}:~
+	ssh -t ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP} '\
 		sudo mv ~/api.service /etc/systemd/system/ \
 		&& sudo systemctl enable api \
 		&& sudo systemctl restart api \'
 
-## production/deploy/uploadcsv: deploy the scripts to production
-production/uploadcsv:
-	## rsync -rP --delete ./scripts/uploadcsv.py talkliketv@${production_host_ip}:~/uploadcsv/
-	## rsync -rP --delete ./scripts/csvfile talkliketv@${production_host_ip}:~/uploadcsv
-	scp /Users/dustysaker/Downloads/TheMannyS01E01.csv  talkliketv@${production_host_ip}:~/uploadcsv
+## cloud/deploy/uploadcsv: deploy the scripts to cloud
+cloud/uploadcsv:
+	## rsync -rP --delete ./scripts/uploadcsv.py ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}:~/uploadcsv/
+	## rsync -rP --delete ./scripts/csvfile ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}:~/uploadcsv
+	scp /Users/dustysaker/Downloads/TheMannyS01E01.csv  ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}:~/uploadcsv
 
-## production/configure/caddyfile: configure the production Caddyfile
-production/configure/caddyfile:
-	rsync -P ./remote/production/Caddyfile talkliketv@${production_host_ip}:~
-	ssh -t talkliketv@${production_host_ip} '\
+## cloud/configure/caddyfile: configure the cloud Caddyfile
+cloud/configure/caddyfile:
+	rsync -P ./remote/cloud/Caddyfile ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}:~
+	ssh -t ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP} '\
 		sudo mv ~/Caddyfile /etc/caddy/ \
 		&& sudo systemctl reload caddy \'
 
-## production/redeploy/web: builds and redeploys web to production
-production/redeploy/web:
+## cloud/redeploy/web: builds and redeploys web to cloud
+cloud/redeploy/web:
 	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/web ./cmd/web
-	rsync -rP --delete ./bin/linux_amd64/web talkliketv@${production_host_ip}:~
-	ssh -t talkliketv@${production_host_ip} '\
+	rsync -rP --delete ./bin/linux_amd64/web ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}:~
+	ssh -t ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP} '\
 		sudo systemctl restart web'
 
 
-## production/redeploy/api: builds and redeploys api to production
-production/redeploy/api:
+## cloud/redeploy/api: builds and redeploys api to cloud
+cloud/redeploy/api:
 	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/api
-	rsync -rP --delete ./bin/linux_amd64/api talkliketv@${production_host_ip}:~
-	ssh -t talkliketv@${production_host_ip} '\
+	rsync -rP --delete ./bin/linux_amd64/api ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}:~
+	ssh -t ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP} '\
 		sudo systemctl restart api'

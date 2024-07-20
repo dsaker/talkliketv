@@ -32,7 +32,7 @@ const (
 )
 
 func init() {
-	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
+	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|cloud)")
 	flag.StringVar(&cfg.Smtp.Host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
 	flag.IntVar(&cfg.Smtp.Port, "smtp-port", 25, "SMTP port")
 	cfg.Smtp.Username = os.Getenv("smtp-username")
