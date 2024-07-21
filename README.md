@@ -81,6 +81,7 @@ ansible-playbook -i inventory.txt playbook.yml
 - directions for extracting srt files from mkv files are below, or you can upload any txt file with the phrases you want to learn one on each line
 - after uploading a file click on Account > Change language and choose your language
 - select the Title you would like to start learning
+- you can also upload a tsv file to the database using the uploadtsv.sh script (the english side of the translation must be the first column) 
 
 ### Extract srt file from mkv files
 
@@ -95,6 +96,7 @@ and extract
 
 - add comments
 - add text translate tests
+- backup db button
 - openapi3 spec (Huma)
 - add observability and monitoring
 - use gmail for smtp
