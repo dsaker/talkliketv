@@ -1,0 +1,32 @@
+---
+# tasks file for talkliketv
+- name: Create user for talkliketv
+  user:
+    name: "{{ web_user }}"  # Username
+    state: present  # Ensure the user is present
+    createhome: yes  # Create the user's home directory
+    shell: /usr/sbin/nologin
+    append: yes
+
+- name: Copy talkliketv binary to server
+  copy:
+    src: ../../../bin/linux_amd64/web
+    dest: /usr/local/bin/
+    owner: "{{ web_user }}"
+    group: "{{ web_user }}"
+    mode: "744"
+
+- name: Copy service file to server
+  copy:
+    src: ../../../remote/cloud/web.service
+    dest: /etc/systemd/system/
+    owner: "{{ web_user }}"
+    group: "{{ web_user }}"
+    mode: "664"
+
+- name: Echo values to environment file
+  shell: |
+    echo "TALKLIKETV_DB_DSN='postgres://"{{db_user}}":"{{db_password}}"@localhost/"{{db_name}}"'" | sudo tee -a /etc/environment
+    echo "SMTP_PASSWORD='{{smtp_password}}'" | sudo tee -a /etc/environment
+    echo "SMTP_USERNAME='{{smtp_username}}'" | sudo tee -a /etc/environment
+  notify: Restart web

@@ -46,7 +46,7 @@ type Config struct {
 
 func (cfg *Config) SetConfigs() {
 	flag.BoolVar(&cfg.ExpVarEnabled, "expvar-enabled", true, "Enable expvar (disable for testing")
-	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
+	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|cloud)")
 	flag.DurationVar(&cfg.CtxTimeout, "ctx-timeout", 3*time.Second, "Context timeout for db queries in seconds")
 
 	// Use the empty string "" as the default value for the db-dsn command-line flag,

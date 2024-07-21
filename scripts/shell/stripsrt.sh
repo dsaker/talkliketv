@@ -64,7 +64,7 @@ fi
 echo "stripping srt file: $filepath"
 
 # create output file variable
-outfile="$filepath.out"
+outfile="$filepath.stripped"
 # empty output file if exists
 true > "$outfile"
 

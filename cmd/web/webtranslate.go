@@ -126,12 +126,26 @@ func (app *web) translateTextPost(w http.ResponseWriter, r *http.Request) {
 
 	// concurrently get all the responses from Google Translate
 	var wg sync.WaitGroup
-	responses := make([]string, numLines)
+	responses := make([]string, numLines) // string array to hold all of the responses
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Make sure it's called to release resources even if no errors
+
 	for i, phrase := range phrasesSlice {
 		wg.Add(1)
-		go getResponse(lang, phrase, responses, i, &wg)
+		go app.getResponse(w, r, ctx, cancel, lang, phrase, responses, i, &wg)
 	}
 	wg.Wait()
+
+	if ctx.Err() != nil {
+		app.sendTranslateError(w, r, fmt.Sprintf("error uploading file: %s", ctx.Err()))
+		app.logError(r, ctx.Err())
+		err = app.Models.Movies.Delete(movieID)
+		if err != nil {
+			app.serverError(w, r, fmt.Errorf("language.Parse: %w", err))
+			return
+		}
+		return
+	}
 
 	for i := range phrasesSlice {
 		// How it is stored in the database and looked up english needs to be stored as Phrase
@@ -140,9 +154,9 @@ func (app *web) translateTextPost(w http.ResponseWriter, r *http.Request) {
 		var usePhrase, translates string
 		if form.FromEnglish == "true" {
 			usePhrase = phrasesSlice[i]
-			translates = responses[i]
+			translates = strings.ReplaceAll(responses[i], "&#39;", "'")
 		} else {
-			usePhrase = responses[i]
+			usePhrase = strings.ReplaceAll(responses[i], "&#39;", "'")
 			translates = phrasesSlice[i]
 		}
 
@@ -220,22 +234,41 @@ func makeHintString(s string) string {
 	return hintString
 }
 
-func getResponse(lang language.Tag, phrase string, responses []string, i int, wg *sync.WaitGroup) {
-	ctx := context.Background()
+func (app *web) getResponse(
+	w http.ResponseWriter,
+	r *http.Request,
+	ctx context.Context,
+	cancel context.CancelFunc,
+	lang language.Tag,
+	phrase string,
+	responses []string,
+	i int,
+	wg *sync.WaitGroup) {
+
+	defer wg.Done()
+	select {
+	case <-ctx.Done():
+		return // Error somewhere, terminate
+	default: // Default to avoid blocking
+	}
 	client, err := translate.NewClient(ctx)
 	if err != nil {
-		println(fmt.Errorf("error creating client: %s", err))
+		app.serverError(w, r, fmt.Errorf("error creating client: %s", err))
+		cancel()
+		return
 	}
 	defer client.Close()
 
 	resp, err := client.Translate(ctx, []string{phrase}, lang, nil)
 	if err != nil {
-		println(fmt.Errorf("translate: %w", err))
+		app.serverError(w, r, fmt.Errorf("translate: %w", err))
+		cancel()
+		return
 	}
 	if len(resp) == 0 {
-		println(fmt.Errorf("translate returned empty response to text: %s", phrase))
+		app.serverError(w, r, fmt.Errorf("translate returned empty response to text: %s", phrase))
+		cancel()
+		return
 	}
 	responses[i] = resp[0].Text
-
-	wg.Done()
 }
