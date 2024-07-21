@@ -23,6 +23,7 @@ To list available make commands
 
 ### Startup Locally
 
+- Create Mailtrap account as described above
 ```
 docker pull postgres
 docker run -d -P -p 127.0.0.1:5433:5432 -e POSTGRES_PASSWORD="password" --name talkliketvpg postgres
@@ -30,13 +31,6 @@ echo "export TALKTV_DB_DSN=postgresql://postgres:password@localhost:5433/postgre
 make db/migrations/up
 make run/web
 make run/api
-```
-
-### Testing
-
-Before running tests locally run 
-```
-make expvar
 ```
 
 ### Build
@@ -50,6 +44,43 @@ To build the api
 ```
 make build/api
 ```
+
+### Deploy web application to google cloud platform
+
+```
+cd terraform
+cp terraform.tfvars.bak terraform.tfvars
+```
+- create gcp project (https://cloud.google.com/resource-manager/docs/creating-managing-projects)
+- create ssh keys if needed (https://cloud.google.com/compute/docs/connect/create-ssh-keys)
+- fill in the values for the variables in terraform.tfvars
+- install terraform if needed (https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+```
+terraform init
+terraform apply
+```
+- note ip output from terraform (you can also run `terraform output` at any time to obtain this value)
+- create mailtrap account as describe above
+- get smtp username and password from Email Testing Inbox
+```
+cd ..
+make build/web
+cd ansible
+cp inventory.txt.bak inventory.txt
+```
+- fill in the needed values <>
+- install anisble if needed (https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
+```
+ansible-playbook -i inventory.txt playbook.yml
+```
+- go to https://{{ terraform output ip }}.sslip.io
+- signup user
+- get activation code from mailtrap.io and activate account
+- you can upload files that end in stripped in scripts/shell or use the stirpsrt script to make your own
+- TheManny is to English from Spanish and MissAdrenaline is from english to any language
+- directions for extracting srt files from mkv files are below, or you can upload any txt file with the phrases you want to learn one on each line
+- after uploading a file click on Account > Change language and choose your language
+- select the Title you would like to start learning
 
 ### Extract srt file from mkv files
 
