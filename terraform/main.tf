@@ -17,10 +17,10 @@ resource "google_compute_subnetwork" "subnetwork_talkliketv" {
 
 # Create a single Compute Engine instance
 resource "google_compute_instance" "talkliketv" {
-  name         = "talkliketv-vm"
-  machine_type = "e2-small"
-  zone         = "us-west1-a"
-  tags         = ["ssh-talkliketv", "https-talkliketv"]
+  name                      = "talkliketv-vm"
+  machine_type              = var.talkliketv_machine_type
+  zone                      = "us-west1-a"
+  tags                      = ["ssh-talkliketv", "https-talkliketv"]
   allow_stopping_for_update = true
   metadata = {
     ssh-keys = "${var.gce_ssh_user}:${file(var.gce_ssh_pub_key_file)}"
@@ -47,6 +47,18 @@ resource "google_compute_instance" "talkliketv" {
   }
 }
 
+# create null resource to run ansible provisioner because we need google compute instance ip
+resource "null_resource" "ansible-provisioner" {
+  provisioner "local-exec" {
+    command = <<EOT
+          sed '/\[talkliketv\]/{n;s/.*/${google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip}/g;}' ../ansible/inventory.txt > output.file
+          mv output.file ../ansible/inventory.txt
+          sleep 30
+          ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i '../ansible/inventory.txt' -e 'gcp_public_ip=${google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip}' -e 'variable_host=${google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip}' ../ansible/playbook.yml
+    EOT
+  }
+}
+
 resource "google_compute_firewall" "talkliketv_vpc_network_allow_ssh" {
   name    = "talkliketv-vpc-network-allow-ssh"
   network = google_compute_network.vpc_network.name
@@ -56,7 +68,7 @@ resource "google_compute_firewall" "talkliketv_vpc_network_allow_ssh" {
     ports    = ["22"]
   }
 
-  target_tags = ["ssh-talkliketv"]
+  target_tags   = ["ssh-talkliketv"]
   source_ranges = ["0.0.0.0/0"]
 }
 
@@ -69,16 +81,16 @@ resource "google_compute_firewall" "talkliketv_vpc_network_allow_https" {
     ports    = ["443"]
   }
 
-  target_tags = ["https-talkliketv"]
+  target_tags   = ["https-talkliketv"]
   source_ranges = ["0.0.0.0/0"]
 }
 
 output "instance_ip" {
-  value = google_compute_instance.talkliketv.network_interface[0].access_config.*.nat_ip
+  value = google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip
 }
 
 resource "google_service_account" "sa_talkliketv" {
-  account_id = "talkliketv-service-account-id"
+  account_id   = "talkliketv-service-account-id"
   display_name = "TalkLikeTv Service Account"
 }
 
