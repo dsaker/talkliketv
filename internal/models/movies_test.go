@@ -34,7 +34,7 @@ func (suite *ModelTestSuite) TestMovieModelChooseMovie() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := suite.m.ChooseMovie(tt.userId, tt.movieId)
+			err := suite.m.UpdateMovie(tt.userId, tt.movieId)
 			assert.NilError(t, err)
 		})
 	}

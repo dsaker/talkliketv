@@ -21,7 +21,7 @@ type MovieModel struct {
 	CtxTimeout time.Duration
 }
 
-func (m *MovieModel) ChooseMovie(userId int, movieId int) error {
+func (m *MovieModel) UpdateMovie(userId int, movieId int) error {
 	args := []interface{}{movieId, userId}
 	_, err := m.Get(movieId)
 	if err != nil {

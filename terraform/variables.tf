@@ -14,6 +14,10 @@ variable "gce_ssh_pub_key_file" {
   type = string
 }
 
+variable "talkliketv_machine_type" {
+  type = string
+}
+
 #variable "ssh_ip" {
 #  type = string
 #}

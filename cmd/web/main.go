@@ -37,6 +37,7 @@ func main() {
 
 	cfg.SetConfigs()
 
+	// get port and debug from commandline flags... if not present use defaults
 	flag.IntVar(&cfg.Port, "port", 4000, "API server port")
 	debug := flag.Bool("debug", false, "Enable debug mode")
 
@@ -54,6 +55,7 @@ func main() {
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
+	// open db connection. if err fail immediately
 	db, err := cfg.OpenDB()
 	if err != nil {
 		logger.PrintFatal(err, nil)
@@ -72,6 +74,7 @@ func main() {
 		logger.PrintFatal(err, nil)
 	}
 
+	// create form decoder to parse forms sent from UI
 	formDecoder := form.NewDecoder()
 
 	sessionManager := scs.New()
