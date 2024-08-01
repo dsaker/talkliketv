@@ -15,6 +15,11 @@ resource "google_compute_subnetwork" "subnetwork_talkliketv" {
   network       = google_compute_network.vpc_network.id
 }
 
+locals {
+  # IP for gcp instance
+  instance_ip = google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip
+}
+
 # Create a single Compute Engine instance
 resource "google_compute_instance" "talkliketv" {
   name                      = "talkliketv-vm"
@@ -45,14 +50,25 @@ resource "google_compute_instance" "talkliketv" {
     email  = google_service_account.sa_talkliketv.email
     scopes = ["cloud-platform"]
   }
+
+#  provisioner "remote-exec" {
+#    when    = "destroy"
+#    command = "ansible-playbook playbooks/unregister_rhsm.yml"
+#  }
 }
 
-# create null resource to run ansible provisioner because we need google compute instance ip
+# create null resource to run ansible provisioner because we need google compute instance ip before running
 resource "null_resource" "ansible-provisioner" {
+  // add gcp instance ip line after [talkliketv] in inventory.txt
+  // sleep 30 seconds to make sure gcp instance is ready for ssh
+  // uncomment first sed for linux, second for mac. replaces CLOUD_HOST_IP in .envrc file
+  // run ansible playbook locally
   provisioner "local-exec" {
     command = <<EOT
-          sed '/\[talkliketv\]/{n;s/.*/${google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip}/g;}' ../ansible/inventory.txt > output.file
+          sed '/\[talkliketv\]/{n;s/.*/${local.instance_ip}/g;}' ../ansible/inventory.txt > output.file
           mv output.file ../ansible/inventory.txt
+          # sed -i 's/^export CLOUD_HOST_IP=.*$/export CLOUD_HOST_IP=34.105.80.183/' .envrc
+          sed -i '' -e 's/^export CLOUD_HOST_IP=.*$/export CLOUD_HOST_IP=34.105.80.184/' .envrc
           sleep 30
           ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i '../ansible/inventory.txt' -e 'gcp_public_ip=${google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip}' -e 'variable_host=${google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip}' ../ansible/playbook.yml
     EOT

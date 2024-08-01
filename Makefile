@@ -24,6 +24,9 @@ copy-hooks:
 expvar:
 	eval $(cat .envrc)
 
+## browser: open talkliketv in default browser
+browser:
+	python3 -m webbrowser https://${CLOUD_HOST_IP}.sslip.io/
 
 # ==================================================================================== #
 # DEVELOPMENT

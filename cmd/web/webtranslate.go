@@ -12,6 +12,7 @@ import (
 	"sync"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/validator"
+	"time"
 	"unicode"
 )
 
@@ -34,7 +35,7 @@ func (app *web) translateText(w http.ResponseWriter, r *http.Request) {
 func (app *web) translateTextPost(w http.ResponseWriter, r *http.Request) {
 	var form TranslateTextForm
 
-	// Maximum upload of 32768 Bytes... this is ~ 4 pages
+	// Maximum upload of 32768 Bytes... this is ~4 pages
 	err := r.ParseMultipartForm(32768)
 	// if file is too big send error
 	if err != nil {
@@ -95,8 +96,9 @@ func (app *web) translateTextPost(w http.ResponseWriter, r *http.Request) {
 	movieID, err := app.Models.Movies.Insert(movie)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateTitle) {
-			form.AddFieldError("title", "Title is already in use")
-			app.duplicateError(w, r, form, err)
+			app.sessionManager.Put(r.Context(), "flash", "Title is already in use.")
+			// And redirect the user to the login page.
+			http.Redirect(w, r, "/translate/text", http.StatusSeeOther)
 		} else {
 			app.serverError(w, r, err)
 		}
@@ -126,12 +128,18 @@ func (app *web) translateTextPost(w http.ResponseWriter, r *http.Request) {
 
 	// concurrently get all the responses from Google Translate
 	var wg sync.WaitGroup
-	responses := make([]string, numLines) // string array to hold all of the responses
+	responses := make([]string, numLines) // string array to hold all the responses
+	// create context with cancel, so you can cancel all other requests after any error
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Make sure it's called to release resources even if no errors
 
 	for i, phrase := range phrasesSlice {
+		// added intermittent sleep to fix TLS handshake errors on the client side
+		if i%50 == 0 && i != 0 {
+			time.Sleep(2 * time.Second)
+		}
 		wg.Add(1)
+		//get responses concurrently with go routines
 		go app.getResponse(w, r, ctx, cancel, lang, phrase, responses, i, &wg)
 	}
 	wg.Wait()
@@ -154,6 +162,7 @@ func (app *web) translateTextPost(w http.ResponseWriter, r *http.Request) {
 		var usePhrase, translates string
 		if form.FromEnglish == "true" {
 			usePhrase = phrasesSlice[i]
+			// google sends back html so the "'" is in unicode and has to be replaced
 			translates = strings.ReplaceAll(responses[i], "&#39;", "'")
 		} else {
 			usePhrase = strings.ReplaceAll(responses[i], "&#39;", "'")
@@ -181,7 +190,7 @@ func (app *web) translateTextPost(w http.ResponseWriter, r *http.Request) {
 	// Add a confirmation flash message to the session confirming that upload was successful
 	app.sessionManager.Put(r.Context(), "flash", "Your file was uploaded successfully.")
 
-	// And redirect the user to the login page.
+	// And redirect the user to the view movies page.
 	http.Redirect(w, r, "/movies/view", http.StatusSeeOther)
 }
 
@@ -250,25 +259,32 @@ func (app *web) getResponse(
 	case <-ctx.Done():
 		return // Error somewhere, terminate
 	default: // Default to avoid blocking
-	}
-	client, err := translate.NewClient(ctx)
-	if err != nil {
-		app.serverError(w, r, fmt.Errorf("error creating client: %s", err))
-		cancel()
-		return
-	}
-	defer client.Close()
+		client, err := translate.NewClient(ctx)
+		if err != nil {
+			app.serverError(w, r, fmt.Errorf("error creating client: %s", err))
+			cancel()
+			return
+		}
+		defer client.Close()
 
-	resp, err := client.Translate(ctx, []string{phrase}, lang, nil)
-	if err != nil {
-		app.serverError(w, r, fmt.Errorf("translate: %w", err))
-		cancel()
-		return
+		resp, err := client.Translate(ctx, []string{phrase}, lang, nil)
+		if err != nil {
+			switch {
+			case errors.Is(err, context.Canceled):
+				return
+			default:
+				app.logError(r, fmt.Errorf("logging default error: %s", err))
+				cancel()
+			}
+			return
+		}
+
+		if len(resp) == 0 {
+			app.logError(r, fmt.Errorf("translate returned empty response to text: %s", phrase))
+			cancel()
+		}
+
+		//app.Logger.PrintInfo(fmt.Sprintf("response is: %s", resp[0].Text), nil)
+		responses[i] = resp[0].Text
 	}
-	if len(resp) == 0 {
-		app.serverError(w, r, fmt.Errorf("translate returned empty response to text: %s", phrase))
-		cancel()
-		return
-	}
-	responses[i] = resp[0].Text
 }

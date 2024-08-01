@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS movies (
     id bigserial PRIMARY KEY,
-    title text NOT NULL,
+    title text NOT NULL UNIQUE,
     num_subs int NOT NULL
 );
 
