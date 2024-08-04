@@ -72,7 +72,7 @@ resource "local_file" "init_file" {
 }
 
 resource "google_service_account" "sa_talkliketv" {
-  account_id   = "talkliketv-service-account-id"
+  account_id   = var.sa_account_id
   display_name = "TalkLikeTv Service Account"
 
   lifecycle {

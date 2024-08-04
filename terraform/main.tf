@@ -2,7 +2,8 @@
 #  source = "./talkliketv-bucket"
 #
 #  bucket_name = var.module_bucket_name
-#  db_user = var.module_db_user
+#  db_user = var.db_user
+#  sa_account_id = var. module_sa_account_id
 #}
 
 resource "google_compute_address" "static" {
@@ -22,9 +23,12 @@ resource "google_compute_subnetwork" "subnetwork_talkliketv" {
   network       = google_compute_network.vpc_network.id
 }
 
+data "google_project" "project" {
+}
+
 locals {
   # IP for gcp instance
-  instance_ip = google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip
+  instance_ip = google_compute_address.static.address
 }
 
 # Create a single Compute Engine instance
@@ -54,20 +58,45 @@ resource "google_compute_instance" "talkliketv" {
 
   service_account {
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
-    # after removing module and adding service account to tfvars uncomment second define statement
-    # email  = module.bucket_module.service_account_email
-    email = var.sa_email
+    email  = "${var.module_sa_account_id}@${data.google_project.project.project_id}.iam.gserviceaccount.com"
     scopes = ["cloud-platform"]
   }
 
-#  provisioner "remote-exec" {
-#    when    = "destroy"
-#    inline = [
-#      "pg_dump --dbname=postgres:// -F t >> talktv_db_$(date +%s).sql",
-#      "consul join ${aws_instance.web.private_ip}",
-#    ]
-#  }
+  connection {
+    type     = "ssh"
+    user     = "dustysaker"
+    host     = self.network_interface.0.access_config.0.nat_ip
+    private_key = file("/Users/dustysaker/.ssh/id_ed25519")
+  }
+
+  provisioner "file" {
+    source      = "scripts/on-destroy.sh"
+    destination = "/tmp/on-destroy.sh"
+  }
+
+  provisioner "remote-exec" {
+    when    = destroy
+    inline = [
+      "chmod +x /tmp/on-destroy.sh",
+      "/tmp/on-destroy.sh",
+    ]
+  }
+
+  depends_on = [local_file.on_destroy_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
 }
+
+#resource "remote_file" "on_destroy" {
+#  connection {
+#    type     = "ssh"
+#    user     = var.gce_ssh_user
+#    host     = local.instance_ip
+#    private_key = file(var.gce_ssh_private_key_file)
+#  }
+#
+#  path        = "/tmp/on-destroy.sh"
+#  content     = file("${path.module}/scripts/on-destroy.sh")
+#  permissions = "0644"
+#}
 
 # create null resource to run ansible provisioner because we need google compute instance ip before running
 resource "null_resource" "ansible-provisioner" {
@@ -80,12 +109,24 @@ resource "null_resource" "ansible-provisioner" {
 
 resource "local_file" "ansible_file" {
   content  = templatefile("templates/ansible-provisioner.sh", {
-    db_user = var.module_db_user,
+    db_user = var.db_user,
     db_password = var.db_password,
     db_name = var.db_name,
     instance_ip = local.instance_ip
+    ansible_user = var.gce_ssh_user
+    ansible_private_key_file = var.gce_ssh_private_key_file
   })
   filename = "scripts/ansible-provisioner.sh"
+}
+
+resource "local_file" "on_destroy_file" {
+  content  = templatefile("templates/on-destroy.sh", {
+    db_user = var.db_user,
+    db_password = var.db_password,
+    db_name = var.db_name,
+    module_bucket_name = var.module_bucket_name
+  })
+  filename = "scripts/on-destroy.sh"
 }
 
 resource "google_compute_firewall" "talkliketv_vpc_network_allow_ssh" {

@@ -14,11 +14,15 @@ variable "gce_ssh_pub_key_file" {
   type = string
 }
 
+variable "gce_ssh_private_key_file" {
+  type = string
+}
+
 variable "talkliketv_machine_type" {
   type = string
 }
 
-variable "module_db_user" {
+variable "db_user" {
   default = ""
 }
 
@@ -35,8 +39,7 @@ variable "module_bucket_name" {
   type        = string
 }
 
-variable "sa_email" {
-  description = "talkeliketv service account email"
+variable "module_sa_account_id" {
+  description = "Name of the service account id for the bucked."
   type        = string
-  default = ""
 }

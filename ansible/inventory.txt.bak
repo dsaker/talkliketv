@@ -1,6 +1,4 @@
 [talkliketv:vars]
-ansible_user = <ssh username>
-ansible_private_key_file = <path to private ssh key file>
 vm_username = talkliketv
 smtp_password: <get from mailtrap.io>
 smtp_username: <get from mailtrap.io>

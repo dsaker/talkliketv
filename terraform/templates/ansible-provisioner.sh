@@ -6,8 +6,8 @@ mv output.file ../ansible/inventory.txt
 # sed -i 's/^export CLOUD_HOST_IP=.*$/export CLOUD_HOST_IP=${instance_ip}/' ../.envrc
 sed -i '' -e 's/^export CLOUD_HOST_IP=.*$/export CLOUD_HOST_IP=${instance_ip}/' ../.envrc
 
-# sleep 30 seconds to make sure gcp instance is ready for ssh
-sleep 30
+# sleep 60 seconds to make sure gcp instance is ready for ssh
+sleep 60
 
 # run ansible playbook locally
 # shellcheck disable=SC2154
@@ -15,4 +15,6 @@ ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i '../ansible/inventory.txt' \
   -e 'gcp_public_ip=${instance_ip}' \
   -e 'db_user=${db_user}' \
   -e 'db_password=${db_password}' \
-  -e 'db_name=${db_name}' ../ansible/playbook.yml
+  -e 'db_name=${db_name}' \
+  -e 'ansible_user=${ansible_user}' \
+  -e 'ansible_private_key_file=${private_key_file}' ../ansible/playbook.yml

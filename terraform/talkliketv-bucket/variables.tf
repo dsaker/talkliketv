@@ -7,3 +7,8 @@ variable "db_user" {
   description = "Talkliketv db user name."
   type        = string
 }
+
+variable "sa_account_id" {
+  description = "Talkliketv db user name."
+  type        = string
+}
