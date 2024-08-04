@@ -53,6 +53,11 @@ cp terraform.tfvars.bak terraform.tfvars
 ```
 - create gcp project (https://cloud.google.com/resource-manager/docs/creating-managing-projects)
 - create ssh keys if needed (https://cloud.google.com/compute/docs/connect/create-ssh-keys)
+- enable Cloud Storage API (https://cloud.google.com/storage/docs/terraform-create-bucket-upload-object)
+- enable Cloud Translation (https://cloud.google.com/translate/docs/setup)
+```
+gcloud services enable storage-component.googleapis.com  compute.googleapis.com translate.googleapis.com storage.buckets.getIamPolicy'
+```
 - fill in the values for the variables in terraform.tfvars
 - install terraform if needed (https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 ```
@@ -82,6 +87,46 @@ ansible-playbook -i inventory.txt playbook.yml
 - after uploading a file click on Account > Change language and choose your language
 - select the Title you would like to start learning
 - you can also upload a tsv file to the database using the uploadtsv.sh script (the english side of the translation must be the first column) 
+
+### Deploy web application to google cloud platform
+
+
+```
+make build/web
+cp ansible/inventory.txt.bak ansible/inventory.txt
+cp terraform/terraform.tfvars.bak terraform/terraform.tfvars
+```
+- create gcp project (https://cloud.google.com/resource-manager/docs/creating-managing-projects)
+- create ssh keys if needed (https://cloud.google.com/compute/docs/connect/create-ssh-keys)
+```
+gcloud init
+gcloud services enable storage-component.googleapis.com  compute.googleapis.com translate.googleapis.com storage.buckets.getIamPolicy'
+```
+- create mailtrap account as described above
+- get smtp username and password from Email Testing Inbox
+- fill in the values for the variables in terraform/terraform.tfvars and ansible/inventory.txt
+- install terraform if needed (https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+- install anisble if needed (https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
+```
+terraform init
+terraform plan
+terraform apply
+```
+- run `make browser` to open web application in browser
+- Signup user
+- get activation code from mailtrap.io and activate account
+- Login
+- click on Upload
+- You can upload scripts/shell/TheMannyS01E01.Spanish.srt.stripped as a test to make sure cloud translate is working
+![img.png](readme_images/img.png)
+- click on Account > Change Language and choose Spanish
+- click on Titles and Select TheMannyS01E01
+- you can upload files that end in stripped in scripts/shell or use the stirpsrt script to make your own from srt files
+- TheManny is to English from Spanish and MissAdrenaline is from english to any language
+- directions for extracting srt files from mkv files are below, or you can upload any txt file with the phrases you want to learn one on each line
+- After you upload a new language, it will appear in the Change Language select list 
+- select the Title you would like to start learning
+- you can also upload a tsv file to the database using the uploadtsv.sh script (the english side of the translation must be the first column)
 
 ### Extract srt file from mkv files
 

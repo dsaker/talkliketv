@@ -139,8 +139,8 @@ build/pack:
 # CLOUD
 # ==================================================================================== #
 
-## cloud/connect: connect to the cloud server
-cloud/connect:
+## connect: connect to the cloud server
+connect:
 	ssh ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}
 
 ## cloud/deploy/api: deploy the web application to cloud

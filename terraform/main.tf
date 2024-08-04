@@ -1,3 +1,10 @@
+#module "bucket_module" {
+#  source = "./talkliketv-bucket"
+#
+#  bucket_name = var.module_bucket_name
+#  db_user = var.module_db_user
+#}
+
 resource "google_compute_address" "static" {
   name = "talkliketv-ipv4-address"
 }
@@ -47,32 +54,38 @@ resource "google_compute_instance" "talkliketv" {
 
   service_account {
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
-    email  = google_service_account.sa_talkliketv.email
+    # after removing module and adding service account to tfvars uncomment second define statement
+    # email  = module.bucket_module.service_account_email
+    email = var.sa_email
     scopes = ["cloud-platform"]
   }
 
 #  provisioner "remote-exec" {
 #    when    = "destroy"
-#    command = "ansible-playbook playbooks/unregister_rhsm.yml"
+#    inline = [
+#      "pg_dump --dbname=postgres:// -F t >> talktv_db_$(date +%s).sql",
+#      "consul join ${aws_instance.web.private_ip}",
+#    ]
 #  }
 }
 
 # create null resource to run ansible provisioner because we need google compute instance ip before running
 resource "null_resource" "ansible-provisioner" {
-  // add gcp instance ip line after [talkliketv] in inventory.txt
-  // sleep 30 seconds to make sure gcp instance is ready for ssh
-  // uncomment first sed for linux, second for mac. replaces CLOUD_HOST_IP in .envrc file
-  // run ansible playbook locally
   provisioner "local-exec" {
-    command = <<EOT
-          sed '/\[talkliketv\]/{n;s/.*/${local.instance_ip}/g;}' ../ansible/inventory.txt > output.file
-          mv output.file ../ansible/inventory.txt
-          # sed -i 's/^export CLOUD_HOST_IP=.*$/export CLOUD_HOST_IP=34.105.80.183/' .envrc
-          sed -i '' -e 's/^export CLOUD_HOST_IP=.*$/export CLOUD_HOST_IP=34.105.80.184/' .envrc
-          sleep 30
-          ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i '../ansible/inventory.txt' -e 'gcp_public_ip=${google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip}' -e 'variable_host=${google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip}' ../ansible/playbook.yml
-    EOT
+    command = "chmod +x scripts/ansible-provisioner.sh && scripts/ansible-provisioner.sh"
   }
+
+  depends_on = [local_file.ansible_file]
+}
+
+resource "local_file" "ansible_file" {
+  content  = templatefile("templates/ansible-provisioner.sh", {
+    db_user = var.module_db_user,
+    db_password = var.db_password,
+    db_name = var.db_name,
+    instance_ip = local.instance_ip
+  })
+  filename = "scripts/ansible-provisioner.sh"
 }
 
 resource "google_compute_firewall" "talkliketv_vpc_network_allow_ssh" {
@@ -99,23 +112,4 @@ resource "google_compute_firewall" "talkliketv_vpc_network_allow_https" {
 
   target_tags   = ["https-talkliketv"]
   source_ranges = ["0.0.0.0/0"]
-}
-
-output "instance_ip" {
-  value = google_compute_instance.talkliketv.network_interface.0.access_config.0.nat_ip
-}
-
-resource "google_service_account" "sa_talkliketv" {
-  account_id   = "talkliketv-service-account-id"
-  display_name = "TalkLikeTv Service Account"
-}
-
-data "google_iam_policy" "talkliketv" {
-  binding {
-    role = "roles/cloudtranslate.user"
-
-    members = [
-      "serviceAccount:${google_service_account.sa_talkliketv.email}",
-    ]
-  }
 }
