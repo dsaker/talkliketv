@@ -1,6 +1,7 @@
 .envrc
 bin/
 tls/
+ui/mp3/TheMannyS01E01.mp3
 
 # Binaries for programs and plugins
 *.exe
