@@ -29,6 +29,7 @@ data "google_project" "project" {
 locals {
   # IP for gcp instance
   instance_ip = google_compute_address.static.address
+  google_object_num = length(data.google_storage_bucket_objects.files.bucket_objects) - 1
 }
 
 # Create a single Compute Engine instance
@@ -81,30 +82,31 @@ resource "google_compute_instance" "talkliketv" {
       "/tmp/on-destroy.sh",
     ]
   }
-
-  depends_on = [local_file.on_destroy_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
+#  depends_on = [local_file.on_destroy_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
+  depends_on = [local_file.on_destroy_file, local_file.initdb_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
 }
 
-#resource "remote_file" "on_destroy" {
-#  connection {
-#    type     = "ssh"
-#    user     = var.gce_ssh_user
-#    host     = local.instance_ip
-#    private_key = file(var.gce_ssh_private_key_file)
-#  }
-#
-#  path        = "/tmp/on-destroy.sh"
-#  content     = file("${path.module}/scripts/on-destroy.sh")
-#  permissions = "0644"
-#}
+data "google_storage_bucket_objects" "files" {
+  bucket = var.module_bucket_name
+}
+
+resource "local_file" "initdb_file" {
+  content  = data.google_storage_bucket_object_content.initdb.content
+  filename = "../ansible/postgres/files/initdb.sql"
+}
+
+data "google_storage_bucket_object_content" "initdb" {
+  name   = data.google_storage_bucket_objects.files.bucket_objects[local.google_object_num].name
+  bucket = var.module_bucket_name
+}
 
 # create null resource to run ansible provisioner because we need google compute instance ip before running
 resource "null_resource" "ansible-provisioner" {
   provisioner "local-exec" {
-    command = "chmod +x scripts/ansible-provisioner.sh && scripts/ansible-provisioner.sh"
+    command = "sleep 60 && chmod +x scripts/ansible-provisioner.sh && scripts/ansible-provisioner.sh"
   }
 
-  depends_on = [local_file.ansible_file]
+  depends_on = [local_file.ansible_file, google_compute_instance.talkliketv]
 }
 
 resource "local_file" "ansible_file" {
