@@ -47,6 +47,7 @@ make build/api
 
 ### Deploy web application to google cloud platform
 
+- install golang if needed (https://go.dev/doc/install)
 ```shell
 make build/web
 cp ansible/inventory.txt.bak ansible/inventory.txt
