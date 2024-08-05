@@ -66,6 +66,13 @@ resource "google_storage_bucket" "talkliketv_bucket" {
   }
 }
 
+resource "google_storage_bucket_object" "init_file" {
+  name   = "talktv_db_0.sql"
+  source = "../ansible/postgres/files/initdb.sql"
+  bucket = google_storage_bucket.talkliketv_bucket.name
+  depends_on = [local_file.init_file]
+}
+
 resource "local_file" "init_file" {
   content  = templatefile("templates/initdb.sql", { db_user = var.db_user})
   filename = "../ansible/postgres/files/initdb.sql"

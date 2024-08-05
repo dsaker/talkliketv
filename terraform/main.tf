@@ -6,6 +6,20 @@
 #  sa_account_id = var. module_sa_account_id
 #}
 
+data "google_storage_bucket_objects" "files" {
+  bucket = var.module_bucket_name
+}
+
+resource "local_file" "initdb_file" {
+  content  = data.google_storage_bucket_object_content.initdb.content
+  filename = "../ansible/postgres/files/initdb.sql"
+}
+
+data "google_storage_bucket_object_content" "initdb" {
+  name   = data.google_storage_bucket_objects.files.bucket_objects[length(data.google_storage_bucket_objects.files.bucket_objects) - 1].name
+  bucket = var.module_bucket_name
+}
+
 resource "google_compute_address" "static" {
   name = "talkliketv-ipv4-address"
 }
@@ -29,7 +43,6 @@ data "google_project" "project" {
 locals {
   # IP for gcp instance
   instance_ip = google_compute_address.static.address
-  google_object_num = length(data.google_storage_bucket_objects.files.bucket_objects) - 1
 }
 
 # Create a single Compute Engine instance
@@ -51,9 +64,9 @@ resource "google_compute_instance" "talkliketv" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.subnetwork_talkliketv.id
-
     access_config {
       nat_ip = google_compute_address.static.address
+      network_tier = STANDARD
     }
   }
 
@@ -65,9 +78,9 @@ resource "google_compute_instance" "talkliketv" {
 
   connection {
     type     = "ssh"
-    user     = "dustysaker"
+    user     = ""
     host     = self.network_interface.0.access_config.0.nat_ip
-    private_key = file("/Users/dustysaker/.ssh/id_ed25519")
+    private_key = file("")
   }
 
   provisioner "file" {
@@ -82,22 +95,8 @@ resource "google_compute_instance" "talkliketv" {
       "/tmp/on-destroy.sh",
     ]
   }
-#  depends_on = [local_file.on_destroy_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
-  depends_on = [local_file.on_destroy_file, local_file.initdb_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
-}
-
-data "google_storage_bucket_objects" "files" {
-  bucket = var.module_bucket_name
-}
-
-resource "local_file" "initdb_file" {
-  content  = data.google_storage_bucket_object_content.initdb.content
-  filename = "../ansible/postgres/files/initdb.sql"
-}
-
-data "google_storage_bucket_object_content" "initdb" {
-  name   = data.google_storage_bucket_objects.files.bucket_objects[local.google_object_num].name
-  bucket = var.module_bucket_name
+  depends_on = [local_file.on_destroy_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
+#  depends_on = [local_file.on_destroy_file, local_file.initdb_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
 }
 
 # create null resource to run ansible provisioner because we need google compute instance ip before running

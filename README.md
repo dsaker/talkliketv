@@ -61,6 +61,8 @@ gcloud services enable storage-component.googleapis.com  compute.googleapis.com 
 - create mailtrap account as described above
 - get smtp username and password from Email Testing Inbox
 - fill in the values for the variables in terraform/terraform.tfvars and ansible/inventory.txt
+- also change google_compute_instance.talkliketv.connection.user and private_key to your user values
+  - (terraform will not allow you to use vars for provisioners with when = destroy)
 - install terraform if needed (https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 - install anisble if needed (https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
 ```shell
@@ -69,12 +71,15 @@ terraform plan
 terraform apply
 ```
 - comment out module.bucket_module from main.tf
+- uncomment three resources below it
+  - google_storage_bucket_objects.files
+  - local_file.initdb_file
+  - google_storage_bucket_object_content.initdb
 - remove bucket_module from terraform state (you do not want to destroy the bucket or service account)
 ```shell
-terraform state rm modules.bucket_module
+terraform state rm module.bucket_module
 ```
-- change service account email line 58 of main.tf to reflect new variable
-- run `make browser` to open web application in browser
+- run `make browser` in root directory to open web application in browser
 - Signup user
 - get activation code from mailtrap.io and activate account
 - Login
@@ -90,14 +95,18 @@ terraform state rm modules.bucket_module
 - select the Title you would like to start learning
 - you can also upload a tsv file to the database using the uploadtsv.sh script (the english side of the translation must be the first column)
 
+### Destroying infrastructure using terraform
+
+- you can run `terraform destroy` to destroy the infrastructure and stop incurring charges
+- everything except what is in module.bucket_module will be destroyed
+- on subsequent `terraform apply` your progress will be loaded from the sql file stored in the bucket
+- the backup sql file is created and stored by the "remote-exec" provisioner when terraform destroy is run
+
 ### Extract srt file from mkv files
 
-download mkvextract tool -> https://mkvtoolnix.download/downloads.html
-
-find srt track of language you would like to extract 
-`mkvinfo mkvfile.mkv`
-and extract
-`mkvextract mkvfile.mkv tracks 5:[Choose Title].[Choose Language].srt`
+- download mkvextract tool -> https://mkvtoolnix.download/downloads.html
+- find srt track of language you would like to extract `mkvinfo mkvfile.mkv` and extract
+- `mkvextract mkvfile.mkv tracks 5:[Choose Title].[Choose Language].srt`
 
 ### To Do
 
