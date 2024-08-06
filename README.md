@@ -61,6 +61,7 @@ gcloud services enable storage-component.googleapis.com  compute.googleapis.com 
 ```
 - create mailtrap account as described above
 - get smtp username and password from Email Testing Inbox
+- generate a new ssh key if needed (https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
 - fill in the values for the variables in terraform/terraform.tfvars and ansible/inventory.txt
 - also change google_compute_instance.talkliketv.connection.user and private_key to your user values
   - (terraform will not allow you to use vars for provisioners with when = destroy)

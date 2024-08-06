@@ -1,24 +1,24 @@
-#module "bucket_module" {
-#  source = "./talkliketv-bucket"
-#
-#  bucket_name = var.module_bucket_name
-#  db_user = var.db_user
-#  sa_account_id = var. module_sa_account_id
+module "bucket_module" {
+  source = "./talkliketv-bucket"
+
+  bucket_name = var.module_bucket_name
+  db_user = var.db_user
+  sa_account_id = var. module_sa_account_id
+}
+
+#data "google_storage_bucket_objects" "files" {
+#  bucket = var.module_bucket_name
 #}
-
-data "google_storage_bucket_objects" "files" {
-  bucket = var.module_bucket_name
-}
-
-resource "local_file" "initdb_file" {
-  content  = data.google_storage_bucket_object_content.initdb.content
-  filename = "../ansible/postgres/files/initdb.sql"
-}
-
-data "google_storage_bucket_object_content" "initdb" {
-  name   = data.google_storage_bucket_objects.files.bucket_objects[length(data.google_storage_bucket_objects.files.bucket_objects) - 1].name
-  bucket = var.module_bucket_name
-}
+#
+#resource "local_file" "initdb_file" {
+#  content  = data.google_storage_bucket_object_content.initdb.content
+#  filename = "../ansible/postgres/files/initdb.sql"
+#}
+#
+#data "google_storage_bucket_object_content" "initdb" {
+#  name   = data.google_storage_bucket_objects.files.bucket_objects[length(data.google_storage_bucket_objects.files.bucket_objects) - 1].name
+#  bucket = var.module_bucket_name
+#}
 
 resource "google_compute_address" "static" {
   name = "talkliketv-ipv4-address"
@@ -35,9 +35,6 @@ resource "google_compute_subnetwork" "subnetwork_talkliketv" {
   ip_cidr_range = "10.0.1.0/24"
   region        = "us-west1"
   network       = google_compute_network.vpc_network.id
-}
-
-data "google_project" "project" {
 }
 
 locals {
@@ -66,13 +63,13 @@ resource "google_compute_instance" "talkliketv" {
     subnetwork = google_compute_subnetwork.subnetwork_talkliketv.id
     access_config {
       nat_ip = google_compute_address.static.address
-      network_tier = STANDARD
+      network_tier = "STANDARD"
     }
   }
 
   service_account {
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
-    email  = "${var.module_sa_account_id}@${data.google_project.project.project_id}.iam.gserviceaccount.com"
+    email  = "${var.module_sa_account_id}@${var.project_id}.iam.gserviceaccount.com"
     scopes = ["cloud-platform"]
   }
 
@@ -96,7 +93,6 @@ resource "google_compute_instance" "talkliketv" {
     ]
   }
   depends_on = [local_file.on_destroy_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
-#  depends_on = [local_file.on_destroy_file, local_file.initdb_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
 }
 
 # create null resource to run ansible provisioner because we need google compute instance ip before running

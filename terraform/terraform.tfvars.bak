@@ -1,4 +1,3 @@
-
 region = ""
 gce_ssh_user = ""
 gce_ssh_pub_key_file = ""
