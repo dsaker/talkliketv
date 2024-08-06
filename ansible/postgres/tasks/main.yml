@@ -1,6 +1,4 @@
 ---
-#  vars_files:
-#    - vars.yml
 
 - name: Install packages
   ansible.builtin.apt:
@@ -66,9 +64,19 @@
     - { ext: citext }
     - { ext: pg_trgm }
 
+#- name: Copy sql file to server
+#  template:
+#    src: talkliketvdb.sql.j2
+#    dest: ~/talkliketvdb.sql
+#    owner: postgres
+#    group: postgres
+#    mode: "664"
+#  become: yes
+#  become_user: postgres
+
 - name: Copy sql file to server
-  template:
-    src: talkliketvdb.sql.j2
+  copy:
+    src: initdb.sql
     dest: ~/talkliketvdb.sql
     owner: postgres
     group: postgres

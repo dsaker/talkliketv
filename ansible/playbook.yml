@@ -1,5 +1,13 @@
+#- name: Add host to group 'talkliketv'
+#  hosts: talkliketv
+#  gather_facts: false
+#  tasks:
+#    - add_host:
+#        name: '{{ new_host_ipaddr }}'
+#        groups: talkliketv
+
 - name: Install Postgres
-  hosts: all
+  hosts: talkliketv
   become: True
   gather_facts: yes
   tags:
@@ -8,7 +16,7 @@
     - role: postgres
 
 - name: Install Caddy
-  hosts: all
+  hosts: talkliketv
   become: True
   gather_facts: yes
   tags:
@@ -17,7 +25,7 @@
     - role: caddy
 
 - name: Install Talkliketv
-  hosts: all
+  hosts: talkliketv
   become: True
   gather_facts: yes
   tags:

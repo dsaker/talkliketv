@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS citext;
 
 CREATE TABLE users (
    id bigserial PRIMARY KEY,
-   movie_id bigint NOT NULL REFERENCES movies,
+   movie_id bigint NOT NULL REFERENCES movies DEFAULT -1,
    name text NOT NULL,
    email citext unique NOT NULL,
    hashed_password bytea NOT NULL,

@@ -130,9 +130,10 @@ func (m *MovieModel) Insert(movie *Movie) (int, error) {
 
 	if err != nil {
 		switch {
-		case err.Error() == `pq: duplicate key value violates unique constraint "users_title_key"`:
+		case err.Error() == `pq: duplicate key value violates unique constraint "movies_title_key"`:
 			return movie.ID, ErrDuplicateTitle
 		default:
+			println(fmt.Sprintf("error: %s", err.Error()))
 			return movie.ID, err
 		}
 	}

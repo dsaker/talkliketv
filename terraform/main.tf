@@ -1,3 +1,25 @@
+module "bucket_module" {
+  source = "./talkliketv-bucket"
+
+  bucket_name = var.module_bucket_name
+  db_user = var.db_user
+  sa_account_id = var. module_sa_account_id
+}
+
+#data "google_storage_bucket_objects" "files" {
+#  bucket = var.module_bucket_name
+#}
+#
+#resource "local_file" "initdb_file" {
+#  content  = data.google_storage_bucket_object_content.initdb.content
+#  filename = "../ansible/postgres/files/initdb.sql"
+#}
+#
+#data "google_storage_bucket_object_content" "initdb" {
+#  name   = data.google_storage_bucket_objects.files.bucket_objects[length(data.google_storage_bucket_objects.files.bucket_objects) - 1].name
+#  bucket = var.module_bucket_name
+#}
+
 resource "google_compute_address" "static" {
   name = "talkliketv-ipv4-address"
 }
@@ -15,12 +37,17 @@ resource "google_compute_subnetwork" "subnetwork_talkliketv" {
   network       = google_compute_network.vpc_network.id
 }
 
+locals {
+  # IP for gcp instance
+  instance_ip = google_compute_address.static.address
+}
+
 # Create a single Compute Engine instance
 resource "google_compute_instance" "talkliketv" {
-  name         = "talkliketv-vm"
-  machine_type = "e2-small"
-  zone         = "us-west1-a"
-  tags         = ["ssh-talkliketv", "https-talkliketv"]
+  name                      = "talkliketv-vm"
+  machine_type              = var.talkliketv_machine_type
+  zone                      = "us-west1-a"
+  tags                      = ["ssh-talkliketv", "https-talkliketv"]
   allow_stopping_for_update = true
   metadata = {
     ssh-keys = "${var.gce_ssh_user}:${file(var.gce_ssh_pub_key_file)}"
@@ -34,17 +61,69 @@ resource "google_compute_instance" "talkliketv" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.subnetwork_talkliketv.id
-
     access_config {
       nat_ip = google_compute_address.static.address
+      network_tier = "STANDARD"
     }
   }
 
   service_account {
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
-    email  = google_service_account.sa_talkliketv.email
+    email  = "${var.module_sa_account_id}@${var.project_id}.iam.gserviceaccount.com"
     scopes = ["cloud-platform"]
   }
+
+  connection {
+    type     = "ssh"
+    user     = ""
+    host     = self.network_interface.0.access_config.0.nat_ip
+    private_key = file("")
+  }
+
+  provisioner "file" {
+    source      = "scripts/on-destroy.sh"
+    destination = "/tmp/on-destroy.sh"
+  }
+
+  provisioner "remote-exec" {
+    when    = destroy
+    inline = [
+      "chmod +x /tmp/on-destroy.sh",
+      "/tmp/on-destroy.sh",
+    ]
+  }
+  depends_on = [local_file.on_destroy_file, google_compute_firewall.talkliketv_vpc_network_allow_ssh]
+}
+
+# create null resource to run ansible provisioner because we need google compute instance ip before running
+resource "null_resource" "ansible-provisioner" {
+  provisioner "local-exec" {
+    command = "sleep 60 && chmod +x scripts/ansible-provisioner.sh && scripts/ansible-provisioner.sh"
+  }
+
+  depends_on = [local_file.ansible_file, google_compute_instance.talkliketv]
+}
+
+resource "local_file" "ansible_file" {
+  content  = templatefile("templates/ansible-provisioner.sh", {
+    db_user = var.db_user,
+    db_password = var.db_password,
+    db_name = var.db_name,
+    instance_ip = local.instance_ip
+    ansible_user = var.gce_ssh_user
+    ansible_private_key_file = var.gce_ssh_private_key_file
+  })
+  filename = "scripts/ansible-provisioner.sh"
+}
+
+resource "local_file" "on_destroy_file" {
+  content  = templatefile("templates/on-destroy.sh", {
+    db_user = var.db_user,
+    db_password = var.db_password,
+    db_name = var.db_name,
+    module_bucket_name = var.module_bucket_name
+  })
+  filename = "scripts/on-destroy.sh"
 }
 
 resource "google_compute_firewall" "talkliketv_vpc_network_allow_ssh" {
@@ -56,7 +135,7 @@ resource "google_compute_firewall" "talkliketv_vpc_network_allow_ssh" {
     ports    = ["22"]
   }
 
-  target_tags = ["ssh-talkliketv"]
+  target_tags   = ["ssh-talkliketv"]
   source_ranges = ["0.0.0.0/0"]
 }
 
@@ -69,25 +148,6 @@ resource "google_compute_firewall" "talkliketv_vpc_network_allow_https" {
     ports    = ["443"]
   }
 
-  target_tags = ["https-talkliketv"]
+  target_tags   = ["https-talkliketv"]
   source_ranges = ["0.0.0.0/0"]
-}
-
-output "instance_ip" {
-  value = google_compute_instance.talkliketv.network_interface[0].access_config.*.nat_ip
-}
-
-resource "google_service_account" "sa_talkliketv" {
-  account_id = "talkliketv-service-account-id"
-  display_name = "TalkLikeTv Service Account"
-}
-
-data "google_iam_policy" "talkliketv" {
-  binding {
-    role = "roles/cloudtranslate.user"
-
-    members = [
-      "serviceAccount:${google_service_account.sa_talkliketv.email}",
-    ]
-  }
 }

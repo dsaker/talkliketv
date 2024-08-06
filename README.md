@@ -47,50 +47,68 @@ make build/api
 
 ### Deploy web application to google cloud platform
 
-```
-cd terraform
-cp terraform.tfvars.bak terraform.tfvars
+- install golang if needed (https://go.dev/doc/install)
+```shell
+make build/web
+cp ansible/inventory.txt.bak ansible/inventory.txt
+cp terraform/terraform.tfvars.bak terraform/terraform.tfvars
 ```
 - create gcp project (https://cloud.google.com/resource-manager/docs/creating-managing-projects)
 - create ssh keys if needed (https://cloud.google.com/compute/docs/connect/create-ssh-keys)
-- fill in the values for the variables in terraform.tfvars
-- install terraform if needed (https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+```shell
+gcloud init
+gcloud services enable storage-component.googleapis.com  compute.googleapis.com translate.googleapis.com storage.buckets.getIamPolicy'
 ```
+- create mailtrap account as described above
+- get smtp username and password from Email Testing Inbox
+- generate a new ssh key if needed (https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+- fill in the values for the variables in terraform/terraform.tfvars and ansible/inventory.txt
+- also change google_compute_instance.talkliketv.connection.user and private_key to your user values
+  - (terraform will not allow you to use vars for provisioners with when = destroy)
+- install terraform if needed (https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+- install anisble if needed (https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
+```shell
 terraform init
+terraform plan
 terraform apply
 ```
-- note ip output from terraform (you can also run `terraform output` at any time to obtain this value)
-- create mailtrap account as describe above
-- get smtp username and password from Email Testing Inbox
+- comment out module.bucket_module from main.tf
+- uncomment three resources below it
+  - google_storage_bucket_objects.files
+  - local_file.initdb_file
+  - google_storage_bucket_object_content.initdb
+- remove bucket_module from terraform state (you do not want to destroy the bucket or service account)
+```shell
+terraform state rm module.bucket_module
 ```
-cd ..
-make build/web
-cd ansible
-cp inventory.txt.bak inventory.txt
-```
-- fill in the needed values <>
-- install anisble if needed (https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
-```
-ansible-playbook -i inventory.txt playbook.yml
-```
-- go to https://{{ terraform output ip }}.sslip.io
-- signup user
+- run `make browser` in root directory to open web application in browser
+- Signup user
 - get activation code from mailtrap.io and activate account
-- you can upload files that end in stripped in scripts/shell or use the stirpsrt script to make your own
+- Login
+- click on Upload
+- You can upload scripts/shell/TheMannyS01E01.Spanish.srt.stripped as a test to make sure cloud translate is working
+![img.png](readme_images/img.png)
+- click on Account > Change Language and choose Spanish
+- click on Titles and Select TheMannyS01E01
+- you can upload files that end in stripped in scripts/shell or use the stirpsrt script to make your own from srt files
 - TheManny is to English from Spanish and MissAdrenaline is from english to any language
 - directions for extracting srt files from mkv files are below, or you can upload any txt file with the phrases you want to learn one on each line
-- after uploading a file click on Account > Change language and choose your language
+- After you upload a new language, it will appear in the Change Language select list 
 - select the Title you would like to start learning
-- you can also upload a tsv file to the database using the uploadtsv.sh script (the english side of the translation must be the first column) 
+- you can also upload a tsv file to the database using the uploadtsv.sh script (the english side of the translation must be the first column)
+
+### Destroying infrastructure using terraform
+
+- you can run `terraform destroy` to destroy the infrastructure and stop incurring charges
+- everything except what is in module.bucket_module will be destroyed
+- on subsequent `terraform apply` your progress will be loaded from the sql file stored in the bucket
+- the backup sql file is created and stored by the "remote-exec" provisioner when terraform destroy is run
 
 ### Extract srt file from mkv files
 
-download mkvextract tool -> https://mkvtoolnix.download/downloads.html
-
-find srt track of language you would like to extract 
-`mkvinfo mkvfile.mkv`
-and extract
-`mkvextract mkvfile.mkv tracks 5:[Choose Title].[Choose Language].srt`
+- download mkvextract tool -> https://mkvtoolnix.download/downloads.html
+- find srt track of language you would like to extract `mkvinfo mkvfile.mkv` and extract
+- `mkvextract mkvfile.mkv tracks 5:[Choose Title].[Choose Language].srt`
 
 ### To Do
 
