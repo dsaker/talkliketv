@@ -14,7 +14,7 @@ const (
 
 type ModelTestSuite struct {
 	suite.Suite
-	testDb *test.TestDatabase
+	testDb *test.Database
 	u      UserModel
 	p      PhraseModel
 	m      MovieModel
@@ -110,7 +110,7 @@ func (suite *ModelTestSuite) TestUserModelInsert() {
 		{
 			name:         "Duplicate Email",
 			userName:     validUserName,
-			userEmail:    "user2@email.com",
+			userEmail:    test.DuplicateEmail,
 			userPassword: validUserPassword,
 			userLanguage: validUserLanguage,
 			wantErr:      ErrDuplicateEmail,
