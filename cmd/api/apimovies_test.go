@@ -58,7 +58,7 @@ func (suite *ApiTestSuite) TestApiMoviesMp3() {
 	}{
 		{
 			name:     "Valid submission",
-			movieId:  "2",
+			movieId:  test.Mp3MovieId,
 			wantCode: http.StatusOK,
 		},
 		{
@@ -150,16 +150,16 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			url:        "/v1/movies?mp3=false",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: test.MovieString,
-			wantSize:   2,
+			wantString: test.MovieStringMiss,
+			wantSize:   1,
 		},
 		{
 			name:       "Mp3 True",
 			url:        "/v1/movies?mp3=true",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: "{\"metadata\":{},\"movies\":null}",
-			wantSize:   0,
+			wantString: test.MovieString,
+			wantSize:   1,
 		},
 		{
 			name:       "Page Size 1",
@@ -182,7 +182,7 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			url:        "/v1/movies?page_size=1&sort=-num_subs",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: test.MovieString,
+			wantString: test.MovieStringMiss,
 			wantSize:   1,
 		},
 		{
@@ -190,7 +190,7 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			url:        "/v1/movies?page_size=1&sort=title",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: test.MovieString,
+			wantString: test.MovieStringMiss,
 			wantSize:   1,
 		},
 		{
@@ -206,7 +206,7 @@ func (suite *ApiTestSuite) TestApiListMoviesHandler() {
 			url:        "/v1/movies?page=2&page_size=1&sort=-title",
 			authToken:  suite.authToken,
 			wantCode:   http.StatusOK,
-			wantString: test.MovieString,
+			wantString: test.MovieStringMiss,
 			wantSize:   1,
 		},
 		{

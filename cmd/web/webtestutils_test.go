@@ -43,7 +43,7 @@ func init() {
 type WebTestSuite struct {
 	suite.Suite
 	ts             *test.TestServer
-	testDb         *test.TestDatabase
+	testDb         *test.Database
 	validCSRFToken string
 	app            *web
 }
@@ -77,7 +77,7 @@ func TestWebTestSuite(t *testing.T) {
 type WebNoLoginTestSuite struct {
 	suite.Suite
 	ts             *test.TestServer
-	testDb         *test.TestDatabase
+	testDb         *test.Database
 	validCSRFToken string
 	app            *web
 }
@@ -99,7 +99,7 @@ func TestWebNoLoginTestSuite(t *testing.T) {
 	suite.Run(t, new(WebNoLoginTestSuite))
 }
 
-func newTestApplication(t *testing.T) (*web, *test.TestDatabase) {
+func newTestApplication(t *testing.T) (*web, *test.Database) {
 	testDb := test.SetupTestDatabase()
 	templateCache, err := newTemplateCache()
 	if err != nil {

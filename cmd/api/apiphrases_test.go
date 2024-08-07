@@ -87,6 +87,6 @@ func (suite *ApiNoLoginTestSuite) TestListPhrasesHandler() {
 		chooseMovie(t, suite.ts, authToken)
 		code, _, body = suite.ts.Request(t, nil, "/v1/phrases", http.MethodGet, authToken)
 		assert.Equal(t, code, http.StatusOK)
-		assert.StringContains(t, body, "MissAdrenalineS01E02")
+		assert.StringContains(t, body, test.MovieString)
 	})
 }

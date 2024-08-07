@@ -27,7 +27,7 @@ const (
 )
 
 const (
-	ValidUserId      = 3
+	ValidUserId      = 1
 	ValidPhraseId    = "1"
 	ValidPhraseIdInt = 1
 	ValidMovieId     = "1"
@@ -37,17 +37,19 @@ const (
 	ValidEmail       = "Test@email.com"
 	DbCtxTimeout     = 60 * time.Second
 	ValidMovieSize   = 2
-	MovieString      = "MissAdrenalineS01E02"
-	Mp3MovieId       = "2"
+	MovieString      = "TheMannyS01E01"
+	MovieStringMiss  = "MissAdrenanlineS01E02"
+	Mp3MovieId       = "1"
+	DuplicateEmail   = "user1@email.com"
 )
 
-type TestDatabase struct {
+type Database struct {
 	DbInstance *sql.DB
 	DbAddress  string
 	container  testcontainers.Container
 }
 
-func SetupTestDatabase() *TestDatabase {
+func SetupTestDatabase() *Database {
 
 	// setup db container
 	ctx, cancel := context.WithTimeout(context.Background(), DbCtxTimeout)
@@ -89,7 +91,7 @@ func SetupTestDatabase() *TestDatabase {
 		Password: DbPass,
 	})
 
-	restoreExec := restore.Exec(dir+"testdata/talktv_db_1721165208.tar", pg.ExecOptions{StreamPrint: false})
+	restoreExec := restore.Exec(dir+"testdata/talktv_db_1723071641.tar", pg.ExecOptions{StreamPrint: false})
 	if restoreExec.Error != nil {
 		fmt.Println(restoreExec.Error.Err)
 		fmt.Println(restoreExec.Output)
@@ -105,14 +107,14 @@ func SetupTestDatabase() *TestDatabase {
 	}
 	cancel()
 
-	return &TestDatabase{
+	return &Database{
 		container:  container,
 		DbInstance: db,
 		DbAddress:  dbAddr,
 	}
 }
 
-func (tdb *TestDatabase) TearDown() {
+func (tdb *Database) TearDown() {
 	tdb.DbInstance.Close()
 	// remove test container
 	_ = tdb.container.Terminate(context.Background())
