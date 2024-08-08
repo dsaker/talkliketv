@@ -63,7 +63,6 @@ resource "google_compute_instance" "talkliketv" {
     subnetwork = google_compute_subnetwork.subnetwork_talkliketv.id
     access_config {
       nat_ip = google_compute_address.static.address
-      network_tier = "STANDARD"
     }
   }
 
@@ -75,9 +74,9 @@ resource "google_compute_instance" "talkliketv" {
 
   connection {
     type     = "ssh"
-    user     = ""
+    user     = "dustysaker"
     host     = self.network_interface.0.access_config.0.nat_ip
-    private_key = file("")
+    private_key = file("/Users/dustysaker/.ssh/id_ed25519")
   }
 
   provisioner "file" {
