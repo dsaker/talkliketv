@@ -97,7 +97,7 @@ resource "google_compute_instance" "talkliketv" {
 resource "null_resource" "save_db_state" {
 
   triggers = {
-    INSTANCE_ID               = local.instance_ip
+    INSTANCE_IP               = local.instance_ip
     SSH_USER                  = var.gce_ssh_user
     SSH_PRIVATE_KEY_FILE      = var.gce_ssh_private_key_file
   }
@@ -105,7 +105,7 @@ resource "null_resource" "save_db_state" {
   connection {
     type        = "ssh"
     user        = self.triggers.SSH_USER
-    host        = self.triggers.INSTANCE_ID
+    host        = self.triggers.INSTANCE_IP
     private_key = file(self.triggers.SSH_PRIVATE_KEY_FILE)
   }
 
