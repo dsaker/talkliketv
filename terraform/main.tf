@@ -1,10 +1,10 @@
-module "bucket_module" {
-  source = "./talkliketv-bucket"
-
-  bucket_name = var.module_bucket_name
-  db_user = var.db_user
-  sa_account_id = var. module_sa_account_id
-}
+#module "bucket_module" {
+#  source = "./talkliketv-bucket"
+#
+#  bucket_name = var.module_bucket_name
+#  db_user = var.db_user
+#  sa_account_id = var. module_sa_account_id
+#}
 
 data "google_storage_bucket_objects" "files" {
   bucket = var.module_bucket_name
@@ -130,6 +130,7 @@ resource "null_resource" "ansible-provisioner" {
 }
 
 resource "local_file" "ansible_file" {
+  # pass in shared variables from variables.tfvars into ansible so you don't have to write them twice
   content  = templatefile("templates/ansible-provisioner.sh", {
     db_user = var.db_user,
     db_password = var.db_password,
@@ -142,6 +143,7 @@ resource "local_file" "ansible_file" {
 }
 
 resource "local_file" "on_destroy_file" {
+  # bash script that saves db state to bucket when tf state is destroyed
   content  = templatefile("templates/on-destroy.sh", {
     db_user = var.db_user,
     db_password = var.db_password,
@@ -151,6 +153,7 @@ resource "local_file" "on_destroy_file" {
   filename = "scripts/on-destroy.sh"
 }
 
+# allow ssh to talkliketv vpc
 resource "google_compute_firewall" "talkliketv_vpc_network_allow_ssh" {
   name    = "talkliketv-vpc-network-allow-ssh"
   network = google_compute_network.vpc_network.name
@@ -164,6 +167,7 @@ resource "google_compute_firewall" "talkliketv_vpc_network_allow_ssh" {
   source_ranges = ["0.0.0.0/0"]
 }
 
+# allow https to talkliketv vpc
 resource "google_compute_firewall" "talkliketv_vpc_network_allow_https" {
   name    = "talkliketv-vpc-network-allow-https"
   network = google_compute_network.vpc_network.name

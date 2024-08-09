@@ -61,8 +61,6 @@ gcloud services enable storage-component.googleapis.com  compute.googleapis.com 
 - get smtp username and password from Email Testing Inbox
 - generate a new ssh key if needed (https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
 - fill in the values for the variables in terraform/terraform.tfvars and ansible/inventory.txt
-- also change google_compute_instance.talkliketv.connection.user and private_key to your user values
-  - (terraform will not allow you to use vars for provisioners with when = destroy)
 - install terraform if needed (https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 - install anisble if needed (https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
 ```shell
@@ -70,37 +68,43 @@ terraform init
 terraform plan
 terraform apply
 ```
-- comment out module.bucket_module from main.tf
-- uncomment three resources below it
+- remove bucket_module from terraform state (you do not want to destroy the bucket or service account)
+```shell
+cd ..
+make remove_module
+```
+- this comments out module.bucket_module from main.tf
+- uncomments the three resources below it
   - google_storage_bucket_objects.files
   - local_file.initdb_file
   - google_storage_bucket_object_content.initdb
-- remove bucket_module from terraform state (you do not want to destroy the bucket or service account)
-```shell
-terraform state rm module.bucket_module
-```
+- and removes bucket_module from terraform state (you do not want to destroy the bucket or service account)
+
 - run `make browser` in root directory to open web application in browser
 - Signup user
-- get activation code from mailtrap.io and activate account
+- Get activation code from mailtrap.io and activate account
 - Login
-- click on Upload
+- Click on Upload
 - You can upload scripts/shell/TheMannyS01E01.Spanish.srt.stripped as a test to make sure cloud translate is working
 ![img.png](readme_images/img.png)
-- click on Account > Change Language and choose Spanish
-- click on Titles and Select TheMannyS01E01
-- you can upload files that end in stripped in scripts/shell or use the stirpsrt script to make your own from srt files
-- TheManny is to English from Spanish and MissAdrenaline is from english to any language
-- directions for extracting srt files from mkv files are below, or you can upload any txt file with the phrases you want to learn one on each line
-- After you upload a new language, it will appear in the Change Language select list 
-- select the Title you would like to start learning
-- you can also upload a tsv file to the database using the uploadtsv.sh script (the english side of the translation must be the first column)
+- Click on Account > Change Language and choose Spanish
+- Click on Titles and Select TheMannyS01E01
+- You can upload files that end in stripped in scripts/shell or use scripts/shell/stirpsrt.sh to make your own from srt files
+```shell
+./stripsrt.sh -i TheMannyS01E01.Spanish.srt
+```
+- TheManny is to English from Spanish and MissAdrenaline is from english to any language 
+- Directions for extracting srt files from mkv files are below, or you can upload any txt file with the phrases you want to learn one on each line
+- After you upload a new language, it will appear in the Change Language select list under Account
+- Select the Title you would like to start learning
+- You can also upload a tsv file to the database using the scripts/shell/uploadtsv.sh script (the english side of the translation must be the first column)
 
 ### Destroying infrastructure using terraform
 
-- you can run `terraform destroy` to destroy the infrastructure and stop incurring charges
-- everything except what is in module.bucket_module will be destroyed
-- on subsequent `terraform apply` your progress will be loaded from the sql file stored in the bucket
-- the backup sql file is created and stored by the "remote-exec" provisioner when terraform destroy is run
+- Run `terraform destroy` to destroy the infrastructure and stop incurring charges
+- Everything except what is in module.bucket_module will be destroyed
+- On subsequent `terraform apply` your progress will be loaded from the sql file stored in the bucket
+- The backup sql file is created and stored by the null_resource.save_db_state in terraform/main.tf when terraform destroy is run
 
 ### Extract srt file from mkv files
 
@@ -111,15 +115,13 @@ terraform state rm module.bucket_module
 ### To Do
 
 - add comments
+- run on linux to make sure sed works
 - add text translate tests
-- backup db button
 - openapi3 spec (Huma)
 - add observability and monitoring
 - use gmail for smtp
 - create native and learning lang
-- GetAllMovies when not signed in
 - delete account
-- password reset web
 
 ### Setup Google Cloud Translate
 
