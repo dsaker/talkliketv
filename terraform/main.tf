@@ -74,9 +74,9 @@ resource "google_compute_instance" "talkliketv" {
 
   connection {
     type     = "ssh"
-    user     = "dustysaker"
+    user     = ""
     host     = self.network_interface.0.access_config.0.nat_ip
-    private_key = file("/Users/dustysaker/.ssh/id_ed25519")
+    private_key = file("")
   }
 
   provisioner "file" {
