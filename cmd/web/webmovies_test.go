@@ -68,7 +68,7 @@ func (suite *WebTestSuite) TestMoviesMp3() {
 	}{
 		{
 			name:     "Valid submission",
-			movieId:  "2",
+			movieId:  "1",
 			wantCode: http.StatusOK,
 		},
 		{

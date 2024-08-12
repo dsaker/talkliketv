@@ -24,6 +24,20 @@ copy-hooks:
 expvar:
 	eval $(cat .envrc)
 
+## browser: open talkliketv in default browser
+browser:
+	python3 -m webbrowser https://${CLOUD_HOST_IP}.sslip.io/
+
+## remove_module: removes bucket_module from terraform state and adds and removes hashes from main.tf
+remove_module:
+	# comment out bucket_module from main.tf
+	sed -i '' -e "1,7s/^/#/" terraform/main.tf
+	# uncomment lines necessary to retrieve db file from bucket in main.tf
+	sed  -i '' -e '9,24s/^#//' terraform/main.tf
+	# remove bucket_module form terraform state
+	terraform -chdir=terraform state rm module.bucket_module
+
+
 # ==================================================================================== #
 # DEVELOPMENT
 # ==================================================================================== #
@@ -135,8 +149,8 @@ build/pack:
 # CLOUD
 # ==================================================================================== #
 
-## cloud/connect: connect to the cloud server
-cloud/connect:
+## connect: connect to the cloud server
+connect:
 	ssh ${CLOUD_HOST_USERNAME}@${CLOUD_HOST_IP}
 
 ## cloud/deploy/api: deploy the web application to cloud

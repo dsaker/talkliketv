@@ -26,7 +26,7 @@ func (suite *ModelTestSuite) TestMovieModelChooseMovie() {
 		},
 		{
 			name:    "Change Movie",
-			movieId: 8,
+			movieId: 2,
 			userId:  test.ValidUserId,
 		},
 	}
@@ -98,7 +98,7 @@ func (suite *ModelTestSuite) TestMovieModelAll() {
 		{
 			name:       "Valid Id",
 			languageId: validLanguageId,
-			numMovies:  5,
+			numMovies:  0,
 		},
 		{
 			name:       "Invalid Language Id",

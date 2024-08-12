@@ -35,7 +35,7 @@ type ApiTestSuite struct {
 	suite.Suite
 	app       *api
 	ts        *test.TestServer
-	testDb    *test.TestDatabase
+	testDb    *test.Database
 	authToken string
 	apiUser   *models.User
 }
@@ -61,7 +61,7 @@ func TestApiTestSuite(t *testing.T) {
 type ApiNoLoginTestSuite struct {
 	suite.Suite
 	ts     *test.TestServer
-	testDb *test.TestDatabase
+	testDb *test.Database
 	app    *api
 }
 
@@ -156,7 +156,7 @@ func getAuthToken(prefix string, t *testing.T, ts *test.TestServer) string {
 	return authToken.Token.Plaintext
 }
 
-func newTestApplication() (*api, *test.TestDatabase) {
+func newTestApplication() (*api, *test.Database) {
 	testDb := test.SetupTestDatabase()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
