@@ -2,30 +2,35 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"talkliketv.net/internal/models"
 	"talkliketv.net/internal/validator"
 	"time"
 )
 
-// Create a new userLoginForm struct.
+// Create a new tokenRequestForm struct.
 type tokenRequestForm struct {
 	Email               string `form:"email"`
 	validator.Validator `form:"-"`
 }
 
+// createPasswordResetToken() creates a token for user to reset their password and emails it to them
 func (app *web) createPasswordResetToken(w http.ResponseWriter, r *http.Request) {
+	// get user from email in tokenRequestForm
 	user := app.decodeEmail(w, r)
 	if user == nil {
+		app.clientError(w, r, http.StatusBadRequest, fmt.Errorf(""))
 		return
 	}
-	// Otherwise, create a new password reset token with a 45-minute expiry time.
+	// create a new password reset token with a 45-minute expiry time.
 	token, err := app.Models.Tokens.New(user.ID, 45*time.Minute, models.ScopePasswordReset)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	// Email the user with their password reset token.
+	// Email the user with their password reset token. Run in background as Mailer.Send()
+	// could take longer
 	app.Background(func() {
 		emailData := map[string]interface{}{
 			"passwordResetToken": token.Plaintext}
@@ -35,13 +40,14 @@ func (app *web) createPasswordResetToken(w http.ResponseWriter, r *http.Request)
 		}
 	})
 
-	//form.AddNonFieldError("An email will be sent to you containing password reset instructions")
+	// let user know an email will be sent with token and redirect to reset page
 	app.sessionManager.Put(r.Context(), "flash", "An email will be sent to you containing password reset instructions")
 	http.Redirect(w, r, "/user/password/reset", http.StatusSeeOther)
 }
 
 func (app *web) createActivationToken(w http.ResponseWriter, r *http.Request) {
 	user := app.decodeEmail(w, r)
+	// if user equals nil then error was already sent in decodeEmail() so just return
 	if user == nil {
 		return
 	}
@@ -52,7 +58,8 @@ func (app *web) createActivationToken(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	// Email the user with their password reset token.
+
+	// Email the user with their password reset token in the background since io could take longer
 	app.Background(func() {
 		emailData := map[string]interface{}{
 			"activationToken": token.Plaintext}
@@ -62,11 +69,12 @@ func (app *web) createActivationToken(w http.ResponseWriter, r *http.Request) {
 		}
 	})
 
-	//form.AddNonFieldError("An email will be sent to you containing password reset instructions")
-	app.sessionManager.Put(r.Context(), "flash", "An email will be sent to you containing password reset instructions")
-	http.Redirect(w, r, "/user/password/reset", http.StatusSeeOther)
+	// let user know an email will be sent with token and redirect to reset page
+	app.sessionManager.Put(r.Context(), "flash", "An email will be sent to you containing activation instructions")
+	http.Redirect(w, r, "/user/activate", http.StatusSeeOther)
 }
 
+// decodeEmail() decodes email from tokenRequestForm and returns user if one is found
 func (app *web) decodeEmail(w http.ResponseWriter, r *http.Request) *models.User {
 	var form tokenRequestForm
 

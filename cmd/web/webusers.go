@@ -185,8 +185,7 @@ func (app *web) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
 
 	// Use the PopString method to retrieve and remove a value from the session
-	// data in one step. If no matching key exists this will return the empty
-	// string.
+	// data in one step. If no matching key exists this will return the empty string.
 	path := app.sessionManager.PopString(r.Context(), "redirectPathAfterLogin")
 	if path != "" {
 		http.Redirect(w, r, path, http.StatusSeeOther)
@@ -207,7 +206,7 @@ func (app *web) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 
 	// Remove the authenticatedUserID from the session data so that the user is
 	// 'logged out'.
-	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+	app.sessionManager.Remove(r.Context(), authenticatedUserId)
 
 	// Add a flash message to the session to confirm to the user that they've been
 	// logged out.
@@ -253,7 +252,7 @@ func (app *web) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request
 		app.render(w, r, http.StatusUnprocessableEntity, "password.gohtml", data)
 		return
 	}
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserId)
 
 	err = app.Models.Users.WebPasswordUpdate(userId, form.CurrentPassword, form.NewPassword)
 	if err != nil {
@@ -277,7 +276,7 @@ func (app *web) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request
 
 func (app *web) userLanguageFlip(w http.ResponseWriter, r *http.Request) {
 
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserId)
 
 	user, err := app.Models.Users.Get(userId)
 	if err != nil {
@@ -299,6 +298,8 @@ func (app *web) userLanguageFlip(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	app.sessionManager.Put(r.Context(), "flippedKey", user.Flipped)
 
 	http.Redirect(w, r, "/phrase/view", http.StatusSeeOther)
 }
@@ -335,7 +336,7 @@ func (app *web) accountLanguageUpdatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserId)
 
 	user, err := app.Models.Users.Get(userId)
 	if err != nil {

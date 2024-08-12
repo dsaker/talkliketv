@@ -15,7 +15,8 @@ func (app *web) about(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "about.gohtml", data)
 }
 
-func (app *web) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
+// healthCheckHandler is an unprotected endpoint that signifies that the application is up
+func (app *web) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	env := envelope{
 		"status": "available",
 		"system_info": map[string]string{

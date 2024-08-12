@@ -48,8 +48,9 @@ func (app *web) render(w http.ResponseWriter, r *http.Request, status int, page 
 	}
 }
 
+// newTemplateData() checks if the user is authenticated and adds the base data needed for the templates
 func (app *web) newTemplateData(r *http.Request) *templateData {
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), "isAuthenticated")
 	var email string
 	if userId != 0 {
 		user, _ := app.Models.Users.Get(userId)
@@ -98,6 +99,8 @@ func (app *web) decodePostForm(r *http.Request, dst any) error {
 	return nil
 }
 
+// isAuthenticated() checks for the isAuthenticated ContextKey for the request and returns
+// a boolean indicating its status
 func (app *web) isAuthenticated(r *http.Request) bool {
 	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
 	if !ok {
@@ -107,7 +110,7 @@ func (app *web) isAuthenticated(r *http.Request) bool {
 	return isAuthenticated
 }
 
-// Change the data parameter to have the type envelope instead of interface{}.
+// writeJson() takes a  map[string]interface{} and returns it as json back to caller.
 func (app *web) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {

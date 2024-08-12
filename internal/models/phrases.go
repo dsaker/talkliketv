@@ -134,37 +134,38 @@ func (m *PhraseModel) PercentageDone(userId int, movieId int, flipped bool) (int
 	var query string
 	if flipped {
 		query = `
-			SELECT SUM(flipped_correct) 
+			SELECT SUM(flipped_correct), count(phrase_id) as total
 			FROM users_phrases
 			WHERE user_id = $1 AND movie_id = $2`
 	} else {
 		query = `
-			SELECT SUM(phrase_correct) 
+			SELECT SUM(phrase_correct), count(phrase_id) as total 
 			FROM users_phrases
 			WHERE user_id = $1 AND movie_id = $2`
 	}
 
 	var sum int
+	var total int
 	ctx, cancel := context.WithTimeout(context.Background(), m.CtxTimeout*time.Second)
 	defer cancel()
-	if err := m.DB.QueryRowContext(ctx, query, userId, movieId).Scan(&sum); err != nil {
+	if err := m.DB.QueryRowContext(ctx, query, userId, movieId).Scan(&sum, &total); err != nil {
 		return -1, -1, err
 	}
 
-	query = `
-			SELECT num_subs 
-			FROM movies
-			WHERE id=$1`
+	//query = `
+	//		SELECT num_subs
+	//		FROM movies
+	//		WHERE id=$1`
 
-	var total int
-	if err := m.DB.QueryRowContext(ctx, query, movieId).Scan(&total); err != nil {
-		return -1, -1, err
-	}
+	//var total int
+	//if err := m.DB.QueryRowContext(ctx, query, movieId).Scan(&total); err != nil {
+	//	return -1, -1, err
+	//}
 
 	return sum, total, nil
 }
 
-func (m PhraseModel) Insert(phrase *Phrase) error {
+func (m *PhraseModel) Insert(phrase *Phrase) error {
 
 	query := `
         INSERT INTO phrases (movie_id, phrase, translates, phrase_hint, translates_hint) 

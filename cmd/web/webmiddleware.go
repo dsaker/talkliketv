@@ -7,20 +7,29 @@ import (
 	"net/http"
 )
 
+// secureHeaders() is set for all routes in web application
 func secureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// limits where css, html, and javascript can be sourced from
 		w.Header().Set("Content-Security-Policy",
 			"default-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com")
-
+		// controls how much referrer information (sent with the Referer header) should be included with requests.
+		// (https://developer.mozilla.org/)
 		w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
+		// Blocks a request if the request destination is of type style and the MIME type is not text/css,
+		// or of type script and the MIME type is not a JavaScript MIME type. (https://developer.mozilla.org/)
 		w.Header().Set("X-Content-Type-Options", "nosniff")
+		// not only will the browser attempt to load the page in a frame fail when loaded from other sites,
+		// attempts to do so will fail when loaded from the same site (https://developer.mozilla.org/)
 		w.Header().Set("X-Frame-Options", "deny")
+		// Disables XSS filtering.
 		w.Header().Set("X-XSS-Protection", "0")
 
 		next.ServeHTTP(w, r)
 	})
 }
 
+// logRequest() applies to all requests. Logs request data for observability
 func (app *web) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.Logger.PrintInfo(fmt.Sprintf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI()), nil)
@@ -29,6 +38,7 @@ func (app *web) logRequest(next http.Handler) http.Handler {
 	})
 }
 
+// recoverPanic() catches a panic so the web application will not shut down
 func (app *web) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Create a deferred function (which will always be run in the event
@@ -49,6 +59,7 @@ func (app *web) recoverPanic(next http.Handler) http.Handler {
 	})
 }
 
+// requireAuthentication() applies to all routes that should require login before being able to view
 func (app *web) requireAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !app.isAuthenticated(r) {
@@ -84,14 +95,13 @@ func (app *web) authenticate(next http.Handler) http.Handler {
 		// GetInt() method. This will return the zero value for an int (0) if no
 		// "authenticatedUserID" value is in the session -- in which case we
 		// call the next handler in the chain as normal and return.
-		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		id := app.sessionManager.GetInt(r.Context(), authenticatedUserId)
 		if id == 0 {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// Otherwise, we check to see if a user with that ID exists in our
-		// database.
+		// Otherwise, we check to see if a user with that ID exists in our database.
 		exists, err := app.Models.Users.Exists(id)
 		if err != nil {
 			app.sessionManager.Put(r.Context(), "flash", "Invalid Credentials")

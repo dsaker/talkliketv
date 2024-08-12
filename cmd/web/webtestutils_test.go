@@ -28,9 +28,10 @@ import (
 var cfg config.Config
 
 const (
-	testuser = "testUser"
+	testUser = "testUser"
 )
 
+// call init to initialize all the necessary flag values for the tests to be able to run
 func init() {
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|cloud)")
 	flag.StringVar(&cfg.Smtp.Host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
@@ -40,6 +41,7 @@ func init() {
 	flag.StringVar(&cfg.Smtp.Sender, "smtp-sender", "TalkLikeTV <no-reply@talkliketv.click>", "SMTP sender")
 }
 
+// struct to hold the suite values for WebTestSuite (logged in tests)
 type WebTestSuite struct {
 	suite.Suite
 	ts             *test.TestServer
@@ -52,12 +54,15 @@ func (suite *WebTestSuite) SetupSuite() {
 	t := suite.T()
 	suite.app, suite.testDb = newTestApplication(t)
 	suite.ts = newWebTestServer(t, suite.app.routes())
-	signup(t, suite.ts, testuser)
-	activate(testuser+test.ValidEmail, suite.app.Models)
-	suite.validCSRFToken = login(t, suite.ts, testuser)
+	// signup, activate, login, and select a Movie with new user testUser
+	signup(t, suite.ts, testUser)
+	activate(testUser+test.ValidEmail, suite.app.Models)
+	suite.validCSRFToken = login(t, suite.ts, testUser)
 	chooseMovie(t, suite.ts, suite.validCSRFToken)
 }
 
+// tear down suite after tests are finished. this includes destroying the
+// container used for testing
 func (suite *WebTestSuite) TearDownSuite() {
 	defer suite.testDb.TearDown()
 	defer suite.ts.Close()
@@ -70,10 +75,12 @@ func (suite *WebTestSuite) TearDownSuite() {
 	})
 }
 
+// Run Web Test Suite
 func TestWebTestSuite(t *testing.T) {
 	suite.Run(t, new(WebTestSuite))
 }
 
+// struct for holding elements necessary for running non logged in tests
 type WebNoLoginTestSuite struct {
 	suite.Suite
 	ts             *test.TestServer
@@ -82,19 +89,23 @@ type WebNoLoginTestSuite struct {
 	app            *web
 }
 
+// setup container test database and server
 func (suite *WebNoLoginTestSuite) SetupSuite() {
 	t := suite.T()
 	suite.app, suite.testDb = newTestApplication(t)
 	suite.ts = newWebTestServer(t, suite.app.routes())
 	_, _, body := suite.ts.Get(t, "/user/login")
+	// get a valid CSRF token to be stored in test struct
 	suite.validCSRFToken = extractCSRFToken(t, body)
 }
 
+// tear down test suite after tests have finished
 func (suite *WebNoLoginTestSuite) TearDownSuite() {
 	defer suite.testDb.TearDown()
 	defer suite.ts.Close()
 }
 
+// run non logged in test suite
 func TestWebNoLoginTestSuite(t *testing.T) {
 	suite.Run(t, new(WebNoLoginTestSuite))
 }
@@ -112,8 +123,6 @@ func newTestApplication(t *testing.T) (*web, *test.Database) {
 	sessionManager.Lifetime = 12 * time.Hour
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
-
-	flag.Parse()
 
 	return &web{
 		templateCache,
@@ -156,6 +165,7 @@ func newWebTestServer(t *testing.T, h http.Handler) *test.TestServer {
 	return &test.TestServer{Server: ts}
 }
 
+// choose a Movie for the testUser in WebTestSuite
 func chooseMovie(t *testing.T, ts *test.TestServer, validToken string) {
 	setupUserForm := url.Values{}
 	setupUserForm.Add("movie_id", "1")
@@ -166,6 +176,7 @@ func chooseMovie(t *testing.T, ts *test.TestServer, validToken string) {
 	assert.Equal(t, code, http.StatusSeeOther)
 }
 
+// used to log in testUser in WebTestSuite
 func login(t *testing.T, ts *test.TestServer, username string) string {
 	_, _, body := ts.Get(t, "/user/login")
 	validCSRFToken := extractCSRFToken(t, body)
@@ -182,6 +193,7 @@ func login(t *testing.T, ts *test.TestServer, username string) string {
 	return validCSRFToken
 }
 
+// used to signup users for testing
 func signup(t *testing.T, ts *test.TestServer, username string) {
 	_, _, body := ts.Get(t, "/user/login")
 	validCSRFToken := extractCSRFToken(t, body)
@@ -215,6 +227,7 @@ func extractCSRFToken(t *testing.T, body string) string {
 	return html.UnescapeString(matches[1])
 }
 
+// activate() is used to activate users for testing
 func activate(email string, models models.Models) {
 
 	user, err := models.Users.GetByEmail(email)
