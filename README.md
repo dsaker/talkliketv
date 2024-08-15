@@ -22,14 +22,19 @@ To list available make commands
 ### Startup Locally
 
 - Create Mailtrap account as described above
+- Install [Migrate](https://github.com/golang-migrate/migrate/blob/master/cmd/migrate/README.md)
+- Install [Golang](https://go.dev/doc/install)
 ```
 docker pull postgres
 docker run -d -P -p 127.0.0.1:5433:5432 -e POSTGRES_PASSWORD="password" --name talkliketvpg postgres
 echo "export TALKTV_DB_DSN=postgresql://postgres:password@localhost:5433/postgres?sslmode=disable" >> .envrc
 make db/migrations/up
+make build/web
 make run/web
+make build/api
 make run/api
 ```
+- Open localhost:4000 in browser
 
 ### Build
 
@@ -45,42 +50,41 @@ make build/api
 
 ### Deploy web application to google cloud platform
 
-- install golang if needed (https://go.dev/doc/install)
+- Install golang if needed (https://go.dev/doc/install)
 ```shell
 make build/web
 cp ansible/inventory.txt.bak ansible/inventory.txt
 cp terraform/terraform.tfvars.bak terraform/terraform.tfvars
 ```
-- create gcp project (https://cloud.google.com/resource-manager/docs/creating-managing-projects)
-- create ssh keys if needed (https://cloud.google.com/compute/docs/connect/create-ssh-keys)
+- Create gcp project (https://cloud.google.com/resource-manager/docs/creating-managing-projects)
+- Install gcloud cli (https://cloud.google.com/sdk/docs/install)
+- Create ssh keys if needed (https://cloud.google.com/compute/docs/connect/create-ssh-keys)
 ```shell
 gcloud init
-gcloud services enable storage-component.googleapis.com  compute.googleapis.com translate.googleapis.com storage.buckets.getIamPolicy'
+gcloud services enable storage-component.googleapis.com  compute.googleapis.com translate.googleapis.com
 ```
-- create mailtrap account as described above
-- get smtp username and password from Email Testing Inbox
-- generate a new ssh key if needed (https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
-- fill in the values for the variables in terraform/terraform.tfvars and ansible/inventory.txt
-- install terraform if needed (https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
-- install anisble if needed (https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
+- Create mailtrap account as described above
+- Get smtp username and password from Email Testing Inbox
+- Fill in the values for the variables in terraform/terraform.tfvars and ansible/inventory.txt
+- Configure ADC with your Google Account (https://cloud.google.com/docs/authentication/provide-credentials-adc#how-to)
+- Install terraform if needed (https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+- Install anisble if needed (https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
 ```shell
+cd terraform
 terraform init
 terraform plan
 terraform apply
 ```
-- remove bucket_module from terraform state (you do not want to destroy the bucket or service account)
-```shell
-cd ..
-make remove_module
-```
-- this comments out module.bucket_module from main.tf
-- uncomments the three resources below it
+- Remove bucket_module from terraform state (you do not want to destroy the bucket or service account)
+- use `make mac/remove_module` for macs `make linux/remove_module` for linux
+- This ^ comments out module.bucket_module from main.tf
+- Uncomments the three resources below it
   - google_storage_bucket_objects.files
   - local_file.initdb_file
   - google_storage_bucket_object_content.initdb
 - and removes bucket_module from terraform state (you do not want to destroy the bucket or service account)
 
-- run `make browser` in root directory to open web application in browser
+- Run `make browser` in root directory to open web application in browser
 - Signup user
 - Get activation code from mailtrap.io and activate account
 - Login

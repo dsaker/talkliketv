@@ -40,6 +40,6 @@ variable "module_bucket_name" {
 }
 
 variable "module_sa_account_id" {
-  description = "Name of the service account id for the bucked."
+  description = "Name of the service account id for the bucket."
   type        = string
 }

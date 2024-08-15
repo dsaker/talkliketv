@@ -1,27 +1,27 @@
-#module "bucket_module" {
-#  source = "./talkliketv-bucket"
-#
-#  bucket_name = var.module_bucket_name
-#  db_user = var.db_user
-#  sa_account_id = var. module_sa_account_id
+module "bucket_module" {
+  source = "./talkliketv-bucket"
+
+  bucket_name = var.module_bucket_name
+  db_user = var.module_db_user
+  sa_account_id = var. module_sa_account_id
+}
+
+#data "google_storage_bucket_objects" "files" {
+#  bucket = var.module_bucket_name
 #}
-
-data "google_storage_bucket_objects" "files" {
-  bucket = var.module_bucket_name
-}
-
-# store content of initdb.sql in ansible files to run with postgres task
-resource "local_file" "initdb_file" {
-  content  = data.google_storage_bucket_object_content.initdb.content
-  filename = "../ansible/postgres/files/initdb.sql"
-}
-
-# get content of last file stored in storage bucket. this will be last object created since
-# they are stored in alphabetical order and named with timestamp
-data "google_storage_bucket_object_content" "initdb" {
-  name   = data.google_storage_bucket_objects.files.bucket_objects[length(data.google_storage_bucket_objects.files.bucket_objects) - 1].name
-  bucket = var.module_bucket_name
-}
+#
+## store content of initdb.sql in ansible files to run with postgres task
+#resource "local_file" "initdb_file" {
+#  content  = data.google_storage_bucket_object_content.initdb.content
+#  filename = "../ansible/postgres/files/initdb.sql"
+#}
+#
+## get content of last file stored in storage bucket. this will be last object created since
+## they are stored in alphabetical order and named with timestamp
+#data "google_storage_bucket_object_content" "initdb" {
+#  name   = data.google_storage_bucket_objects.files.bucket_objects[length(data.google_storage_bucket_objects.files.bucket_objects) - 1].name
+#  bucket = var.module_bucket_name
+#}
 
 resource "google_compute_address" "static" {
   name = "talkliketv-ipv4-address"

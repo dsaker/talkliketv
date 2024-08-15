@@ -1,9 +1,6 @@
-export TALKTV_DB_DSN=postgres://talktv:<your_password>@localhost/talktv?sslmode=disable
-export DOCKER_DB_DSN=postgres://talktv:<your_password>@host.docker.internal/talktv?sslmode=disable
-export TEST_DB_DSN=postgres://testdb:<your_password>@localhost/testdb?sslmode=disable
 export SMTP_USERNAME=<SMTP_USERNAME>
 export SMTP_PASSWORD=<SMTP_PASSWORD>
 export CLOUD_HOST_IP=<ip>
 export CLOUD_HOST_USERNAME=<username>
-cloud_host_ip = "34.168.161.15"
-cloud_host_username = "dustysaker"
+cloud_host_ip = ""
+cloud_host_username = ""

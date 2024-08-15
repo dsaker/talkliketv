@@ -1,7 +1,7 @@
 [talkliketv:vars]
 vm_username = talkliketv
-smtp_password: <get from mailtrap.io>
-smtp_username: <get from mailtrap.io>
+smtp_username = <get from mailtrap.io>
+smtp_password = <get from mailtrap.io>
 
 [talkliketv]
 <will be replaced by terraform... no need to change>
