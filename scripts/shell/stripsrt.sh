@@ -72,6 +72,7 @@ true > "$outfile"
 sed -i '' -e 's/-//g' "$filepath"
 sed -i '' -e 's/<i>//g' "$filepath"
 sed -i '' -e 's/<\/i>//g' "$filepath"
+sed -i '' -e 's/\"//g' "$filepath"
 # delete all strings between brackets including brackets
 sed -i '' -e "s/[{][^)]*[}]//g" "$filepath"
 

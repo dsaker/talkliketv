@@ -10,11 +10,11 @@ def replace(line_in):
     # remove brackets and contents
     line_in = re.sub("{.*?}", "", line_in)
     # replace unneeded characters and strip trailing and beginning white space
-    line_in = line_in.replace("-", "").replace("<i>", "").replace("</i>", "").replace("[]", "").replace("-", "").strip()
+    line_in = line_in.replace("-", "").replace("<i>", "").replace("</i>", "").replace("[]", "").replace("-", "").replace('"', '').replace("'", "").strip()
     # replace multiple white spaces with one
     ' '.join(line_in.split())
     # if length of line is greater than one output to output file
-    if len(line_in.split()) > 1:
+    if len(line_in.split()) > 2:
         output.write(line_in + "\n")
 
 

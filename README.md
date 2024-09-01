@@ -90,7 +90,9 @@ terraform apply
 - Login
 - Click on Upload
 - You can upload scripts/shell/TheMannyS01E01.Spanish.srt.stripped as a test to make sure cloud translate is working
+
 ![img.png](readme_images/img.png)
+
 - Click on Account > Change Language and choose Spanish
 - Click on Titles and Select TheMannyS01E01
 - You can upload files that end in stripped in scripts/shell or use scripts/shell/stirpsrt.sh to make your own from srt files
